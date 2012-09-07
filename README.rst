@@ -61,7 +61,7 @@ There is a client hierarchy: the Ingest Client, the Search Client, and the Admin
 
 - the **Search Client** can issue read operations and uses the Lucene Queries jar. With a search client, it is not possible to ingest any data or to issue admin actions.
 
-- the **Admin Client** can issue administrative actions and will also have the capabilities of a Search Clien, because actions like warming/explain depend on the Search Client.
+- the **Admin Client** can issue administrative actions and will also have the capabilities of a Search Client, because actions like warming/explain depend on the Search Client.
 
 The selected Maven project group ID is **org.elasticsearch.client** and the Maven artifact names are
 
