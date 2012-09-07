@@ -39,13 +39,16 @@ When we talk of an Elasticsearch client, we refer to a Java program that
 
 Elasticsearch client code differs from the server code, it has no code for
 
-- cluster discovery
+- cluster discovery, cluster management
 - node membership in the cluster (different to NodeClient or TransportClient)
 - services, modules
+- index engine, shard operations
+- field mapping
 - TCP transport (the Elasticsearch internal protocol)
 - plugins
 - rivers
-- scripting (mvel, Javascript, Python)
+- scripting (mvel, Javascript, Python etc.)
+- analyzers, tokenizers
 
 Because the client build does not use relocation like the Elasticsearch server does, Maven project dependencies will be transparent (Lucene, Jackson, Guava, Joda etc.)
 
@@ -56,9 +59,9 @@ There is a client hierarchy: the Ingest Client, the Search Client, and the Admin
 
 - the **Ingest Client** can issue ingest actions without requiring Lucene jars. It is only meant for data pushing. With an Ingest Client, it is not possible to send queries (only get requests) or admin actions like index creations or deletions or node shutdowns/restarts.
 
-- the **Search Client** can issue read operations and uses Lucene Query jar. With a search client, it is not possible to ingest any data or to issue admin actions
+- the **Search Client** can issue read operations and uses the Lucene Queries jar. With a search client, it is not possible to ingest any data or to issue admin actions.
 
-- the **Admin Client** can issue administrative actions and will also have the capabilities of a Search Client (actions like warming/explain depend on the Search Client)
+- the **Admin Client** can issue administrative actions and will also have the capabilities of a Search Clien, because actions like warming/explain depend on the Search Client.
 
 The selected Maven project group ID is **org.elasticsearch.client** and the Maven artifact names are
 
@@ -71,6 +74,10 @@ The selected Maven project group ID is **org.elasticsearch.client** and the Mave
 		**elasticsearch-client-search-api** (jar)
         
 		**elasticsearch-client-admin-api** (jar)
+
+This modularization allows client development for the full or only for parts of the Elasticsearch API. 
+
+Furthermore, by not having the Admin client or the Ingest client present, client installations could realize a simple security pattern in order to protect against some malfunctions caused by accidentally initiated crucial operations (deletions, shutdowns, overwrites).
 
 
 Generating the client codebase
@@ -101,8 +108,6 @@ Unfortunately, the code required some modifications. These are the main changes 
 - in org.elasticsearch.cluster.metadata.AliasAction, method AliasAction filter(FilterBuilder filterBuilder) removed 
 
 - Compressor: removed Lucene/Netty deps, renamed to ClientCompressor
-
-- PlainActionFuture instead of PlainListenableActionFuture
 
 - IndexMetadata: MapperService.DEFAULT_MAPPING moved to IndexMetadata.DEFAULT_MAPPING
 
