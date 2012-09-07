@@ -43,6 +43,7 @@ import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.percolate.PercolateAction;
 import org.elasticsearch.action.percolate.PercolateRequest;
@@ -54,8 +55,22 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IngestClient;
+import org.elasticsearch.common.Nullable;
+import org.elasticsearch.threadpool.ClientThreadPool;
 
 public abstract class AbstractIngestClient implements IngestClient {
+
+    private final ClientThreadPool threadPool;
+    
+    public AbstractIngestClient() {
+        this.threadPool = new ClientThreadPool();
+    }
+    
+    @Override
+    public ClientThreadPool threadPool() {
+        return threadPool;
+    }
+    
     
     @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>, IngestClient extends Client> 
@@ -71,6 +86,21 @@ public abstract class AbstractIngestClient implements IngestClient {
     @Override
     public void index(final IndexRequest request, final ActionListener<IndexResponse> listener) {
         execute(IndexAction.INSTANCE, request, listener);
+    }
+
+    @Override
+    public IndexRequestBuilder prepareIndex() {
+        return new IndexRequestBuilder(this, null);
+    }
+
+    @Override
+    public IndexRequestBuilder prepareIndex(String index, String type) {
+        return prepareIndex(index, type, null);
+    }
+
+    @Override
+    public IndexRequestBuilder prepareIndex(String index, String type, @Nullable String id) {
+        return prepareIndex().setIndex(index).setType(type).setId(id);
     }
     
     @Override

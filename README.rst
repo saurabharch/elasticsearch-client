@@ -116,3 +116,7 @@ Unfortunately, the code required some modifications. These are the main changes 
 - constructor MappingMetaData(DocumentMapper docMapper)  removed
 
 - ThreadPool: lighter version with removed AbstractComponent and less executors, renamed to ClientThreadPool. ThreadPool.Info subclass moved to ThreadPoolInfo.Info
+
+- IndexAction: removed process() method, it is only called by TransportIndexAction / TransportBulkAction
+
+- org.elasticsearch.action.Action: got a fourth class parameter, the client class
