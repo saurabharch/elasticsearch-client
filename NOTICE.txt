@@ -1,0 +1,8 @@
+This is a client API implementation for
+
+ElasticSearch
+Copyright 2009-2011 ElasticSearch and Shay Banon
+
+This product includes software developed by The Apache Software
+Foundation (http://www.apache.org/).
+
