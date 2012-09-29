@@ -19,6 +19,7 @@
 
 package org.elasticsearch.common.settings.loader;
 
+import org.elasticsearch.common.Nullable;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,7 +36,7 @@ public interface SettingsLoader {
 
     static class Helper {
 
-        public static Map<String, String> loadNestedFromMap(Map map) {
+        public static Map<String, String> loadNestedFromMap(@Nullable Map map) {
             Map<String, String> settings = newHashMap();
             if (map == null) {
                 return settings;

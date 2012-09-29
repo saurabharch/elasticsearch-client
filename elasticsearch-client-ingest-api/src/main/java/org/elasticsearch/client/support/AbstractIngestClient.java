@@ -53,7 +53,7 @@ import org.elasticsearch.action.update.UpdateAction;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.GenericClient;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.threadpool.ClientThreadPool;
@@ -73,7 +73,7 @@ public abstract class AbstractIngestClient implements IngestClient {
     
     
     @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>, IngestClient extends Client> 
+    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, IngestClient extends GenericClient> 
             RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder, IngestClient> action) {
         return action.newRequestBuilder((IngestClient)this);
     }

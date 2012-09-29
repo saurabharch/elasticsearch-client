@@ -52,7 +52,7 @@ import org.elasticsearch.action.search.SearchScrollRequestBuilder;
  * simply returns an {@link org.elasticsearch.action.ActionFuture}, while the second accepts an
  * {@link org.elasticsearch.action.ActionListener}.
  */
-public interface SearchClient extends Client {
+public interface SearchClient extends GenericClient {
 
     /**
      * Executes a generic action, denoted by an {@link Action}.
@@ -64,7 +64,7 @@ public interface SearchClient extends Client {
      * @param <RequestBuilder> The request builder type.
      * @return A future allowing to get back the response.
      */
-    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>, SearchClient extends Client> 
+    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             ActionFuture<Response> execute(final Action<Request, Response, RequestBuilder, SearchClient> action, final Request request);
 
     /**
@@ -77,7 +77,7 @@ public interface SearchClient extends Client {
      * @param <Response>       The response type.
      * @param <RequestBuilder> The request builder type.
      */
-    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>, SearchClient extends Client> 
+    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             void execute(final Action<Request, Response, RequestBuilder, SearchClient> action, final Request request, ActionListener<Response> listener);
 
     /**
@@ -89,7 +89,7 @@ public interface SearchClient extends Client {
      * @param <RequestBuilder> The request builder.
      * @return The request builder, that can, at a later stage, execute the request.
      */
-    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>, SearchClient extends Client> 
+    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder, SearchClient> action);
 
     /**

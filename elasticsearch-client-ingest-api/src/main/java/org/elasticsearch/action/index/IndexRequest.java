@@ -23,26 +23,19 @@ import com.google.common.base.Charsets;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
-//import org.elasticsearch.ElasticSearchParseException;
+import org.elasticsearch.ElasticSearchParseException;
 import org.elasticsearch.action.ActionRequestValidationException;
-//import org.elasticsearch.action.RoutingMissingException;
-import org.elasticsearch.action.WriteConsistencyLevel;
-import org.elasticsearch.action.support.replication.ReplicationType;
 import org.elasticsearch.action.support.replication.ShardReplicationOperationRequest;
 import org.elasticsearch.client.IngestRequests;
-//import org.elasticsearch.cluster.metadata.MappingMetaData;
-//import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Required;
-//import org.elasticsearch.common.UUID;
+import org.elasticsearch.common.UUID;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.*;
 import org.elasticsearch.index.VersionType;
-//import org.elasticsearch.index.mapper.internal.TimestampFieldMapper;
 
 import java.io.IOException;
 import java.util.Map;
@@ -51,7 +44,7 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
 
 /**
  * Index request to index a typed JSON document into a specific index and make it searchable. Best
- * created using {@link org.elasticsearch.client.IngestRequests#indexRequest(String)}.
+ * created using {@link org.elasticsearch.client.Requests#indexRequest(String)}.
  * <p/>
  * <p>The index requires the {@link #index()}, {@link #type(String)}, {@link #id(String)} and
  * {@link #source(byte[])} to be set.
@@ -63,10 +56,10 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
  * <p>If the {@link #id(String)} is not set, it will be automatically generated.
  *
  * @see IndexResponse
- * @see org.elasticsearch.client.IngestRequests#indexRequest(String)
+ * @see org.elasticsearch.client.Requests#indexRequest(String)
  * @see org.elasticsearch.client.Client#index(IndexRequest)
  */
-public class IndexRequest extends ShardReplicationOperationRequest {
+public class IndexRequest extends ShardReplicationOperationRequest<IndexRequest> {
 
     /**
      * Operation type controls if the type of the index operation.
@@ -178,38 +171,10 @@ public class IndexRequest extends ShardReplicationOperationRequest {
     }
 
     /**
-     * Sets the index the index operation will happen on.
-     */
-    @Override
-    public IndexRequest index(String index) {
-        super.index(index);
-        return this;
-    }
-
-    /**
      * Sets the content type that will be used when generating a document from user provided objects (like Map).
      */
     public IndexRequest contentType(XContentType contentType) {
         this.contentType = contentType;
-        return this;
-    }
-
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    @Override
-    public IndexRequest listenerThreaded(boolean threadedListener) {
-        super.listenerThreaded(threadedListener);
-        return this;
-    }
-
-    /**
-     * Controls if the operation will be executed on a separate thread when executed locally. Defaults
-     * to <tt>true</tt> when running in embedded mode.
-     */
-    @Override
-    public IndexRequest operationThreaded(boolean threadedOperation) {
-        super.operationThreaded(threadedOperation);
         return this;
     }
 
@@ -332,7 +297,7 @@ public class IndexRequest extends ShardReplicationOperationRequest {
     }
 
     /**
-     * Index the Map as a {@link org.elasticsearch.client.IngestRequests#INDEX_CONTENT_TYPE}.
+     * Index the Map as a {@link org.elasticsearch.client.Requests#INDEX_CONTENT_TYPE}.
      *
      * @param source The map to index
      */
@@ -469,21 +434,6 @@ public class IndexRequest extends ShardReplicationOperationRequest {
     }
 
     /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public IndexRequest timeout(TimeValue timeout) {
-        this.timeout = timeout;
-        return this;
-    }
-
-    /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public IndexRequest timeout(String timeout) {
-        return timeout(TimeValue.parseTimeValue(timeout, null));
-    }
-
-    /**
      * Sets the type of operation to perform.
      */
     public IndexRequest opType(OpType opType) {
@@ -503,32 +453,6 @@ public class IndexRequest extends ShardReplicationOperationRequest {
         } else {
             throw new ElasticSearchIllegalArgumentException("No index opType matching [" + opType + "]");
         }
-    }
-
-    /**
-     * Set the replication type for this operation.
-     */
-    @Override
-    public IndexRequest replicationType(ReplicationType replicationType) {
-        super.replicationType(replicationType);
-        return this;
-    }
-
-    /**
-     * Sets the consistency level of write. Defaults to {@link org.elasticsearch.action.WriteConsistencyLevel#DEFAULT}
-     */
-    @Override
-    public IndexRequest consistencyLevel(WriteConsistencyLevel consistencyLevel) {
-        super.consistencyLevel(consistencyLevel);
-        return this;
-    }
-
-    /**
-     * Set the replication type for this operation.
-     */
-    public IndexRequest replicationType(String replicationType) {
-        super.replicationType(ReplicationType.fromString(replicationType));
-        return this;
     }
 
     /**
@@ -602,79 +526,14 @@ public class IndexRequest extends ShardReplicationOperationRequest {
         return this.percolate;
     }
 
-/*    public void process(MetaData metaData, String aliasOrIndex, @Nullable MappingMetaData mappingMd, boolean allowIdGeneration) throws ElasticSearchException {
-        // resolve the routing if needed
-        routing(metaData.resolveIndexRouting(routing, aliasOrIndex));
-        // resolve timestamp if provided externally
-        if (timestamp != null) {
-            timestamp = MappingMetaData.Timestamp.parseStringTimestamp(timestamp,
-                    mappingMd != null ? mappingMd.timestamp().dateTimeFormatter() : TimestampFieldMapper.Defaults.DATE_TIME_FORMATTER);
-        }
-        // extract values if needed
-        if (mappingMd != null) {
-            MappingMetaData.ParseContext parseContext = mappingMd.createParseContext(id, routing, timestamp);
-
-            if (parseContext.shouldParse()) {
-                XContentParser parser = null;
-                try {
-                    parser = XContentHelper.createParser(source);
-                    mappingMd.parse(parser, parseContext);
-                    if (parseContext.shouldParseId()) {
-                        id = parseContext.id();
-                    }
-                    if (parseContext.shouldParseRouting()) {
-                        routing = parseContext.routing();
-                    }
-                    if (parseContext.shouldParseTimestamp()) {
-                        timestamp = parseContext.timestamp();
-                        timestamp = MappingMetaData.Timestamp.parseStringTimestamp(timestamp, mappingMd.timestamp().dateTimeFormatter());
-                    }
-                } catch (Exception e) {
-                    throw new ElasticSearchParseException("failed to parse doc to extract routing/timestamp", e);
-                } finally {
-                    if (parser != null) {
-                        parser.close();
-                    }
-                }
-            }
-
-            // might as well check for routing here
-            if (mappingMd.routing().required() && routing == null) {
-                throw new RoutingMissingException(index, type, id);
-            }
-        }
-
-        // generate id if not already provided and id generation is allowed
-        if (allowIdGeneration) {
-            if (id == null) {
-                id(UUID.randomBase64UUID());
-                // since we generate the id, change it to CREATE
-                opType(IndexRequest.OpType.CREATE);
-            }
-        }
-
-        // generate timestamp if not provided, we always have one post this stage...
-        if (timestamp == null) {
-            timestamp = Long.toString(System.currentTimeMillis());
-        }
-    }*/
-
     @Override
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
         type = in.readString();
-        if (in.readBoolean()) {
-            id = in.readString();
-        }
-        if (in.readBoolean()) {
-            routing = in.readString();
-        }
-        if (in.readBoolean()) {
-            parent = in.readString();
-        }
-        if (in.readBoolean()) {
-            timestamp = in.readString();
-        }
+        id = in.readOptionalString();
+        routing = in.readOptionalString();
+        parent = in.readOptionalString();
+        timestamp = in.readOptionalString();
         ttl = in.readLong();
         source = in.readBytesReference();
         sourceUnsafe = false;
@@ -682,9 +541,7 @@ public class IndexRequest extends ShardReplicationOperationRequest {
         opType = OpType.fromId(in.readByte());
         refresh = in.readBoolean();
         version = in.readLong();
-        if (in.readBoolean()) {
-            percolate = in.readString();
-        }
+        percolate = in.readOptionalString();
         versionType = VersionType.fromValue(in.readByte());
     }
 
@@ -692,41 +549,16 @@ public class IndexRequest extends ShardReplicationOperationRequest {
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
         out.writeString(type);
-        if (id == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(id);
-        }
-        if (routing == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(routing);
-        }
-        if (parent == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(parent);
-        }
-        if (timestamp == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(timestamp);
-        }
+        out.writeOptionalString(id);
+        out.writeOptionalString(routing);
+        out.writeOptionalString(parent);
+        out.writeOptionalString(timestamp);
         out.writeLong(ttl);
         out.writeBytesReference(source);
         out.writeByte(opType.id());
         out.writeBoolean(refresh);
         out.writeLong(version);
-        if (percolate == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(percolate);
-        }
+        out.writeOptionalString(percolate);
         out.writeByte(versionType.getValue());
     }
 

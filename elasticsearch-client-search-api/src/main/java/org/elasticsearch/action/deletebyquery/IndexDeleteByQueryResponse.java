@@ -22,21 +22,16 @@ package org.elasticsearch.action.deletebyquery;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.io.stream.Streamable;
 
 import java.io.IOException;
 
 /**
  * Delete by query response executed on a specific index.
- *
- *
  */
-public class IndexDeleteByQueryResponse implements ActionResponse, Streamable {
+public class IndexDeleteByQueryResponse extends ActionResponse {
 
     private String index;
-
     private int successfulShards;
-
     private int failedShards;
 
     IndexDeleteByQueryResponse(String index, int successfulShards, int failedShards) {
@@ -107,6 +102,7 @@ public class IndexDeleteByQueryResponse implements ActionResponse, Streamable {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         index = in.readString();
         successfulShards = in.readVInt();
         failedShards = in.readVInt();
@@ -114,6 +110,7 @@ public class IndexDeleteByQueryResponse implements ActionResponse, Streamable {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeString(index);
         out.writeVInt(successfulShards);
         out.writeVInt(failedShards);

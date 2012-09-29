@@ -20,6 +20,7 @@
 package org.elasticsearch.common.lucene.search;
 
 import org.apache.lucene.search.*;
+import org.elasticsearch.common.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -108,11 +109,8 @@ public class Queries {
         return q;
     }
 
-    public static boolean isMatchAllQuery(Query query) {
+    public static boolean isConstantMatchAllQuery(Query query) {
         if (query == Queries.MATCH_ALL_QUERY) {
-            return true;
-        }
-        if (query instanceof MatchAllDocsQuery) {
             return true;
         }
         if (query instanceof DeletionAwareConstantScoreQuery) {
@@ -124,7 +122,7 @@ public class Queries {
         return false;
     }
 
-    public static void applyMinimumShouldMatch(BooleanQuery query, String minimumShouldMatch) {
+    public static void applyMinimumShouldMatch(BooleanQuery query, @Nullable String minimumShouldMatch) {
         if (minimumShouldMatch == null) {
             return;
         }

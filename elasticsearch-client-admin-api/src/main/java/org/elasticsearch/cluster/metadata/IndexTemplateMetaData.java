@@ -21,7 +21,7 @@ package org.elasticsearch.cluster.metadata;
 
 import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.common.collect.MapBuilder;
-import org.elasticsearch.common.compress.CompressedString;
+import org.elasticsearch.common.compress.BasicCompressedString;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.settings.ImmutableSettings;
@@ -49,11 +49,11 @@ public class IndexTemplateMetaData {
     private final Settings settings;
 
     // the mapping source should always include the type as top level
-    private final ImmutableMap<String, CompressedString> mappings;
+    private final ImmutableMap<String, BasicCompressedString> mappings;
 
     private final ImmutableMap<String, IndexMetaData.Custom> customs;
 
-    public IndexTemplateMetaData(String name, int order, String template, Settings settings, ImmutableMap<String, CompressedString> mappings, ImmutableMap<String, IndexMetaData.Custom> customs) {
+    public IndexTemplateMetaData(String name, int order, String template, Settings settings, ImmutableMap<String, BasicCompressedString> mappings, ImmutableMap<String, IndexMetaData.Custom> customs) {
         this.name = name;
         this.order = order;
         this.template = template;
@@ -94,11 +94,11 @@ public class IndexTemplateMetaData {
         return settings();
     }
 
-    public ImmutableMap<String, CompressedString> mappings() {
+    public ImmutableMap<String, BasicCompressedString> mappings() {
         return this.mappings;
     }
 
-    public ImmutableMap<String, CompressedString> getMappings() {
+    public ImmutableMap<String, BasicCompressedString> getMappings() {
         return this.mappings;
     }
 
@@ -154,7 +154,7 @@ public class IndexTemplateMetaData {
 
         private Settings settings = ImmutableSettings.Builder.EMPTY_SETTINGS;
 
-        private MapBuilder<String, CompressedString> mappings = MapBuilder.newMapBuilder();
+        private MapBuilder<String, BasicCompressedString> mappings = MapBuilder.newMapBuilder();
 
         private MapBuilder<String, IndexMetaData.Custom> customs = MapBuilder.newMapBuilder();
 
@@ -200,13 +200,13 @@ public class IndexTemplateMetaData {
             return this;
         }
 
-        public Builder putMapping(String mappingType, CompressedString mappingSource) throws IOException {
+        public Builder putMapping(String mappingType, BasicCompressedString mappingSource) throws IOException {
             mappings.put(mappingType, mappingSource);
             return this;
         }
 
         public Builder putMapping(String mappingType, String mappingSource) throws IOException {
-            mappings.put(mappingType, new CompressedString(mappingSource));
+            mappings.put(mappingType, new BasicCompressedString(mappingSource));
             return this;
         }
 
@@ -241,7 +241,7 @@ public class IndexTemplateMetaData {
             builder.endObject();
 
             builder.startArray("mappings");
-            for (Map.Entry<String, CompressedString> entry : indexTemplateMetaData.mappings().entrySet()) {
+            for (Map.Entry<String, BasicCompressedString> entry : indexTemplateMetaData.mappings().entrySet()) {
                 byte[] data = entry.getValue().uncompressed();
                 XContentParser parser = XContentFactory.xContent(data).createParser(data);
                 Map<String, Object> mapping = parser.mapOrderedAndClose();
@@ -332,17 +332,17 @@ public class IndexTemplateMetaData {
         }
 
         public static IndexTemplateMetaData readFrom(StreamInput in) throws IOException {
-            Builder builder = new Builder(in.readString());
+            Builder builder = new Builder(in.readUTF());
             builder.order(in.readInt());
-            builder.template(in.readString());
+            builder.template(in.readUTF());
             builder.settings(ImmutableSettings.readSettingsFromStream(in));
             int mappingsSize = in.readVInt();
             for (int i = 0; i < mappingsSize; i++) {
-                builder.putMapping(in.readString(), CompressedString.readCompressedString(in));
+                builder.putMapping(in.readUTF(), BasicCompressedString.readCompressedString(in));
             }
             int customSize = in.readVInt();
             for (int i = 0; i < customSize; i++) {
-                String type = in.readString();
+                String type = in.readUTF();
                 IndexMetaData.Custom customIndexMetaData = IndexMetaData.lookupFactorySafe(type).readFrom(in);
                 builder.putCustom(type, customIndexMetaData);
             }
@@ -350,18 +350,18 @@ public class IndexTemplateMetaData {
         }
 
         public static void writeTo(IndexTemplateMetaData indexTemplateMetaData, StreamOutput out) throws IOException {
-            out.writeString(indexTemplateMetaData.name());
+            out.writeUTF(indexTemplateMetaData.name());
             out.writeInt(indexTemplateMetaData.order());
-            out.writeString(indexTemplateMetaData.template());
+            out.writeUTF(indexTemplateMetaData.template());
             ImmutableSettings.writeSettingsToStream(indexTemplateMetaData.settings(), out);
             out.writeVInt(indexTemplateMetaData.mappings().size());
-            for (Map.Entry<String, CompressedString> entry : indexTemplateMetaData.mappings().entrySet()) {
-                out.writeString(entry.getKey());
+            for (Map.Entry<String, BasicCompressedString> entry : indexTemplateMetaData.mappings().entrySet()) {
+                out.writeUTF(entry.getKey());
                 entry.getValue().writeTo(out);
             }
             out.writeVInt(indexTemplateMetaData.customs().size());
             for (Map.Entry<String, IndexMetaData.Custom> entry : indexTemplateMetaData.customs().entrySet()) {
-                out.writeString(entry.getKey());
+                out.writeUTF(entry.getKey());
                 IndexMetaData.lookupFactorySafe(entry.getKey()).writeTo(entry.getValue(), out);
             }
         }

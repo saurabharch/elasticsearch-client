@@ -51,7 +51,7 @@ import static org.elasticsearch.common.unit.TimeValue.readTimeValue;
 /**
  * A request to create an index template.
  */
-public class PutIndexTemplateRequest extends MasterNodeOperationRequest {
+public class PutIndexTemplateRequest extends MasterNodeOperationRequest<PutIndexTemplateRequest> {
 
     private String name;
 

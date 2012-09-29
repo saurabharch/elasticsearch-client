@@ -25,7 +25,7 @@ import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-//import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchException;
 import org.elasticsearch.search.SearchShardTarget;
 
@@ -46,7 +46,7 @@ public class ShardSearchFailure implements ShardOperationFailedException {
 
     private String reason;
 
-    //private RestStatus status;
+    private RestStatus status;
 
     private ShardSearchFailure() {
 
@@ -57,18 +57,18 @@ public class ShardSearchFailure implements ShardOperationFailedException {
         if (actual != null && actual instanceof SearchException) {
             this.shardTarget = ((SearchException) actual).shard();
         }
-        /*if (actual != null && actual instanceof ElasticSearchException) {
+        if (actual != null && actual instanceof ElasticSearchException) {
             status = ((ElasticSearchException) t).status();
         } else {
             status = RestStatus.INTERNAL_SERVER_ERROR;
-        }*/
+        }
         this.reason = ExceptionsHelper.detailedMessage(t);
     }
 
     public ShardSearchFailure(String reason, SearchShardTarget shardTarget) {
         this.shardTarget = shardTarget;
         this.reason = reason;
-        //this.status = RestStatus.INTERNAL_SERVER_ERROR;
+        this.status = RestStatus.INTERNAL_SERVER_ERROR;
     }
 
     /**
@@ -79,9 +79,9 @@ public class ShardSearchFailure implements ShardOperationFailedException {
         return this.shardTarget;
     }
 
-    /*public RestStatus status() {
+    public RestStatus status() {
         return this.status;
-    }*/
+    }
 
     /**
      * The index the search failed on.
@@ -128,8 +128,8 @@ public class ShardSearchFailure implements ShardOperationFailedException {
         if (in.readBoolean()) {
             shardTarget = readSearchShardTarget(in);
         }
-        reason = in.readString();
-        //status = RestStatus.readFrom(in);
+        reason = in.readUTF();
+        status = RestStatus.readFrom(in);
     }
 
     @Override
@@ -140,7 +140,7 @@ public class ShardSearchFailure implements ShardOperationFailedException {
             out.writeBoolean(true);
             shardTarget.writeTo(out);
         }
-        out.writeString(reason);
-        //RestStatus.writeTo(out, status);
+        out.writeUTF(reason);
+        RestStatus.writeTo(out, status);
     }
 }

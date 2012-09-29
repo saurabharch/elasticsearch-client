@@ -19,6 +19,8 @@
 
 package org.elasticsearch;
 
+import org.elasticsearch.rest.RestStatus;
+
 /**
  *
  */
@@ -32,4 +34,8 @@ public class ElasticSearchParseException extends ElasticSearchException {
         super(msg, cause);
     }
 
+    @Override
+    public RestStatus status() {
+        return RestStatus.BAD_REQUEST;
+    }
 }

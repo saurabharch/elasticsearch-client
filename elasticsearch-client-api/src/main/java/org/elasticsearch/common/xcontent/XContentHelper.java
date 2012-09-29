@@ -26,8 +26,8 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.compress.CompressedStreamInput;
-import org.elasticsearch.common.compress.ClientCompressor;
-import org.elasticsearch.common.compress.ClientCompressorFactory;
+import org.elasticsearch.common.compress.BasicCompressor;
+import org.elasticsearch.common.compress.BasicCompressorFactory;
 import org.elasticsearch.common.io.stream.BytesStreamInput;
 
 import java.io.IOException;
@@ -46,7 +46,7 @@ public class XContentHelper {
         if (bytes.hasArray()) {
             return createParser(bytes.array(), bytes.arrayOffset(), bytes.length());
         }
-        ClientCompressor compressor = ClientCompressorFactory.compressor(bytes);
+        BasicCompressor compressor = BasicCompressorFactory.compressor(bytes);
         if (compressor != null) {
             CompressedStreamInput compressedInput = compressor.streamInput(bytes.streamInput());
             XContentType contentType = XContentFactory.xContentType(compressedInput);
@@ -59,7 +59,7 @@ public class XContentHelper {
 
 
     public static XContentParser createParser(byte[] data, int offset, int length) throws IOException {
-        ClientCompressor compressor = ClientCompressorFactory.compressor(data, offset, length);
+        BasicCompressor compressor = BasicCompressorFactory.compressor(data, offset, length);
         if (compressor != null) {
             CompressedStreamInput compressedInput = compressor.streamInput(new BytesStreamInput(data, offset, length, false));
             XContentType contentType = XContentFactory.xContentType(compressedInput);
@@ -77,7 +77,7 @@ public class XContentHelper {
         try {
             XContentParser parser;
             XContentType contentType;
-            ClientCompressor compressor = ClientCompressorFactory.compressor(bytes);
+            BasicCompressor compressor = BasicCompressorFactory.compressor(bytes);
             if (compressor != null) {
                 CompressedStreamInput compressedStreamInput = compressor.streamInput(bytes.streamInput());
                 contentType = XContentFactory.xContentType(compressedStreamInput);
@@ -105,7 +105,7 @@ public class XContentHelper {
         try {
             XContentParser parser;
             XContentType contentType;
-            ClientCompressor compressor = ClientCompressorFactory.compressor(data, offset, length);
+            BasicCompressor compressor = BasicCompressorFactory.compressor(data, offset, length);
             if (compressor != null) {
                 CompressedStreamInput compressedStreamInput = compressor.streamInput(new BytesStreamInput(data, offset, length, false));
                 contentType = XContentFactory.xContentType(compressedStreamInput);

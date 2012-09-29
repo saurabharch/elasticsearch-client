@@ -22,7 +22,7 @@ package org.elasticsearch.index.get;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.ElasticSearchParseException;
 import org.elasticsearch.common.bytes.BytesReference;
-//import org.elasticsearch.common.compress.CompressorFactory;
+import org.elasticsearch.common.compress.BasicCompressorFactory;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.io.stream.Streamable;
@@ -39,9 +39,6 @@ import java.util.Map;
 
 import static com.google.common.collect.Iterators.emptyIterator;
 import static com.google.common.collect.Maps.newHashMapWithExpectedSize;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
 import static org.elasticsearch.index.get.GetField.readGetField;
 
 /**
@@ -170,12 +167,12 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
      * Returns bytes reference, also un compress the source if needed.
      */
     public BytesReference sourceRef() {
-        //try {
-            //this.source = CompressorFactory.uncompressIfNeeded(this.source);
+        try {
+            this.source = BasicCompressorFactory.uncompressIfNeeded(this.source);
             return this.source;
-        //} catch (IOException e) {
-        //    throw new ElasticSearchParseException("failed to decompress source", e);
-        //}
+        } catch (IOException e) {
+            throw new ElasticSearchParseException("failed to decompress source", e);
+        }
     }
 
     /**
@@ -210,7 +207,7 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
     /**
      * The source of the document (As a map).
      */
-    @SuppressWarnings({"unchecked"})
+    /*@SuppressWarnings({"unchecked"})
     public Map<String, Object> sourceAsMap() throws ElasticSearchParseException {
         if (source == null) {
             return null;
@@ -219,14 +216,13 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
             return sourceAsMap;
         }
 
-        sourceAsMap = //SourceLookup.sourceAsMap(source);
-                XContentHelper.convertToMap(source, false).v2();
+        sourceAsMap = SourceLookup.sourceAsMap(source);
         return sourceAsMap;
     }
 
     public Map<String, Object> getSource() {
         return sourceAsMap();
-    }
+    }*/
 
     public Map<String, GetField> fields() {
         return this.fields;
@@ -263,19 +259,6 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
         /*if (source != null) {
             RestXContentBuilder.restDocumentSource(source, builder, params);
         }*/
-            XContentType contentType = XContentFactory.xContentType(source);
-            if (contentType == builder.contentType()) {
-                builder.rawField("_source", source);
-            } else {
-                XContentParser parser = XContentFactory.xContent(contentType).createParser(source);
-                try {
-                    parser.nextToken();
-                    builder.field("_source");
-                    builder.copyCurrentStructure(parser);
-                } finally {
-                    parser.close();
-                }
-            }
 
         if (fields != null && !fields.isEmpty()) {
             builder.startObject(Fields.FIELDS);
@@ -331,9 +314,9 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-        index = in.readString();
-        type = in.readOptionalString();
-        id = in.readString();
+        index = in.readUTF();
+        type = in.readOptionalUTF();
+        id = in.readUTF();
         version = in.readLong();
         exists = in.readBoolean();
         if (exists) {
@@ -356,9 +339,9 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(index);
-        out.writeOptionalString(type);
-        out.writeString(id);
+        out.writeUTF(index);
+        out.writeOptionalUTF(type);
+        out.writeUTF(id);
         out.writeLong(version);
         out.writeBoolean(exists);
         if (exists) {

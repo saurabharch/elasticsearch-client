@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-client</artifactId>
-        <version>0.0.0-SNAPSHOT</version>
+        <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>elasticsearch-client-api</artifactId>
@@ -77,24 +77,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.ning</groupId>
-            <artifactId>compress-lzf</artifactId>
-            <version>0.9.5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.xerial.snappy</groupId>
-            <artifactId>snappy-java</artifactId>
-            <version>1.0.4.1</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
             <groupId>com.spatial4j</groupId>
             <artifactId>spatial4j</artifactId>
-            <version>0.2</version>
+            <version>0.3</version>
             <scope>compile</scope>
         </dependency>
 
@@ -112,9 +97,17 @@
         </dependency>
         
         <dependency>
+            <groupId>com.ning</groupId>
+            <artifactId>compress-lzf</artifactId>
+            <version>0.9.5</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.6.4</version>
+            <optional>true</optional>
         </dependency>
         
         <dependency>

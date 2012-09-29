@@ -22,23 +22,32 @@ package org.elasticsearch.threadpool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.elasticsearch.ElasticSearchIllegalArgumentException;
+import org.elasticsearch.common.Nullable;
+import org.elasticsearch.common.io.FileSystemUtils;
+import org.elasticsearch.common.io.stream.StreamInput;
+import org.elasticsearch.common.io.stream.StreamOutput;
+import org.elasticsearch.common.io.stream.Streamable;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.SizeValue;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.util.concurrent.*;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilderString;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import org.elasticsearch.ElasticSearchIllegalArgumentException;
-import org.elasticsearch.common.Nullable;
-import org.elasticsearch.common.io.FileSystemUtils;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.settings.ImmutableSettings;
+
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.SizeValue;
-import org.elasticsearch.common.unit.TimeValue;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMinutes;
 import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
-import org.elasticsearch.common.util.concurrent.*;
 
 /**
  *
@@ -48,7 +57,7 @@ public class ClientThreadPool {
     private static ESLogger logger = ESLoggerFactory.getLogger(ClientThreadPool.class.getName());
 
     private final Settings settings;
-    
+
     public static class Names {
         public static final String SAME = "same";
         public static final String GENERIC = "generic";
@@ -66,20 +75,20 @@ public class ClientThreadPool {
 
     public ClientThreadPool(Settings settings) {
         this.settings = settings;
-
+        
         Map<String, Settings> groupSettings = settings.getGroups("threadpool");
 
         Map<String, ExecutorHolder> executors = Maps.newHashMap();
         executors.put(Names.GENERIC, build(Names.GENERIC, "cached", groupSettings.get(Names.GENERIC), settingsBuilder().put("keep_alive", "30s").build()));
-        executors.put(Names.SAME, new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new ThreadPoolInfo.Info(Names.SAME, "same")));
+        executors.put(Names.SAME, new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new ClientThreadPoolInfo.Info(Names.SAME, "same")));
         this.executors = ImmutableMap.copyOf(executors);
-        this.scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, EsExecutors.daemonThreadFactory(settings, "scheduler"));
+        this.scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, ClientEsExecutors.daemonThreadFactory(settings, "scheduler"));
         this.scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
         this.scheduler.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
 
         //TimeValue estimatedTimeInterval = componentSettings.getAsTime("estimated_time_interval", TimeValue.timeValueMillis(200));
         TimeValue estimatedTimeInterval = TimeValue.timeValueMillis(200);
-        this.estimatedTimeThread = new EstimatedTimeThread(EsExecutors.threadName(settings, "[timer]"), estimatedTimeInterval.millis());
+        this.estimatedTimeThread = new EstimatedTimeThread(ClientEsExecutors.threadName(settings, "[timer]"), estimatedTimeInterval.millis());
         this.estimatedTimeThread.start();
     }
 
@@ -87,8 +96,8 @@ public class ClientThreadPool {
         return estimatedTimeThread.estimatedTimeInMillis();
     }
 
-    public ThreadPoolInfo info() {
-        List<ThreadPoolInfo.Info> infos = new ArrayList();
+    public ClientThreadPoolInfo info() {
+        List<ClientThreadPoolInfo.Info> infos = new ArrayList();
         for (ExecutorHolder holder : executors.values()) {
             String name = holder.info.name();
             // no need to have info on "same" thread pool
@@ -97,11 +106,11 @@ public class ClientThreadPool {
             }
             infos.add(holder.info);
         }
-        return new ThreadPoolInfo(infos);
+        return new ClientThreadPoolInfo(infos);
     }
 
-    public ThreadPoolStats stats() {
-        List<ThreadPoolStats.Stats> stats = new ArrayList<ThreadPoolStats.Stats>();
+    public ClientThreadPoolStats stats() {
+        List<ClientThreadPoolStats.Stats> stats = new ArrayList<ClientThreadPoolStats.Stats>();
         for (ExecutorHolder holder : executors.values()) {
             String name = holder.info.name();
             // no need to have info on "same" thread pool
@@ -122,9 +131,9 @@ public class ClientThreadPool {
                     rejected = ((XRejectedExecutionHandler) rejectedExecutionHandler).rejected();
                 }
             }
-            stats.add(new ThreadPoolStats.Stats(name, threads, queue, active, rejected));
+            stats.add(new ClientThreadPoolStats.Stats(name, threads, queue, active, rejected));
         }
-        return new ThreadPoolStats(stats);
+        return new ClientThreadPoolStats(stats);
     }
 
     public Executor generic() {
@@ -191,67 +200,18 @@ public class ClientThreadPool {
             settings = ImmutableSettings.Builder.EMPTY_SETTINGS;
         }
         String type = settings.get("type", defaultType);
-        ThreadFactory threadFactory = EsExecutors.daemonThreadFactory(this.settings, name);
+        ThreadFactory threadFactory = ClientEsExecutors.daemonThreadFactory(this.settings, name);
         if ("same".equals(type)) {
             logger.debug("creating thread_pool [{}], type [{}]", name, type);
-            return new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new ThreadPoolInfo.Info(name, type));
+            return new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new ClientThreadPoolInfo.Info(name, type));
         } else if ("cached".equals(type)) {
             TimeValue keepAlive = settings.getAsTime("keep_alive", defaultSettings.getAsTime("keep_alive", timeValueMinutes(5)));
             logger.debug("creating thread_pool [{}], type [{}], keep_alive [{}]", name, type, keepAlive);
-            Executor executor = new EsThreadPoolExecutor(0, Integer.MAX_VALUE,
+            Executor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,
                     keepAlive.millis(), TimeUnit.MILLISECONDS,
                     new SynchronousQueue<Runnable>(),
                     threadFactory);
-            return new ExecutorHolder(executor, new ThreadPoolInfo.Info(name, type, -1, -1, keepAlive, null));
-        } else if ("fixed".equals(type)) {
-            int size = settings.getAsInt("size", defaultSettings.getAsInt("size", Runtime.getRuntime().availableProcessors() * 5));
-            SizeValue capacity = settings.getAsSize("capacity", settings.getAsSize("queue", settings.getAsSize("queue_size", defaultSettings.getAsSize("queue", defaultSettings.getAsSize("queue_size", null)))));
-            RejectedExecutionHandler rejectedExecutionHandler;
-            String rejectSetting = settings.get("reject_policy", defaultSettings.get("reject_policy", "abort"));
-            if ("abort".equals(rejectSetting)) {
-                rejectedExecutionHandler = new EsAbortPolicy();
-            } else if ("caller".equals(rejectSetting)) {
-                rejectedExecutionHandler = new ThreadPoolExecutor.CallerRunsPolicy();
-            } else {
-                throw new ElasticSearchIllegalArgumentException("reject_policy [" + rejectSetting + "] not valid for [" + name + "] thread pool");
-            }
-            String queueType = settings.get("queue_type", "linked");
-            BlockingQueue<Runnable> workQueue;
-            if (capacity == null) {
-                workQueue = ConcurrentCollections.newBlockingQueue();
-            } else if ((int) capacity.singles() > 0) {
-                if ("linked".equals(queueType)) {
-                    workQueue = new LinkedBlockingQueue<Runnable>((int) capacity.singles());
-                } else if ("array".equals(queueType)) {
-                    workQueue = new ArrayBlockingQueue<Runnable>((int) capacity.singles());
-                } else {
-                    throw new ElasticSearchIllegalArgumentException("illegal queue_type set to [" + queueType + "], should be either linked or array");
-                }
-            } else {
-                workQueue = new SynchronousQueue<Runnable>();
-            }
-            logger.debug("creating thread_pool [{}], type [{}], size [{}], queue_size [{}], reject_policy [{}], queue_type [{}]", name, type, size, capacity, rejectSetting, queueType);
-            Executor executor = new EsThreadPoolExecutor(size, size,
-                    0L, TimeUnit.MILLISECONDS,
-                    workQueue,
-                    threadFactory, rejectedExecutionHandler);
-            return new ExecutorHolder(executor, new ThreadPoolInfo.Info(name, type, size, size, null, capacity));
-        } else if ("scaling".equals(type)) {
-            TimeValue keepAlive = settings.getAsTime("keep_alive", defaultSettings.getAsTime("keep_alive", timeValueMinutes(5)));
-            int min = settings.getAsInt("min", defaultSettings.getAsInt("min", 1));
-            int size = settings.getAsInt("max", settings.getAsInt("size", defaultSettings.getAsInt("size", Runtime.getRuntime().availableProcessors() * 5)));
-            logger.debug("creating thread_pool [{}], type [{}], min [{}], size [{}], keep_alive [{}]", name, type, min, size, keepAlive);
-            Executor executor = EsExecutors.newScalingExecutorService(min, size, keepAlive.millis(), TimeUnit.MILLISECONDS, threadFactory);
-            return new ExecutorHolder(executor, new ThreadPoolInfo.Info(name, type, min, size, keepAlive, null));
-        } else if ("blocking".equals(type)) {
-            TimeValue keepAlive = settings.getAsTime("keep_alive", defaultSettings.getAsTime("keep_alive", timeValueMinutes(5)));
-            int min = settings.getAsInt("min", defaultSettings.getAsInt("min", 1));
-            int size = settings.getAsInt("max", settings.getAsInt("size", defaultSettings.getAsInt("size", Runtime.getRuntime().availableProcessors() * 5)));
-            SizeValue capacity = settings.getAsSize("capacity", settings.getAsSize("queue_size", defaultSettings.getAsSize("queue_size", new SizeValue(1000))));
-            TimeValue waitTime = settings.getAsTime("wait_time", defaultSettings.getAsTime("wait_time", timeValueSeconds(60)));
-            logger.debug("creating thread_pool [{}], type [{}], min [{}], size [{}], queue_size [{}], keep_alive [{}], wait_time [{}]", name, type, min, size, capacity.singles(), keepAlive, waitTime);
-            Executor executor = EsExecutors.newBlockingExecutorService(min, size, keepAlive.millis(), TimeUnit.MILLISECONDS, threadFactory, (int) capacity.singles(), waitTime.millis(), TimeUnit.MILLISECONDS);
-            return new ExecutorHolder(executor, new ThreadPoolInfo.Info(name, type, min, size, keepAlive, capacity));
+            return new ExecutorHolder(executor, new ClientThreadPoolInfo.Info(name, type, -1, -1, keepAlive, null));
         }
         throw new ElasticSearchIllegalArgumentException("No type found [" + type + "], for [" + name + "]");
     }
@@ -360,13 +320,13 @@ public class ClientThreadPool {
 
     static class ExecutorHolder {
         public final Executor executor;
-        public final ThreadPoolInfo.Info info;
+        public final ClientThreadPoolInfo.Info info;
 
-        ExecutorHolder(Executor executor, ThreadPoolInfo.Info info) {
+        ExecutorHolder(Executor executor, ClientThreadPoolInfo.Info info) {
             this.executor = executor;
             this.info = info;
         }
     }
 
-
+   
 }

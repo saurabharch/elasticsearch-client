@@ -20,7 +20,7 @@
 package org.elasticsearch.action.explain;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.BaseSearchRequestBuilder;
+import org.elasticsearch.action.support.single.shard.SingleShardOperationRequestBuilder;
 import org.elasticsearch.client.SearchClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -28,7 +28,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 /**
  * A builder for {@link ExplainRequest}.
  */
-public class ExplainRequestBuilder extends BaseSearchRequestBuilder<ExplainRequest, ExplainResponse> {
+public class ExplainRequestBuilder extends SingleShardOperationRequestBuilder<ExplainRequest, ExplainResponse, ExplainRequestBuilder> {
 
     private ExplainSourceBuilder sourceBuilder;
 
@@ -37,18 +37,7 @@ public class ExplainRequestBuilder extends BaseSearchRequestBuilder<ExplainReque
     }
 
     public ExplainRequestBuilder(SearchClient client, String index, String type, String id) {
-        super(client, new ExplainRequest());
-        request().index(index);
-        request().type(type);
-        request().id(id);
-    }
-
-    /**
-     * Sets the index to get a score explanation for.
-     */
-    public ExplainRequestBuilder setIndex(String index) {
-        request().index(index);
-        return this;
+        super(client, new ExplainRequest().index(index).type(type).id(id));
     }
 
     /**
@@ -108,6 +97,14 @@ public class ExplainRequestBuilder extends BaseSearchRequestBuilder<ExplainReque
     }
 
     /**
+     * Explicitly specify the fields that will be returned for the explained document. By default, nothing is returned.
+     */
+    public ExplainRequestBuilder setFields(String... fields) {
+        request.fields(fields);
+        return this;
+    }
+
+    /**
      * Sets the full source of the explain request (for example, wrapping an actual query).
      */
     public ExplainRequestBuilder setSource(BytesReference source, boolean unsafe) {
@@ -128,7 +125,7 @@ public class ExplainRequestBuilder extends BaseSearchRequestBuilder<ExplainReque
             request.source(sourceBuilder);
         }
 
-        //client.explain(request, listener);
+        ((SearchClient) client).explain(request, listener);
     }
 
     private ExplainSourceBuilder sourceBuilder() {

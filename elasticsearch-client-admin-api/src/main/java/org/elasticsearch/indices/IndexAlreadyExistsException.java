@@ -21,7 +21,7 @@ package org.elasticsearch.indices;
 
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.IndexException;
-//import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.rest.RestStatus;
 
 /**
  *
@@ -32,8 +32,8 @@ public class IndexAlreadyExistsException extends IndexException {
         super(index, "Already exists");
     }
 
-   /* @Override
+    @Override
     public RestStatus status() {
         return RestStatus.BAD_REQUEST;
-    }*/
+    }
 }

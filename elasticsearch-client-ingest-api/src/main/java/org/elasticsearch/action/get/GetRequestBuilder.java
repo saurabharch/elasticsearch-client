@@ -20,14 +20,14 @@
 package org.elasticsearch.action.get;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.BaseIngestRequestBuilder;
+import org.elasticsearch.action.support.single.shard.SingleShardOperationRequestBuilder;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.common.Nullable;
 
 /**
  * A get document action request builder.
  */
-public class GetRequestBuilder extends BaseIngestRequestBuilder<GetRequest, GetResponse> {
+public class GetRequestBuilder extends SingleShardOperationRequestBuilder<GetRequest, GetResponse, GetRequestBuilder> {
 
     public GetRequestBuilder(IngestClient client) {
         super(client, new GetRequest());
@@ -35,14 +35,6 @@ public class GetRequestBuilder extends BaseIngestRequestBuilder<GetRequest, GetR
 
     public GetRequestBuilder(IngestClient client, @Nullable String index) {
         super(client, new GetRequest(index));
-    }
-
-    /**
-     * Sets the index of the document to fetch.
-     */
-    public GetRequestBuilder setIndex(String index) {
-        request.index(index);
-        return this;
     }
 
     /**
@@ -114,24 +106,8 @@ public class GetRequestBuilder extends BaseIngestRequestBuilder<GetRequest, GetR
         return this;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    public GetRequestBuilder setListenerThreaded(boolean threadedListener) {
-        request.listenerThreaded(threadedListener);
-        return this;
-    }
-
-    /**
-     * Controls if the operation will be executed on a separate thread when executed locally.
-     */
-    public GetRequestBuilder setOperationThreaded(boolean threadedOperation) {
-        request.operationThreaded(threadedOperation);
-        return this;
-    }
-
     @Override
     protected void doExecute(ActionListener<GetResponse> listener) {
-        //client.get(request, listener);
+        ((IngestClient) client).get(request, listener);
     }
 }

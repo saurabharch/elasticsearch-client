@@ -24,16 +24,17 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.io.stream.Streamable;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-//import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
 import java.io.Serializable;
-import org.elasticsearch.action.OperationStatus;
 
 /**
  *
  */
 public class ClusterBlock implements Serializable, Streamable, ToXContent {
+
+    public static final ClusterBlock INDEX_CLOSED_BLOCK = new ClusterBlock(4, "index closed", false, false, RestStatus.FORBIDDEN, ClusterBlockLevel.READ_WRITE);
 
     private int id;
 
@@ -45,12 +46,12 @@ public class ClusterBlock implements Serializable, Streamable, ToXContent {
 
     private boolean disableStatePersistence = false;
 
-    private OperationStatus status;
+    private RestStatus status;
 
     ClusterBlock() {
     }
 
-    public ClusterBlock(int id, String description, boolean retryable, boolean disableStatePersistence, OperationStatus status, ClusterBlockLevel... levels) {
+    public ClusterBlock(int id, String description, boolean retryable, boolean disableStatePersistence, RestStatus status, ClusterBlockLevel... levels) {
         this.id = id;
         this.description = description;
         this.retryable = retryable;
@@ -67,7 +68,7 @@ public class ClusterBlock implements Serializable, Streamable, ToXContent {
         return this.description;
     }
 
-    public OperationStatus status() {
+    public RestStatus status() {
         return this.status;
     }
 
@@ -125,27 +126,27 @@ public class ClusterBlock implements Serializable, Streamable, ToXContent {
     @Override
     public void readFrom(StreamInput in) throws IOException {
         id = in.readVInt();
-        description = in.readString();
+        description = in.readUTF();
         levels = new ClusterBlockLevel[in.readVInt()];
         for (int i = 0; i < levels.length; i++) {
             levels[i] = ClusterBlockLevel.fromId(in.readVInt());
         }
         retryable = in.readBoolean();
         disableStatePersistence = in.readBoolean();
-        //status = RestStatus.readFrom(in);
+        status = RestStatus.readFrom(in);
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(id);
-        out.writeString(description);
+        out.writeUTF(description);
         out.writeVInt(levels.length);
         for (ClusterBlockLevel level : levels) {
             out.writeVInt(level.id());
         }
         out.writeBoolean(retryable);
         out.writeBoolean(disableStatePersistence);
-        //RestStatus.writeTo(out, status);
+        RestStatus.writeTo(out, status);
     }
 
     public String toString() {

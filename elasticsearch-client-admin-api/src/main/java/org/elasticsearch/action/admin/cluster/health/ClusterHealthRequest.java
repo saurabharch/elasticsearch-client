@@ -34,7 +34,7 @@ import static org.elasticsearch.common.unit.TimeValue.readTimeValue;
 /**
  *
  */
-public class ClusterHealthRequest extends MasterNodeOperationRequest {
+public class ClusterHealthRequest extends MasterNodeOperationRequest<ClusterHealthRequest> {
 
     private String[] indices;
 

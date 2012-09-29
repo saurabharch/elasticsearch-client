@@ -34,7 +34,7 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
 /**
  * A request to put a search warmer.
  */
-public class PutWarmerRequest extends MasterNodeOperationRequest {
+public class PutWarmerRequest extends MasterNodeOperationRequest<PutWarmerRequest> {
 
     private String name;
 

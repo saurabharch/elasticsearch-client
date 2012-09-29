@@ -20,7 +20,7 @@
 package org.elasticsearch.action.percolate;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.BaseIngestRequestBuilder;
+import org.elasticsearch.action.support.single.custom.SingleCustomOperationRequestBuilder;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -31,7 +31,7 @@ import java.util.Map;
 /**
  *
  */
-public class PercolateRequestBuilder extends BaseIngestRequestBuilder<PercolateRequest, PercolateResponse> {
+public class PercolateRequestBuilder extends SingleCustomOperationRequestBuilder<PercolateRequest, PercolateResponse, PercolateRequestBuilder> {
 
     public PercolateRequestBuilder(IngestClient client) {
         super(client, new PercolateRequest());
@@ -146,35 +146,9 @@ public class PercolateRequestBuilder extends BaseIngestRequestBuilder<PercolateR
         return this;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    public PercolateRequestBuilder setListenerThreaded(boolean listenerThreaded) {
-        request.listenerThreaded(listenerThreaded);
-        return this;
-    }
-
-    /**
-     * if this operation hits a node with a local relevant shard, should it be preferred
-     * to be executed on, or just do plain round robin. Defaults to <tt>true</tt>
-     */
-    public PercolateRequestBuilder setPreferLocal(boolean preferLocal) {
-        request.preferLocal(preferLocal);
-        return this;
-    }
-
-    /**
-     * Controls if the operation will be executed on a separate thread when executed locally. Defaults
-     * to <tt>true</tt> when running in embedded mode.
-     */
-    public PercolateRequestBuilder setOperationThreaded(boolean operationThreaded) {
-        request.operationThreaded(operationThreaded);
-        return this;
-    }
-
     @Override
     protected void doExecute(ActionListener<PercolateResponse> listener) {
-        //client.percolate(request, listener);
+        ((IngestClient) client).percolate(request, listener);
     }
 
 }

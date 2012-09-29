@@ -50,7 +50,7 @@ import org.elasticsearch.common.Nullable;
  * simply returns an {@link org.elasticsearch.action.ActionFuture}, while the second accepts an
  * {@link org.elasticsearch.action.ActionListener}.
  */
-public interface IngestClient extends Client {
+public interface IngestClient extends GenericClient {
 
     /**
      * Index a JSON source associated with a given index and type.

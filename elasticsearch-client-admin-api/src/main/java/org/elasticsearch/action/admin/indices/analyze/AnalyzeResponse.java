@@ -34,7 +34,7 @@ import java.util.List;
 /**
  *
  */
-public class AnalyzeResponse implements ActionResponse, Iterable<AnalyzeResponse.AnalyzeToken>, ToXContent {
+public class AnalyzeResponse extends ActionResponse implements Iterable<AnalyzeResponse.AnalyzeToken>, ToXContent {
 
     public static class AnalyzeToken implements Streamable {
         private String term;
@@ -106,9 +106,7 @@ public class AnalyzeResponse implements ActionResponse, Iterable<AnalyzeResponse
             startOffset = in.readInt();
             endOffset = in.readInt();
             position = in.readVInt();
-            if (in.readBoolean()) {
-                type = in.readString();
-            }
+            type = in.readOptionalString();
         }
 
         @Override
@@ -117,12 +115,7 @@ public class AnalyzeResponse implements ActionResponse, Iterable<AnalyzeResponse
             out.writeInt(startOffset);
             out.writeInt(endOffset);
             out.writeVInt(position);
-            if (type == null) {
-                out.writeBoolean(false);
-            } else {
-                out.writeBoolean(true);
-                out.writeString(type);
-            }
+            out.writeOptionalString(type);
         }
     }
 
@@ -186,6 +179,7 @@ public class AnalyzeResponse implements ActionResponse, Iterable<AnalyzeResponse
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         int size = in.readVInt();
         tokens = new ArrayList<AnalyzeToken>(size);
         for (int i = 0; i < size; i++) {
@@ -195,6 +189,7 @@ public class AnalyzeResponse implements ActionResponse, Iterable<AnalyzeResponse
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeVInt(tokens.size());
         for (AnalyzeToken token : tokens) {
             token.writeTo(out);

@@ -19,13 +19,13 @@
 
 package org.elasticsearch.common.io;
 
-import org.elasticsearch.common.io.stream.CachedStreamInput;
-import org.elasticsearch.common.io.stream.CachedStreamOutput;
+import org.elasticsearch.common.io.stream.ClientCachedStreamInput;
+import org.elasticsearch.common.io.stream.ClientCachedStreamOutput;
 
 public class CachedStreams {
 
     public static void clear() {
-        CachedStreamInput.clear();
-        CachedStreamOutput.clear();
+        ClientCachedStreamInput.clear();
+        ClientCachedStreamOutput.clear();
     }
 }

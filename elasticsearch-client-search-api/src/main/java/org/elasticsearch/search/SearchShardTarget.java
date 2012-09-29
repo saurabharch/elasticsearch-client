@@ -94,9 +94,9 @@ public class SearchShardTarget implements Streamable, Serializable, Comparable<S
     @Override
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
-            nodeId = in.readString();
+            nodeId = in.readUTF();
         }
-        index = in.readString();
+        index = in.readUTF();
         shardId = in.readVInt();
     }
 
@@ -106,9 +106,9 @@ public class SearchShardTarget implements Streamable, Serializable, Comparable<S
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(nodeId);
+            out.writeUTF(nodeId);
         }
-        out.writeString(index);
+        out.writeUTF(index);
         out.writeVInt(shardId);
     }
 

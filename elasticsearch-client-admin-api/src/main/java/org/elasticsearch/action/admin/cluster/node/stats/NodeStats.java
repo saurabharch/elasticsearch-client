@@ -31,7 +31,7 @@ import org.elasticsearch.monitor.jvm.JvmStats;
 import org.elasticsearch.monitor.network.NetworkStats;
 import org.elasticsearch.monitor.os.OsStats;
 import org.elasticsearch.monitor.process.ProcessStats;
-import org.elasticsearch.threadpool.ThreadPoolStats;
+import org.elasticsearch.threadpool.ClientThreadPoolStats;
 import org.elasticsearch.transport.TransportStats;
 
 import java.io.IOException;
@@ -59,7 +59,7 @@ public class NodeStats extends NodeOperationResponse {
     private JvmStats jvm;
 
     @Nullable
-    private ThreadPoolStats threadPool;
+    private ClientThreadPoolStats threadPool;
 
     @Nullable
     private NetworkStats network;
@@ -77,7 +77,7 @@ public class NodeStats extends NodeOperationResponse {
     }
 
     public NodeStats(DiscoveryNode node, long timestamp, @Nullable String hostname, @Nullable NodeIndicesStats indices,
-                     @Nullable OsStats os, @Nullable ProcessStats process, @Nullable JvmStats jvm, @Nullable ThreadPoolStats threadPool, @Nullable NetworkStats network,
+                     @Nullable OsStats os, @Nullable ProcessStats process, @Nullable JvmStats jvm, @Nullable ClientThreadPoolStats threadPool, @Nullable NetworkStats network,
                      @Nullable FsStats fs, @Nullable TransportStats transport, @Nullable HttpStats http) {
         super(node);
         this.timestamp = timestamp;
@@ -179,7 +179,7 @@ public class NodeStats extends NodeOperationResponse {
      * Thread Pool level statistics.
      */
     @Nullable
-    public ThreadPoolStats threadPool() {
+    public ClientThreadPoolStats threadPool() {
         return this.threadPool;
     }
 
@@ -187,7 +187,7 @@ public class NodeStats extends NodeOperationResponse {
      * Thread Pool level statistics.
      */
     @Nullable
-    public ThreadPoolStats getThreadPool() {
+    public ClientThreadPoolStats getThreadPool() {
         return threadPool();
     }
 
@@ -254,7 +254,7 @@ public class NodeStats extends NodeOperationResponse {
         super.readFrom(in);
         timestamp = in.readVLong();
         if (in.readBoolean()) {
-            hostname = in.readString();
+            hostname = in.readUTF();
         }
         if (in.readBoolean()) {
             indices = NodeIndicesStats.readIndicesStats(in);
@@ -269,7 +269,7 @@ public class NodeStats extends NodeOperationResponse {
             jvm = JvmStats.readJvmStats(in);
         }
         if (in.readBoolean()) {
-            threadPool = ThreadPoolStats.readThreadPoolStats(in);
+            threadPool = ClientThreadPoolStats.readThreadPoolStats(in);
         }
         if (in.readBoolean()) {
             network = NetworkStats.readNetworkStats(in);
@@ -293,7 +293,7 @@ public class NodeStats extends NodeOperationResponse {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(hostname);
+            out.writeUTF(hostname);
         }
         if (indices == null) {
             out.writeBoolean(false);

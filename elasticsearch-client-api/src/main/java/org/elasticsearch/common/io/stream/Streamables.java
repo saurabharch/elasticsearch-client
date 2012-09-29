@@ -34,7 +34,7 @@ public class Streamables {
         int size = in.readVInt();
         Map<String, Object> map = new HashMap<String, Object>(size);
         for (int i = 0; i < size; i++) {
-            map.put(in.readString(), readMapValue(in));
+            map.put(in.readUTF(), readMapValue(in));
         }
         return map;
     }
@@ -44,7 +44,7 @@ public class Streamables {
         if (type == -1) {
             return null;
         } else if (type == 0) {
-            return in.readString();
+            return in.readUTF();
         } else if (type == 1) {
             return in.readInt();
         } else if (type == 2) {
@@ -78,7 +78,7 @@ public class Streamables {
             int size = in.readVInt();
             Map map = new HashMap(size);
             for (int i = 0; i < size; i++) {
-                map.put(in.readString(), readMapValue(in));
+                map.put(in.readUTF(), readMapValue(in));
             }
             return map;
         } else {
@@ -89,7 +89,7 @@ public class Streamables {
     public static void writeMap(StreamOutput out, Map<String, Object> map) throws IOException {
         out.writeVInt(map.size());
         for (Map.Entry<String, Object> entry : map.entrySet()) {
-            out.writeString(entry.getKey());
+            out.writeUTF(entry.getKey());
             writeMapValue(out, entry.getValue());
         }
     }
@@ -102,7 +102,7 @@ public class Streamables {
         Class type = value.getClass();
         if (type == String.class) {
             out.writeByte((byte) 0);
-            out.writeString((String) value);
+            out.writeUTF((String) value);
         } else if (type == Integer.class) {
             out.writeByte((byte) 1);
             out.writeInt((Integer) value);
@@ -141,7 +141,7 @@ public class Streamables {
             Map<String, Object> map = (Map<String, Object>) value;
             out.writeVInt(map.size());
             for (Map.Entry<String, Object> entry : map.entrySet()) {
-                out.writeString(entry.getKey());
+                out.writeUTF(entry.getKey());
                 writeMapValue(out, entry.getValue());
             }
         } else {

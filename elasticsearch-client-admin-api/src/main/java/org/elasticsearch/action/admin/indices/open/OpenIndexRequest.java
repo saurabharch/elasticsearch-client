@@ -34,7 +34,7 @@ import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
 /**
  * A request to open an index.
  */
-public class OpenIndexRequest extends MasterNodeOperationRequest {
+public class OpenIndexRequest extends MasterNodeOperationRequest<OpenIndexRequest> {
 
     private String index;
 

@@ -29,7 +29,7 @@ import org.elasticsearch.cluster.node.DiscoveryNodeFilters;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Preconditions;
 import org.elasticsearch.common.collect.MapBuilder;
-import org.elasticsearch.common.compress.CompressedString;
+import org.elasticsearch.common.compress.BasicCompressedString;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.regex.Regex;
@@ -41,8 +41,8 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
 //import org.elasticsearch.index.mapper.MapperService;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.warmer.IndexWarmersMetaData;
-import org.elasticsearch.action.OperationStatus;
 
 import java.io.IOException;
 import java.util.*;
@@ -53,9 +53,6 @@ import static org.elasticsearch.common.settings.ImmutableSettings.*;
  *
  */
 public class IndexMetaData {
-
-    // from MapperService
-    public static final String DEFAULT_MAPPING = "_default_";
 
     public interface Custom {
 
@@ -119,10 +116,10 @@ public class IndexMetaData {
             .add(IndexMetaData.SETTING_BLOCKS_METADATA)
             .build();
 
-    public static final ClusterBlock INDEX_READ_ONLY_BLOCK = new ClusterBlock(5, "index read-only (api)", false, false, OperationStatus.FORBIDDEN, ClusterBlockLevel.WRITE, ClusterBlockLevel.METADATA);
-    public static final ClusterBlock INDEX_READ_BLOCK = new ClusterBlock(7, "index read (api)", false, false, OperationStatus.FORBIDDEN, ClusterBlockLevel.READ);
-    public static final ClusterBlock INDEX_WRITE_BLOCK = new ClusterBlock(8, "index write (api)", false, false, OperationStatus.FORBIDDEN, ClusterBlockLevel.WRITE);
-    public static final ClusterBlock INDEX_METADATA_BLOCK = new ClusterBlock(9, "index metadata (api)", false, false, OperationStatus.FORBIDDEN, ClusterBlockLevel.METADATA);
+    public static final ClusterBlock INDEX_READ_ONLY_BLOCK = new ClusterBlock(5, "index read-only (api)", false, false, RestStatus.FORBIDDEN, ClusterBlockLevel.WRITE, ClusterBlockLevel.METADATA);
+    public static final ClusterBlock INDEX_READ_BLOCK = new ClusterBlock(7, "index read (api)", false, false, RestStatus.FORBIDDEN, ClusterBlockLevel.READ);
+    public static final ClusterBlock INDEX_WRITE_BLOCK = new ClusterBlock(8, "index write (api)", false, false, RestStatus.FORBIDDEN, ClusterBlockLevel.WRITE);
+    public static final ClusterBlock INDEX_METADATA_BLOCK = new ClusterBlock(9, "index metadata (api)", false, false, RestStatus.FORBIDDEN, ClusterBlockLevel.METADATA);
 
     public static ImmutableSet<String> dynamicSettings() {
         return dynamicSettings;
@@ -320,7 +317,7 @@ public class IndexMetaData {
         if (mapping != null) {
             return mapping;
         }
-        return mappings.get(DEFAULT_MAPPING);
+        return mappings.get("_default_"/*MapperService.DEFAULT_MAPPING*/);
     }
 
     public ImmutableMap<String, Custom> customs() {
@@ -417,7 +414,7 @@ public class IndexMetaData {
             return index;
         }
 
-        public Builder index(String name) {
+        public Builder index(String index) {
             this.index = index;
             return this;
         }
@@ -531,8 +528,8 @@ public class IndexMetaData {
             }
 
             // update default mapping on the MappingMetaData
-            if (mappings.containsKey(DEFAULT_MAPPING)) {
-                MappingMetaData defaultMapping = mappings.get(DEFAULT_MAPPING);
+            if (mappings.containsKey("_default_"/*MapperService.DEFAULT_MAPPING*/)) {
+                MappingMetaData defaultMapping = mappings.get("_default_"/*MapperService.DEFAULT_MAPPING*/);
                 for (MappingMetaData mappingMetaData : mappings.map().values()) {
                     mappingMetaData.updateDefaultMapping(defaultMapping);
                 }
@@ -627,7 +624,7 @@ public class IndexMetaData {
                     if ("mappings".equals(currentFieldName)) {
                         while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
                             if (token == XContentParser.Token.VALUE_EMBEDDED_OBJECT) {
-                                builder.putMapping(new MappingMetaData(new CompressedString(parser.binaryValue())));
+                                builder.putMapping(new MappingMetaData(new BasicCompressedString(parser.binaryValue())));
                             } else {
                                 Map<String, Object> mapping = parser.mapOrdered();
                                 if (mapping.size() == 1) {
@@ -649,7 +646,7 @@ public class IndexMetaData {
         }
 
         public static IndexMetaData readFrom(StreamInput in) throws IOException {
-            Builder builder = new Builder(in.readString());
+            Builder builder = new Builder(in.readUTF());
             builder.version(in.readLong());
             builder.state(State.fromId(in.readByte()));
             builder.settings(readSettingsFromStream(in));
@@ -665,7 +662,7 @@ public class IndexMetaData {
             }
             int customSize = in.readVInt();
             for (int i = 0; i < customSize; i++) {
-                String type = in.readString();
+                String type = in.readUTF();
                 Custom customIndexMetaData = lookupFactorySafe(type).readFrom(in);
                 builder.putCustom(type, customIndexMetaData);
             }
@@ -673,7 +670,7 @@ public class IndexMetaData {
         }
 
         public static void writeTo(IndexMetaData indexMetaData, StreamOutput out) throws IOException {
-            out.writeString(indexMetaData.index());
+            out.writeUTF(indexMetaData.index());
             out.writeLong(indexMetaData.version());
             out.writeByte(indexMetaData.state().id());
             writeSettingsToStream(indexMetaData.settings(), out);
@@ -687,7 +684,7 @@ public class IndexMetaData {
             }
             out.writeVInt(indexMetaData.customs().size());
             for (Map.Entry<String, Custom> entry : indexMetaData.customs().entrySet()) {
-                out.writeString(entry.getKey());
+                out.writeUTF(entry.getKey());
                 lookupFactorySafe(entry.getKey()).writeTo(entry.getValue(), out);
             }
         }

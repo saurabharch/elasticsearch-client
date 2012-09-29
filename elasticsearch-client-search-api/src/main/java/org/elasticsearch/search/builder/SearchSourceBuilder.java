@@ -471,6 +471,7 @@ public class SearchSourceBuilder implements ToXContent {
      * @param lang   The language of the script
      * @param script The script to execute
      * @param params The script parameters (can be <tt>null</tt>)
+     * @return
      */
     public SearchSourceBuilder scriptField(String name, String lang, String script, Map<String, Object> params) {
         if (scriptFields == null) {

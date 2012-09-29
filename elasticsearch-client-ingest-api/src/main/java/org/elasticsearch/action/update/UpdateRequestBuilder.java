@@ -22,11 +22,10 @@ package org.elasticsearch.action.update;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.support.BaseIngestRequestBuilder;
 import org.elasticsearch.action.support.replication.ReplicationType;
+import org.elasticsearch.action.support.single.instance.InstanceShardOperationRequestBuilder;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 
@@ -34,7 +33,7 @@ import java.util.Map;
 
 /**
  */
-public class UpdateRequestBuilder extends BaseIngestRequestBuilder<UpdateRequest, UpdateResponse> {
+public class UpdateRequestBuilder extends InstanceShardOperationRequestBuilder<UpdateRequest, UpdateResponse, UpdateRequestBuilder> {
 
     public UpdateRequestBuilder(IngestClient client) {
         super(client, new UpdateRequest());
@@ -42,14 +41,6 @@ public class UpdateRequestBuilder extends BaseIngestRequestBuilder<UpdateRequest
 
     public UpdateRequestBuilder(IngestClient client, String index, String type, String id) {
         super(client, new UpdateRequest(index, type, id));
-    }
-
-    /**
-     * Sets the index the document will exists on.
-     */
-    public UpdateRequestBuilder setIndex(String index) {
-        request.index(index);
-        return this;
     }
 
     /**
@@ -129,22 +120,6 @@ public class UpdateRequestBuilder extends BaseIngestRequestBuilder<UpdateRequest
      */
     public UpdateRequestBuilder setRetryOnConflict(int retryOnConflict) {
         request.retryOnConflict(retryOnConflict);
-        return this;
-    }
-
-    /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public UpdateRequestBuilder setTimeout(TimeValue timeout) {
-        request.timeout(timeout);
-        return this;
-    }
-
-    /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public UpdateRequestBuilder setTimeout(String timeout) {
-        request.timeout(timeout);
         return this;
     }
 
@@ -241,7 +216,8 @@ public class UpdateRequestBuilder extends BaseIngestRequestBuilder<UpdateRequest
     }
 
     /**
-     * Sets the index request to be used if the document does not exists. 
+     * Sets the index request to be used if the document does not exists. Otherwise, a {@link org.elasticsearch.index.engine.DocumentMissingException}
+     * is thrown.
      */
     public UpdateRequestBuilder setUpsert(IndexRequest indexRequest) {
         request.upsert(indexRequest);
@@ -318,6 +294,6 @@ public class UpdateRequestBuilder extends BaseIngestRequestBuilder<UpdateRequest
 
     @Override
     protected void doExecute(ActionListener<UpdateResponse> listener) {
-        //client.update(request, listener);
+        ((IngestClient) client).update(request, listener);
     }
 }

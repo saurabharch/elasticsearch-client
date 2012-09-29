@@ -22,7 +22,6 @@ package org.elasticsearch.action.count;
 import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.support.broadcast.BroadcastOperationRequest;
-import org.elasticsearch.action.support.broadcast.BroadcastOperationThreading;
 import org.elasticsearch.client.SearchRequests;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Required;
@@ -43,16 +42,16 @@ import java.util.Map;
 
 /**
  * A request to count the number of documents matching a specific query. Best created with
- * {@link org.elasticsearch.client.SearchRequests#countRequest(String...)}.
+ * {@link org.elasticsearch.client.Requests#countRequest(String...)}.
  * <p/>
  * <p>The request requires the query source to be set either using {@link #query(org.elasticsearch.index.query.QueryBuilder)},
  * or {@link #query(byte[])}.
  *
  * @see CountResponse
  * @see org.elasticsearch.client.Client#count(CountRequest)
- * @see org.elasticsearch.client.SearchRequests#countRequest(String...)
+ * @see org.elasticsearch.client.Requests#countRequest(String...)
  */
-public class CountRequest extends BroadcastOperationRequest {
+public class CountRequest extends BroadcastOperationRequest<CountRequest> {
 
     private static final XContentType contentType = SearchRequests.CONTENT_TYPE;
 
@@ -92,35 +91,12 @@ public class CountRequest extends BroadcastOperationRequest {
         return queryHint;
     }
 
-    /**
-     * Controls the operation threading model.
-     */
-    @Override
-    public CountRequest operationThreading(BroadcastOperationThreading operationThreading) {
-        super.operationThreading(operationThreading);
-        return this;
-    }
-
     @Override
     protected void beforeStart() {
         if (querySourceUnsafe) {
             querySource = querySource.copyBytesArray();
             querySourceUnsafe = false;
         }
-    }
-
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    @Override
-    public CountRequest listenerThreaded(boolean threadedListener) {
-        super.listenerThreaded(threadedListener);
-        return this;
-    }
-
-    public CountRequest indices(String... indices) {
-        this.indices = indices;
-        return this;
     }
 
     /**
@@ -265,10 +241,10 @@ public class CountRequest extends BroadcastOperationRequest {
         minScore = in.readFloat();
 
         if (in.readBoolean()) {
-            queryHint = in.readString();
+            queryHint = in.readUTF();
         }
         if (in.readBoolean()) {
-            routing = in.readString();
+            routing = in.readUTF();
         }
 
         querySourceUnsafe = false;
@@ -278,7 +254,7 @@ public class CountRequest extends BroadcastOperationRequest {
         if (typesSize > 0) {
             types = new String[typesSize];
             for (int i = 0; i < typesSize; i++) {
-                types[i] = in.readString();
+                types[i] = in.readUTF();
             }
         }
     }
@@ -292,20 +268,20 @@ public class CountRequest extends BroadcastOperationRequest {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(queryHint);
+            out.writeUTF(queryHint);
         }
         if (routing == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(routing);
+            out.writeUTF(routing);
         }
 
         out.writeBytesReference(querySource);
 
         out.writeVInt(types.length);
         for (String type : types) {
-            out.writeString(type);
+            out.writeUTF(type);
         }
     }
 

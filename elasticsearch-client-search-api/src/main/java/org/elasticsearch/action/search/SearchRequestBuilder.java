@@ -21,7 +21,8 @@ package org.elasticsearch.action.search;
 
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.BaseSearchRequestBuilder;
+import org.elasticsearch.action.ActionRequestBuilder;
+import org.elasticsearch.action.support.IgnoreIndices;
 import org.elasticsearch.client.SearchClient;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -41,7 +42,7 @@ import java.util.Map;
 /**
  * A search action request builder.
  */
-public class SearchRequestBuilder extends BaseSearchRequestBuilder<SearchRequest, SearchResponse> {
+public class SearchRequestBuilder extends ActionRequestBuilder<SearchRequest, SearchResponse, SearchRequestBuilder> {
 
     private SearchSourceBuilder sourceBuilder;
 
@@ -176,10 +177,10 @@ public class SearchRequestBuilder extends BaseSearchRequestBuilder<SearchRequest
     }
 
     /**
-     * Should the listener be called on a separate thread if needed.
+     * Specifies what type of requested indices to ignore. For example indices that don't exist.
      */
-    public SearchRequestBuilder setListenerThreaded(boolean listenerThreaded) {
-        request.listenerThreaded(listenerThreaded);
+    public SearchRequestBuilder setIgnoreIndices(IgnoreIndices ignoreIndices) {
+        request().ignoreIndices(ignoreIndices);
         return this;
     }
 
@@ -803,7 +804,7 @@ public class SearchRequestBuilder extends BaseSearchRequestBuilder<SearchRequest
         if (sourceBuilder != null) {
             request.source(sourceBuilder());
         }
-        //client.search(request, listener);
+        ((SearchClient) client).search(request, listener);
     }
 
     private SearchSourceBuilder sourceBuilder() {

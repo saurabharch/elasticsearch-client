@@ -24,6 +24,7 @@ import org.apache.lucene.search.DocIdSet;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.util.FixedBitSet;
 import org.apache.lucene.util.OpenBitSet;
+import org.elasticsearch.common.Nullable;
 
 import java.io.IOException;
 
@@ -116,7 +117,7 @@ public class DocSets {
     /**
      * Returns a cacheable version of the doc id set (might be the same instance provided as a parameter).
      */
-    public static DocSet cacheable(IndexReader reader, DocIdSet set) throws IOException {
+    public static DocSet cacheable(IndexReader reader, @Nullable DocIdSet set) throws IOException {
         if (set == null) {
             return DocSet.EMPTY_DOC_SET;
         }

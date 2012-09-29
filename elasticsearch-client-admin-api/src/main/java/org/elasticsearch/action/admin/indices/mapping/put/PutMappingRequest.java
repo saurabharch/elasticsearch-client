@@ -50,7 +50,7 @@ import static org.elasticsearch.common.unit.TimeValue.readTimeValue;
  * @see org.elasticsearch.client.IndicesAdminClient#putMapping(PutMappingRequest)
  * @see PutMappingResponse
  */
-public class PutMappingRequest extends MasterNodeOperationRequest {
+public class PutMappingRequest extends MasterNodeOperationRequest<PutMappingRequest> {
 
     private String[] indices;
 
@@ -205,13 +205,8 @@ public class PutMappingRequest extends MasterNodeOperationRequest {
     @Override
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
-        indices = new String[in.readVInt()];
-        for (int i = 0; i < indices.length; i++) {
-            indices[i] = in.readString();
-        }
-        if (in.readBoolean()) {
-            mappingType = in.readString();
-        }
+        indices = in.readStringArray();
+        mappingType = in.readOptionalString();
         mappingSource = in.readString();
         timeout = readTimeValue(in);
         ignoreConflicts = in.readBoolean();
@@ -220,20 +215,8 @@ public class PutMappingRequest extends MasterNodeOperationRequest {
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
-        if (indices == null) {
-            out.writeVInt(0);
-        } else {
-            out.writeVInt(indices.length);
-            for (String index : indices) {
-                out.writeString(index);
-            }
-        }
-        if (mappingType == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(mappingType);
-        }
+        out.writeStringArrayNullable(indices);
+        out.writeOptionalString(mappingType);
         out.writeString(mappingSource);
         timeout.writeTo(out);
         out.writeBoolean(ignoreConflicts);

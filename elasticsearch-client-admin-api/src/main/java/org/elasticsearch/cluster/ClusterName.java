@@ -61,12 +61,12 @@ public class ClusterName implements Streamable {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-        value = in.readString().intern();
+        value = in.readUTF().intern();
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(value);
+        out.writeUTF(value);
     }
 
     @Override

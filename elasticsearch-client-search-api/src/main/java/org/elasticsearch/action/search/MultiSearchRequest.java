@@ -22,6 +22,7 @@ package org.elasticsearch.action.search;
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionRequestValidationException;
+import org.elasticsearch.action.support.IgnoreIndices;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -40,11 +41,11 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
 /**
  * A multi search API request.
  */
-public class MultiSearchRequest implements ActionRequest {
+public class MultiSearchRequest extends ActionRequest<MultiSearchRequest> {
 
     private List<SearchRequest> requests = Lists.newArrayList();
 
-    private boolean listenerThreaded = false;
+    private IgnoreIndices ignoreIndices = IgnoreIndices.DEFAULT;
 
     /**
      * Add a search request to execute. Note, the order is important, the search response will be returned in the
@@ -66,11 +67,11 @@ public class MultiSearchRequest implements ActionRequest {
 
     public MultiSearchRequest add(byte[] data, int from, int length, boolean contentUnsafe,
                                   @Nullable String[] indices, @Nullable String[] types, @Nullable String searchType) throws Exception {
-        return add(new BytesArray(data, from, length), contentUnsafe, indices, types, searchType);
+        return add(new BytesArray(data, from, length), contentUnsafe, indices, types, searchType, IgnoreIndices.NONE);
     }
 
     public MultiSearchRequest add(BytesReference data, boolean contentUnsafe,
-                                  @Nullable String[] indices, @Nullable String[] types, @Nullable String searchType) throws Exception {
+                                  @Nullable String[] indices, @Nullable String[] types, @Nullable String searchType, IgnoreIndices ignoreIndices) throws Exception {
         XContent xContent = XContentFactory.xContent(data);
         int from = 0;
         int length = data.length();
@@ -87,6 +88,9 @@ public class MultiSearchRequest implements ActionRequest {
             }
 
             SearchRequest searchRequest = new SearchRequest(indices);
+            if (ignoreIndices != null) {
+                searchRequest.ignoreIndices(ignoreIndices);
+            }
             if (types != null && types.length > 0) {
                 searchRequest.types(types);
             }
@@ -117,6 +121,8 @@ public class MultiSearchRequest implements ActionRequest {
                                     searchRequest.routing(parser.text());
                                 } else if ("query_hint".equals(currentFieldName) || "queryHint".equals(currentFieldName)) {
                                     searchRequest.queryHint(parser.text());
+                                } else if ("ignore_indices".equals(currentFieldName) || "ignoreIndices".equals(currentFieldName)) {
+                                    searchRequest.ignoreIndices(IgnoreIndices.fromString(parser.text()));
                                 }
                             }
                         }
@@ -176,19 +182,18 @@ public class MultiSearchRequest implements ActionRequest {
         return validationException;
     }
 
-    @Override
-    public boolean listenerThreaded() {
-        return listenerThreaded;
+    public IgnoreIndices ignoreIndices() {
+        return ignoreIndices;
     }
 
-    @Override
-    public MultiSearchRequest listenerThreaded(boolean listenerThreaded) {
-        this.listenerThreaded = listenerThreaded;
+    public MultiSearchRequest ignoreIndices(IgnoreIndices ignoreIndices) {
+        this.ignoreIndices = ignoreIndices;
         return this;
     }
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         int size = in.readVInt();
         for (int i = 0; i < size; i++) {
             SearchRequest request = new SearchRequest();
@@ -199,6 +204,7 @@ public class MultiSearchRequest implements ActionRequest {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeVInt(requests.size());
         for (SearchRequest request : requests) {
             request.writeTo(out);

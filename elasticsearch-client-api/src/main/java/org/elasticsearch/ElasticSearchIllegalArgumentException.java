@@ -19,6 +19,8 @@
 
 package org.elasticsearch;
 
+import org.elasticsearch.rest.RestStatus;
+
 /**
  *
  */
@@ -36,4 +38,8 @@ public class ElasticSearchIllegalArgumentException extends ElasticSearchExceptio
         super(msg, cause);
     }
 
+    @Override
+    public RestStatus status() {
+        return RestStatus.BAD_REQUEST;
+    }
 }

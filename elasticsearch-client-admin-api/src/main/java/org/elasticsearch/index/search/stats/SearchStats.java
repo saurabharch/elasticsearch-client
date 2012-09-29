@@ -260,7 +260,7 @@ public class SearchStats implements Streamable, ToXContent {
             int size = in.readVInt();
             groupStats = new HashMap<String, Stats>(size);
             for (int i = 0; i < size; i++) {
-                groupStats.put(in.readString(), Stats.readStats(in));
+                groupStats.put(in.readUTF(), Stats.readStats(in));
             }
         }
     }
@@ -274,7 +274,7 @@ public class SearchStats implements Streamable, ToXContent {
             out.writeBoolean(true);
             out.writeVInt(groupStats.size());
             for (Map.Entry<String, Stats> entry : groupStats.entrySet()) {
-                out.writeString(entry.getKey());
+                out.writeUTF(entry.getKey());
                 entry.getValue().writeTo(out);
             }
         }

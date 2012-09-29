@@ -21,12 +21,11 @@ package org.elasticsearch.action.index;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.WriteConsistencyLevel;
-import org.elasticsearch.action.support.BaseIngestRequestBuilder;
 import org.elasticsearch.action.support.replication.ReplicationType;
+import org.elasticsearch.action.support.replication.ShardReplicationOperationRequestBuilder;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.VersionType;
@@ -36,7 +35,7 @@ import java.util.Map;
 /**
  * An index document action request builder.
  */
-public class IndexRequestBuilder extends BaseIngestRequestBuilder<IndexRequest, IndexResponse> {
+public class IndexRequestBuilder extends ShardReplicationOperationRequestBuilder<IndexRequest, IndexResponse, IndexRequestBuilder> {
 
     public IndexRequestBuilder(IngestClient client) {
         super(client, new IndexRequest());
@@ -44,14 +43,6 @@ public class IndexRequestBuilder extends BaseIngestRequestBuilder<IndexRequest, 
 
     public IndexRequestBuilder(IngestClient client, @Nullable String index) {
         super(client, new IndexRequest(index));
-    }
-
-    /**
-     * Sets the index to index the document to.
-     */
-    public IndexRequestBuilder setIndex(String index) {
-        request.index(index);
-        return this;
     }
 
     /**
@@ -219,22 +210,6 @@ public class IndexRequestBuilder extends BaseIngestRequestBuilder<IndexRequest, 
     }
 
     /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public IndexRequestBuilder setTimeout(TimeValue timeout) {
-        request.timeout(timeout);
-        return this;
-    }
-
-    /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public IndexRequestBuilder setTimeout(String timeout) {
-        request.timeout(timeout);
-        return this;
-    }
-
-    /**
      * Sets the type of operation to perform.
      */
     public IndexRequestBuilder setOpType(IndexRequest.OpType opType) {
@@ -334,25 +309,8 @@ public class IndexRequestBuilder extends BaseIngestRequestBuilder<IndexRequest, 
         return this;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    public IndexRequestBuilder setListenerThreaded(boolean listenerThreaded) {
-        request.listenerThreaded(listenerThreaded);
-        return this;
-    }
-
-    /**
-     * Controls if the operation will be executed on a separate thread when executed locally. Defaults
-     * to <tt>true</tt> when running in embedded mode.
-     */
-    public IndexRequestBuilder setOperationThreaded(boolean operationThreaded) {
-        request.operationThreaded(operationThreaded);
-        return this;
-    }
-
     @Override
     protected void doExecute(ActionListener<IndexResponse> listener) {
-        client.index(request, listener);
+        ((IngestClient)client).index(request, listener);
     }
 }

@@ -21,7 +21,6 @@ package org.elasticsearch.common;
 
 import org.elasticsearch.monitor.jvm.JvmUtils;
 
-
 /**
  *
  */
@@ -42,7 +41,8 @@ public class Bytes {
      *
      * @param minTargetSize   Minimum required value to be returned.
      * @param bytesPerElement Bytes used by each element of
-     *                        the array.  See constants in RamUsageEstimator.
+     *                        the array.  See constants in {@link RamUsageEstimator}.
+     * @lucene.internal
      */
 
     public static int oversize(int minTargetSize, int bytesPerElement) {

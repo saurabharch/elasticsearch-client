@@ -20,8 +20,7 @@
 package org.elasticsearch.action.count;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.BaseSearchRequestBuilder;
-import org.elasticsearch.action.support.broadcast.BroadcastOperationThreading;
+import org.elasticsearch.action.support.broadcast.BroadcastOperationRequestBuilder;
 import org.elasticsearch.client.SearchClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -29,18 +28,10 @@ import org.elasticsearch.index.query.QueryBuilder;
 /**
  * A count action request builder.
  */
-public class CountRequestBuilder extends BaseSearchRequestBuilder<CountRequest, CountResponse> {
+public class CountRequestBuilder extends BroadcastOperationRequestBuilder<CountRequest, CountResponse, CountRequestBuilder> {
 
     public CountRequestBuilder(SearchClient client) {
         super(client, new CountRequest());
-    }
-
-    /**
-     * Sets the indices the count query will run against.
-     */
-    public CountRequestBuilder setIndices(String... indices) {
-        request.indices(indices);
-        return this;
     }
 
     /**
@@ -124,24 +115,8 @@ public class CountRequestBuilder extends BaseSearchRequestBuilder<CountRequest, 
         return this;
     }
 
-    /**
-     * Controls the operation threading model.
-     */
-    public CountRequestBuilder setOperationThreading(BroadcastOperationThreading operationThreading) {
-        request.operationThreading(operationThreading);
-        return this;
-    }
-
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    public CountRequestBuilder setListenerThreaded(boolean threadedListener) {
-        request.listenerThreaded(threadedListener);
-        return this;
-    }
-
     @Override
     protected void doExecute(ActionListener<CountResponse> listener) {
-        //client.count(request, listener);
+        ((SearchClient) client).count(request, listener);
     }
 }

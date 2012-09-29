@@ -20,7 +20,7 @@
 package org.elasticsearch.common.util.concurrent;
 
 import org.elasticsearch.ElasticSearchException;
-import org.elasticsearch.action.OperationStatus;
+import org.elasticsearch.rest.RestStatus;
 
 /**
  */
@@ -39,7 +39,7 @@ public class EsRejectedExecutionException extends ElasticSearchException {
     }
 
     @Override
-    public OperationStatus status() {
-        return OperationStatus.SERVICE_UNAVAILABLE;
+    public RestStatus status() {
+        return RestStatus.SERVICE_UNAVAILABLE;
     }
 }

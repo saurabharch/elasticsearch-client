@@ -51,12 +51,38 @@ public class BytesStreamOutput extends StreamOutput implements BytesStream {
     }
 
     @Override
+    public boolean seekPositionSupported() {
+        return true;
+    }
+
+    @Override
+    public long position() throws IOException {
+        return count;
+    }
+
+    @Override
+    public void seek(long position) throws IOException {
+        if (position > Integer.MAX_VALUE) {
+            throw new UnsupportedOperationException();
+        }
+        count = (int) position;
+    }
+
+    @Override
     public void writeByte(byte b) throws IOException {
         int newcount = count + 1;
         if (newcount > buf.length) {
             buf = Arrays.copyOf(buf, Bytes.oversize(newcount, 1));
         }
         buf[count] = b;
+        count = newcount;
+    }
+
+    public void skip(int length) {
+        int newcount = count + length;
+        if (newcount > buf.length) {
+            buf = Arrays.copyOf(buf, Bytes.oversize(newcount, 1));
+        }
         count = newcount;
     }
 

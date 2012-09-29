@@ -31,7 +31,7 @@ import java.util.List;
 /**
  *
  */
-public class PercolateResponse implements ActionResponse, Iterable<String> {
+public class PercolateResponse extends ActionResponse implements Iterable<String> {
 
     private List<String> matches;
 
@@ -54,6 +54,7 @@ public class PercolateResponse implements ActionResponse, Iterable<String> {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         int size = in.readVInt();
         matches = new ArrayList<String>(size);
         for (int i = 0; i < size; i++) {
@@ -63,6 +64,7 @@ public class PercolateResponse implements ActionResponse, Iterable<String> {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeVInt(matches.size());
         for (String match : matches) {
             out.writeString(match);

@@ -45,15 +45,15 @@ import static org.elasticsearch.search.Scroll.readScroll;
 
 /**
  * A more like this request allowing to search for documents that a "like" the provided document. The document
- * to check against to fetched based on the index, type and id provided. Best created with {@link org.elasticsearch.client.SearchRequests#moreLikeThisRequest(String)}.
+ * to check against to fetched based on the index, type and id provided. Best created with {@link org.elasticsearch.client.Requests#moreLikeThisRequest(String)}.
  * <p/>
  * <p>Note, the {@link #index()}, {@link #type(String)} and {@link #id(String)} are required.
  *
  * @see org.elasticsearch.client.Client#moreLikeThis(MoreLikeThisRequest)
- * @see org.elasticsearch.client.SearchRequests#moreLikeThisRequest(String)
+ * @see org.elasticsearch.client.Requests#moreLikeThisRequest(String)
  * @see org.elasticsearch.action.search.SearchResponse
  */
-public class MoreLikeThisRequest implements ActionRequest {
+public class MoreLikeThisRequest extends ActionRequest<MoreLikeThisRequest> {
 
     private static final XContentType contentType = SearchRequests.CONTENT_TYPE;
 
@@ -85,8 +85,6 @@ public class MoreLikeThisRequest implements ActionRequest {
 
     private BytesReference searchSource;
     private boolean searchSourceUnsafe;
-
-    private boolean threadedListener = false;
 
     MoreLikeThisRequest() {
     }
@@ -516,25 +514,9 @@ public class MoreLikeThisRequest implements ActionRequest {
         return validationException;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    @Override
-    public boolean listenerThreaded() {
-        return threadedListener;
-    }
-
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    @Override
-    public ActionRequest listenerThreaded(boolean listenerThreaded) {
-        this.threadedListener = listenerThreaded;
-        return this;
-    }
-
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         index = in.readString();
         type = in.readString();
         id = in.readString();
@@ -545,7 +527,7 @@ public class MoreLikeThisRequest implements ActionRequest {
         } else {
             fields = new String[size];
             for (int i = 0; i < size; i++) {
-                fields[i] = in.readString();
+                fields[i] = in.readUTF();
             }
         }
 
@@ -556,7 +538,7 @@ public class MoreLikeThisRequest implements ActionRequest {
         if (size > 0) {
             stopWords = new String[size];
             for (int i = 0; i < size; i++) {
-                stopWords[i] = in.readString();
+                stopWords[i] = in.readUTF();
             }
         }
         minDocFreq = in.readVInt();
@@ -566,7 +548,7 @@ public class MoreLikeThisRequest implements ActionRequest {
         boostTerms = in.readFloat();
         searchType = SearchType.fromId(in.readByte());
         if (in.readBoolean()) {
-            searchQueryHint = in.readString();
+            searchQueryHint = in.readUTF();
         }
         size = in.readVInt();
         if (size == 0) {
@@ -603,6 +585,7 @@ public class MoreLikeThisRequest implements ActionRequest {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeString(index);
         out.writeString(type);
         out.writeString(id);

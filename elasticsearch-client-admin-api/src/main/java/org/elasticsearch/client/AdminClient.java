@@ -22,6 +22,8 @@ package org.elasticsearch.client;
 /**
  * Administrative actions/operations against the cluster or the indices.
  *
+ *
+ * @see org.elasticsearch.client.Client#admin()
  */
 public interface AdminClient {
 

@@ -33,9 +33,9 @@ public class BytesArray implements BytesReference {
 
     public static final BytesArray EMPTY = new BytesArray(Bytes.EMPTY_ARRAY, 0, 0);
 
-    private byte[] bytes;
-    private int offset;
-    private int length;
+    protected byte[] bytes;
+    protected int offset;
+    protected int length;
 
     public BytesArray(String bytes) {
         this(bytes.getBytes(Charsets.UTF_8));

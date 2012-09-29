@@ -19,17 +19,17 @@
 
 package org.elasticsearch.action;
 
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.GenericClient;
 
 /**
- * Main action (used with {@link Client} API.
+ * Main action (used with {@link GenericClient} API.
  */
-public abstract class Action<Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>, GenericClient extends Client>
+public abstract class Action<Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient>
         extends GenericAction<Request, Response> {
 
     protected Action(String name) {
         super(name);
     }
 
-    public abstract RequestBuilder newRequestBuilder(GenericClient client);
+    public abstract RequestBuilder newRequestBuilder(Client client);
 }

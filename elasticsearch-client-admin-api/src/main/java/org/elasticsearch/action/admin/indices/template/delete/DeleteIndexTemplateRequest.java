@@ -34,7 +34,7 @@ import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
 /**
  * A request to delete an index template.
  */
-public class DeleteIndexTemplateRequest extends MasterNodeOperationRequest {
+public class DeleteIndexTemplateRequest extends MasterNodeOperationRequest<DeleteIndexTemplateRequest> {
 
     private String name;
 

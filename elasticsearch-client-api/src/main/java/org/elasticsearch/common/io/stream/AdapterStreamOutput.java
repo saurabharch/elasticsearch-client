@@ -19,6 +19,8 @@
 
 package org.elasticsearch.common.io.stream;
 
+import org.elasticsearch.Version;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.text.Text;
 
@@ -32,6 +34,13 @@ public class AdapterStreamOutput extends StreamOutput {
 
     public AdapterStreamOutput(StreamOutput out) {
         this.out = out;
+        super.setVersion(out.getVersion());
+    }
+
+    @Override
+    public StreamOutput setVersion(Version version) {
+        out.setVersion(version);
+        return super.setVersion(version);
     }
 
     public void setOut(StreamOutput out) {
@@ -40,6 +49,21 @@ public class AdapterStreamOutput extends StreamOutput {
 
     public StreamOutput wrappedOut() {
         return this.out;
+    }
+
+    @Override
+    public boolean seekPositionSupported() {
+        return out.seekPositionSupported();
+    }
+
+    @Override
+    public long position() throws IOException {
+        return out.position();
+    }
+
+    @Override
+    public void seek(long position) throws IOException {
+        out.seek(position);
     }
 
     @Override
@@ -78,7 +102,7 @@ public class AdapterStreamOutput extends StreamOutput {
     }
 
     @Override
-    public void writeBytesReference(BytesReference bytes) throws IOException {
+    public void writeBytesReference(@Nullable BytesReference bytes) throws IOException {
         out.writeBytesReference(bytes);
     }
 
@@ -100,6 +124,11 @@ public class AdapterStreamOutput extends StreamOutput {
     @Override
     public void writeVLong(long i) throws IOException {
         out.writeVLong(i);
+    }
+
+    @Override
+    public void writeUTF(String str) throws IOException {
+        out.writeUTF(str);
     }
 
     @Override

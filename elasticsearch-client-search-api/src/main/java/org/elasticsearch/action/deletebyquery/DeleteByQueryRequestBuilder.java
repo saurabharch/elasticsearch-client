@@ -21,11 +21,10 @@ package org.elasticsearch.action.deletebyquery;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.WriteConsistencyLevel;
-import org.elasticsearch.action.support.BaseSearchRequestBuilder;
+import org.elasticsearch.action.support.replication.IndicesReplicationOperationRequestBuilder;
 import org.elasticsearch.action.support.replication.ReplicationType;
 import org.elasticsearch.client.SearchClient;
 import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -34,18 +33,10 @@ import java.util.Map;
 /**
  *
  */
-public class DeleteByQueryRequestBuilder extends BaseSearchRequestBuilder<DeleteByQueryRequest, DeleteByQueryResponse> {
+public class DeleteByQueryRequestBuilder extends IndicesReplicationOperationRequestBuilder<DeleteByQueryRequest, DeleteByQueryResponse, DeleteByQueryRequestBuilder> {
 
     public DeleteByQueryRequestBuilder(SearchClient client) {
         super(client, new DeleteByQueryRequest());
-    }
-
-    /**
-     * The indices the delete by query will run against.
-     */
-    public DeleteByQueryRequestBuilder setIndices(String... indices) {
-        request.indices(indices);
-        return this;
     }
 
     /**
@@ -141,22 +132,6 @@ public class DeleteByQueryRequestBuilder extends BaseSearchRequestBuilder<Delete
     }
 
     /**
-     * A timeout to wait if the delete by query operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public DeleteByQueryRequestBuilder setTimeout(TimeValue timeout) {
-        request.timeout(timeout);
-        return this;
-    }
-
-    /**
-     * A timeout to wait if the delete by query operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public DeleteByQueryRequestBuilder setTimeout(String timeout) {
-        request.timeout(timeout);
-        return this;
-    }
-
-    /**
      * The replication type to use with this operation.
      */
     public DeleteByQueryRequestBuilder setReplicationType(ReplicationType replicationType) {
@@ -177,16 +152,8 @@ public class DeleteByQueryRequestBuilder extends BaseSearchRequestBuilder<Delete
         return this;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    public DeleteByQueryRequestBuilder setListenerThreaded(boolean threadedListener) {
-        request.listenerThreaded(threadedListener);
-        return this;
-    }
-
     @Override
     protected void doExecute(ActionListener<DeleteByQueryResponse> listener) {
-        //client.deleteByQuery(request, listener);
+        ((SearchClient) client).deleteByQuery(request, listener);
     }
 }

@@ -20,22 +20,17 @@
 package org.elasticsearch.action.admin.indices.cache.clear;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.indices.support.BaseIndicesRequestBuilder;
-import org.elasticsearch.action.support.broadcast.BroadcastOperationThreading;
+import org.elasticsearch.action.support.broadcast.BroadcastOperationRequestBuilder;
 import org.elasticsearch.client.IndicesAdminClient;
+import org.elasticsearch.client.internal.InternalIndicesAdminClient;
 
 /**
  *
  */
-public class ClearIndicesCacheRequestBuilder extends BaseIndicesRequestBuilder<ClearIndicesCacheRequest, ClearIndicesCacheResponse> {
+public class ClearIndicesCacheRequestBuilder extends BroadcastOperationRequestBuilder<ClearIndicesCacheRequest, ClearIndicesCacheResponse, ClearIndicesCacheRequestBuilder> {
 
     public ClearIndicesCacheRequestBuilder(IndicesAdminClient indicesClient) {
-        super(indicesClient, new ClearIndicesCacheRequest());
-    }
-
-    public ClearIndicesCacheRequestBuilder setIndices(String... indices) {
-        request.indices(indices);
-        return this;
+        super((InternalIndicesAdminClient) indicesClient, new ClearIndicesCacheRequest());
     }
 
     public ClearIndicesCacheRequestBuilder setFilterCache(boolean filterCache) {
@@ -63,24 +58,8 @@ public class ClearIndicesCacheRequestBuilder extends BaseIndicesRequestBuilder<C
         return this;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    public ClearIndicesCacheRequestBuilder setListenerThreaded(boolean threadedListener) {
-        request.listenerThreaded(threadedListener);
-        return this;
-    }
-
-    /**
-     * Controls the operation threading model.
-     */
-    public ClearIndicesCacheRequestBuilder setOperationThreading(BroadcastOperationThreading operationThreading) {
-        request.operationThreading(operationThreading);
-        return this;
-    }
-
     @Override
     protected void doExecute(ActionListener<ClearIndicesCacheResponse> listener) {
-        client.clearCache(request, listener);
+        ((IndicesAdminClient) client).clearCache(request, listener);
     }
 }

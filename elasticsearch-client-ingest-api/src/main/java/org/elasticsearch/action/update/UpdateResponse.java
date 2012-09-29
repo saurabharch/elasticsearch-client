@@ -31,18 +31,13 @@ import java.util.List;
 
 /**
  */
-public class UpdateResponse implements ActionResponse {
+public class UpdateResponse extends ActionResponse {
 
     private String index;
-
     private String id;
-
     private String type;
-
     private long version;
-
     private List<String> matches;
-
     private GetResult getResult;
 
     public UpdateResponse() {
@@ -147,6 +142,7 @@ public class UpdateResponse implements ActionResponse {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         index = in.readString();
         id = in.readString();
         type = in.readString();
@@ -179,6 +175,7 @@ public class UpdateResponse implements ActionResponse {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeString(index);
         out.writeString(id);
         out.writeString(type);

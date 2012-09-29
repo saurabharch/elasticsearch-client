@@ -26,7 +26,7 @@ import com.google.common.collect.Sets;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.action.OperationStatus;
+import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,9 +38,6 @@ import java.util.Set;
 public class ClusterBlocks {
 
     public static final ClusterBlocks EMPTY_CLUSTER_BLOCK = new ClusterBlocks(ImmutableSet.<ClusterBlock>of(), ImmutableMap.<String, ImmutableSet<ClusterBlock>>of());
-
-    // moved from org.elasticsearch.cluster.metadata.MetaDataStateIndexService
-    public static final ClusterBlock INDEX_CLOSED_BLOCK = new ClusterBlock(4, "index closed", false, false, OperationStatus.FORBIDDEN, ClusterBlockLevel.READ_WRITE);
 
     private final ImmutableSet<ClusterBlock> global;
 
@@ -113,7 +110,7 @@ public class ClusterBlocks {
     /**
      * Is there a global block with the provided status?
      */
-    public boolean hasGlobalBlock(OperationStatus status) {
+    public boolean hasGlobalBlock(RestStatus status) {
         for (ClusterBlock clusterBlock : global) {
             if (clusterBlock.status().equals(status)) {
                 return true;
@@ -239,7 +236,7 @@ public class ClusterBlocks {
 
         public Builder addBlocks(IndexMetaData indexMetaData) {
             if (indexMetaData.state() == IndexMetaData.State.CLOSE) {
-                addIndexBlock(indexMetaData.index(), INDEX_CLOSED_BLOCK);
+                addIndexBlock(indexMetaData.index(), ClusterBlock.INDEX_CLOSED_BLOCK);
             }
             if (indexMetaData.settings().getAsBoolean(IndexMetaData.SETTING_READ_ONLY, false)) {
                 addIndexBlock(indexMetaData.index(), IndexMetaData.INDEX_READ_ONLY_BLOCK);
@@ -306,7 +303,7 @@ public class ClusterBlocks {
             ImmutableMap.Builder<String, ImmutableSet<ClusterBlock>> indicesBuilder = ImmutableMap.builder();
             int size = in.readVInt();
             for (int j = 0; j < size; j++) {
-                indicesBuilder.put(in.readString().intern(), readBlockSet(in));
+                indicesBuilder.put(in.readUTF().intern(), readBlockSet(in));
             }
             return new ClusterBlocks(global, indicesBuilder.build());
         }
@@ -315,7 +312,7 @@ public class ClusterBlocks {
             writeBlockSet(blocks.global(), out);
             out.writeVInt(blocks.indices().size());
             for (Map.Entry<String, ImmutableSet<ClusterBlock>> entry : blocks.indices().entrySet()) {
-                out.writeString(entry.getKey());
+                out.writeUTF(entry.getKey());
                 writeBlockSet(entry.getValue(), out);
             }
         }

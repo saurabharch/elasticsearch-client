@@ -21,7 +21,7 @@ package org.elasticsearch.cluster.metadata;
 
 import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.compress.CompressedString;
+import org.elasticsearch.common.compress.BasicCompressedString;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.ToXContent;
@@ -39,13 +39,13 @@ public class AliasMetaData {
 
     private final String alias;
 
-    private final CompressedString filter;
+    private final BasicCompressedString filter;
 
     private String indexRouting;
 
     private String searchRouting;
 
-    private AliasMetaData(String alias, CompressedString filter, String indexRouting, String searchRouting) {
+    private AliasMetaData(String alias, BasicCompressedString filter, String indexRouting, String searchRouting) {
         this.alias = alias;
         this.filter = filter;
         this.indexRouting = indexRouting;
@@ -60,11 +60,11 @@ public class AliasMetaData {
         return alias();
     }
 
-    public CompressedString filter() {
+    public BasicCompressedString filter() {
         return filter;
     }
 
-    public CompressedString getFilter() {
+    public BasicCompressedString getFilter() {
         return filter();
     }
 
@@ -121,7 +121,7 @@ public class AliasMetaData {
 
         private String alias;
 
-        private CompressedString filter;
+        private BasicCompressedString filter;
 
         private String indexRouting;
 
@@ -143,7 +143,7 @@ public class AliasMetaData {
             return alias;
         }
 
-        public Builder filter(CompressedString filter) {
+        public Builder filter(BasicCompressedString filter) {
             this.filter = filter;
             return this;
         }
@@ -173,7 +173,7 @@ public class AliasMetaData {
             }
             try {
                 XContentBuilder builder = XContentFactory.jsonBuilder().map(filter);
-                this.filter = new CompressedString(builder.bytes());
+                this.filter = new BasicCompressedString(builder.bytes());
                 return this;
             } catch (IOException e) {
                 throw new ElasticSearchGenerationException("Failed to build json for alias request", e);
@@ -253,7 +253,7 @@ public class AliasMetaData {
                     }
                 } else if (token == XContentParser.Token.VALUE_EMBEDDED_OBJECT) {
                     if ("filter".equals(currentFieldName)) {
-                        builder.filter(new CompressedString(parser.binaryValue()));
+                        builder.filter(new BasicCompressedString(parser.binaryValue()));
                     }
                 } else if (token == XContentParser.Token.VALUE_STRING) {
                     if ("routing".equals(currentFieldName)) {
@@ -269,7 +269,7 @@ public class AliasMetaData {
         }
 
         public static void writeTo(AliasMetaData aliasMetaData, StreamOutput out) throws IOException {
-            out.writeString(aliasMetaData.alias());
+            out.writeUTF(aliasMetaData.alias());
             if (aliasMetaData.filter() != null) {
                 out.writeBoolean(true);
                 aliasMetaData.filter.writeTo(out);
@@ -278,13 +278,13 @@ public class AliasMetaData {
             }
             if (aliasMetaData.indexRouting() != null) {
                 out.writeBoolean(true);
-                out.writeString(aliasMetaData.indexRouting());
+                out.writeUTF(aliasMetaData.indexRouting());
             } else {
                 out.writeBoolean(false);
             }
             if (aliasMetaData.searchRouting() != null) {
                 out.writeBoolean(true);
-                out.writeString(aliasMetaData.searchRouting());
+                out.writeUTF(aliasMetaData.searchRouting());
             } else {
                 out.writeBoolean(false);
             }
@@ -292,18 +292,18 @@ public class AliasMetaData {
         }
 
         public static AliasMetaData readFrom(StreamInput in) throws IOException {
-            String alias = in.readString();
-            CompressedString filter = null;
+            String alias = in.readUTF();
+            BasicCompressedString filter = null;
             if (in.readBoolean()) {
-                filter = CompressedString.readCompressedString(in);
+                filter = BasicCompressedString.readCompressedString(in);
             }
             String indexRouting = null;
             if (in.readBoolean()) {
-                indexRouting = in.readString();
+                indexRouting = in.readUTF();
             }
             String searchRouting = null;
             if (in.readBoolean()) {
-                searchRouting = in.readString();
+                searchRouting = in.readUTF();
             }
             return new AliasMetaData(alias, filter, indexRouting, searchRouting);
         }

@@ -22,6 +22,8 @@ package org.elasticsearch.cluster.node;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.UnmodifiableIterator;
+import org.elasticsearch.ElasticSearchIllegalArgumentException;
+import org.elasticsearch.common.Booleans;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.io.stream.StreamInput;
@@ -176,7 +178,18 @@ public class DiscoveryNodes implements Iterable<DiscoveryNode> {
         return nodesIds == null || nodesIds.length == 0 || (nodesIds.length == 1 && nodesIds[0].equals("_all"));
     }
 
-    public String[] resolveNodes(String... nodesIds) {
+    public DiscoveryNode resolveNode(String node) {
+        String[] resolvedNodeIds = resolveNodesIds(node);
+        if (resolvedNodeIds.length > 1) {
+            throw new ElasticSearchIllegalArgumentException("resolved [" + node + "] into [" + resolvedNodeIds.length + "] nodes, where expected to be resolved to a single node");
+        }
+        if (resolvedNodeIds.length == 0) {
+            throw new ElasticSearchIllegalArgumentException("failed to resolve [" + node + " ], no matching nodes");
+        }
+        return nodes.get(resolvedNodeIds[0]);
+    }
+
+    public String[] resolveNodesIds(String... nodesIds) {
         if (isAllNodes(nodesIds)) {
             int index = 0;
             nodesIds = new String[nodes.size()];
@@ -215,12 +228,26 @@ public class DiscoveryNodes implements Iterable<DiscoveryNode> {
                     if (index != -1) {
                         String matchAttrName = nodeId.substring(0, index);
                         String matchAttrValue = nodeId.substring(index + 1);
-                        for (DiscoveryNode node : this) {
-                            for (Map.Entry<String, String> entry : node.attributes().entrySet()) {
-                                String attrName = entry.getKey();
-                                String attrValue = entry.getValue();
-                                if (Regex.simpleMatch(matchAttrName, attrName) && Regex.simpleMatch(matchAttrValue, attrValue)) {
-                                    resolvedNodesIds.add(node.id());
+                        if ("data".equals(matchAttrName)) {
+                            if (Booleans.parseBoolean(matchAttrValue, true)) {
+                                resolvedNodesIds.addAll(dataNodes.keySet());
+                            } else {
+                                resolvedNodesIds.removeAll(dataNodes.keySet());
+                            }
+                        } else if ("master".equals(matchAttrName)) {
+                            if (Booleans.parseBoolean(matchAttrValue, true)) {
+                                resolvedNodesIds.addAll(masterNodes.keySet());
+                            } else {
+                                resolvedNodesIds.removeAll(masterNodes.keySet());
+                            }
+                        } else {
+                            for (DiscoveryNode node : this) {
+                                for (Map.Entry<String, String> entry : node.attributes().entrySet()) {
+                                    String attrName = entry.getKey();
+                                    String attrValue = entry.getValue();
+                                    if (Regex.simpleMatch(matchAttrName, attrName) && Regex.simpleMatch(matchAttrValue, attrValue)) {
+                                        resolvedNodesIds.add(node.id());
+                                    }
                                 }
                             }
                         }
@@ -472,7 +499,7 @@ public class DiscoveryNodes implements Iterable<DiscoveryNode> {
                 out.writeBoolean(false);
             } else {
                 out.writeBoolean(true);
-                out.writeString(nodes.masterNodeId);
+                out.writeUTF(nodes.masterNodeId);
             }
             out.writeVInt(nodes.size());
             for (DiscoveryNode node : nodes) {
@@ -483,7 +510,7 @@ public class DiscoveryNodes implements Iterable<DiscoveryNode> {
         public static DiscoveryNodes readFrom(StreamInput in, @Nullable DiscoveryNode localNode) throws IOException {
             Builder builder = new Builder();
             if (in.readBoolean()) {
-                builder.masterNodeId(in.readString());
+                builder.masterNodeId(in.readUTF());
             }
             if (localNode != null) {
                 builder.localNodeId(localNode.id());

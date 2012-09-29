@@ -34,7 +34,7 @@ import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
 /**
  * A request to close an index.
  */
-public class CloseIndexRequest extends MasterNodeOperationRequest {
+public class CloseIndexRequest extends MasterNodeOperationRequest<CloseIndexRequest> {
 
     private String index;
 

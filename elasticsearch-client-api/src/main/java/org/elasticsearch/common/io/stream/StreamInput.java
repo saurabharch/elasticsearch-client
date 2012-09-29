@@ -19,6 +19,8 @@
 
 package org.elasticsearch.common.io.stream;
 
+import org.elasticsearch.Version;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -34,6 +36,17 @@ import java.util.*;
  *
  */
 public abstract class StreamInput extends InputStream {
+
+    private Version version = Version.CURRENT;
+
+    public Version getVersion() {
+        return this.version;
+    }
+
+    public StreamInput setVersion(Version version) {
+        this.version = version;
+        return this;
+    }
 
     /**
      * Reads and returns a single byte.
@@ -55,6 +68,14 @@ public abstract class StreamInput extends InputStream {
      */
     public BytesReference readBytesReference() throws IOException {
         int length = readVInt();
+        return readBytesReference(length);
+    }
+
+    /**
+     * Reads a bytes reference from this stream, might hold an actual reference to the underlying
+     * bytes of the stream.
+     */
+    public BytesReference readBytesReference(int length) throws IOException {
         if (length == 0) {
             return BytesArray.EMPTY;
         }
@@ -144,11 +165,25 @@ public abstract class StreamInput extends InputStream {
         return i | ((b & 0x7FL) << 56);
     }
 
-    public Text readText() throws IOException {
-        // use StringAndBytes so we can cache the string if its ever converted to it
-        return new StringAndBytesText(readBytesReference());
+    /**
+     * @deprecated use {@link #readOptionalString()}
+     */
+    @Nullable
+    @Deprecated
+    public String readOptionalUTF() throws IOException {
+        if (readBoolean()) {
+            return readUTF();
+        }
+        return null;
     }
 
+    public Text readText() throws IOException {
+        // use StringAndBytes so we can cache the string if its ever converted to it
+        int length = readInt();
+        return new StringAndBytesText(readBytesReference(length));
+    }
+
+    @Nullable
     public String readOptionalString() throws IOException {
         if (readBoolean()) {
             return readString();
@@ -158,7 +193,7 @@ public abstract class StreamInput extends InputStream {
 
     public String readString() throws IOException {
         int charCount = readVInt();
-        char[] chars = CachedStreamInput.getCharArray(charCount);
+        char[] chars = ClientCachedStreamInput.getCharArray(charCount);
         int c, charIndex = 0;
         while (charIndex < charCount) {
             c = readByte() & 0xff;
@@ -184,6 +219,15 @@ public abstract class StreamInput extends InputStream {
         }
         return new String(chars, 0, charCount);
     }
+
+    /**
+     * @deprecated use {@link #readString()}
+     */
+    @Deprecated
+    public String readUTF() throws IOException {
+        return readString();
+    }
+
 
     public final float readFloat() throws IOException {
         return Float.intBitsToFloat(readInt());
@@ -236,11 +280,13 @@ public abstract class StreamInput extends InputStream {
         return ret;
     }
 
+    @Nullable
     public Map<String, Object> readMap() throws IOException {
         return (Map<String, Object>) readGenericValue();
     }
 
     @SuppressWarnings({"unchecked"})
+    @Nullable
     public Object readGenericValue() throws IOException {
         byte type = readByte();
         switch (type) {
@@ -299,6 +345,8 @@ public abstract class StreamInput extends InputStream {
                 return new DateTime(readLong());
             case 14:
                 return readBytesReference();
+            case 15:
+                return readText();
             default:
                 throw new IOException("Can't read unknown type [" + type + "]");
         }

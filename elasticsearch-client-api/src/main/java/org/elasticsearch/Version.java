@@ -19,8 +19,10 @@
 
 package org.elasticsearch;
 
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
+import org.elasticsearch.monitor.jvm.JvmInfo;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -81,6 +83,8 @@ public class Version implements Serializable {
     public static final Version V_0_19_8 = new Version(V_0_19_8_ID, false);
     public static final int V_0_19_9_ID = /*00*/190999;
     public static final Version V_0_19_9 = new Version(V_0_19_9_ID, false);
+    public static final int V_0_19_10_ID = /*00*/191099;
+    public static final Version V_0_19_10 = new Version(V_0_19_10_ID, false);
 
     public static final int V_0_20_0_Beta1_ID = /*00*/200001;
     public static final Version V_0_20_0_Beta1 = new Version(V_0_20_0_Beta1_ID, true);
@@ -93,24 +97,8 @@ public class Version implements Serializable {
 
     public static Version fromId(int id) {
         switch (id) {
-            case V_0_18_0_ID:
-                return V_0_18_0;
-            case V_0_18_1_ID:
-                return V_0_18_1;
-            case V_0_18_2_ID:
-                return V_0_18_2;
-            case V_0_18_3_ID:
-                return V_0_18_3;
-            case V_0_18_4_ID:
-                return V_0_18_4;
-            case V_0_18_5_ID:
-                return V_0_18_5;
-            case V_0_18_6_ID:
-                return V_0_18_6;
-            case V_0_18_7_ID:
-                return V_0_18_7;
-            case V_0_18_8_ID:
-                return V_0_18_8;
+            case V_0_20_0_Beta1_ID:
+                return V_0_20_0_Beta1;
 
             case V_0_19_0_RC1_ID:
                 return V_0_19_0_RC1;
@@ -138,9 +126,27 @@ public class Version implements Serializable {
                 return V_0_19_8;
             case V_0_19_9_ID:
                 return V_0_19_9;
+            case V_0_19_10_ID:
+                return V_0_19_10;
 
-            case V_0_20_0_Beta1_ID:
-                return V_0_20_0_Beta1;
+            case V_0_18_0_ID:
+                return V_0_18_0;
+            case V_0_18_1_ID:
+                return V_0_18_1;
+            case V_0_18_2_ID:
+                return V_0_18_2;
+            case V_0_18_3_ID:
+                return V_0_18_3;
+            case V_0_18_4_ID:
+                return V_0_18_4;
+            case V_0_18_5_ID:
+                return V_0_18_5;
+            case V_0_18_6_ID:
+                return V_0_18_6;
+            case V_0_18_7_ID:
+                return V_0_18_7;
+            case V_0_18_8_ID:
+                return V_0_18_8;
 
             default:
                 return new Version(id, null);
@@ -158,7 +164,7 @@ public class Version implements Serializable {
     public final byte build;
     public final Boolean snapshot;
 
-    Version(int id, Boolean snapshot) {
+    Version(int id, @Nullable Boolean snapshot) {
         this.id = id;
         this.major = (byte) ((id / 1000000) % 100);
         this.minor = (byte) ((id / 10000) % 100);
@@ -179,6 +185,14 @@ public class Version implements Serializable {
         return version.id >= id;
     }
 
+    public boolean before(Version version) {
+        return version.id < id;
+    }
+
+    public boolean onOrBefore(Version version) {
+        return version.id <= id;
+    }
+
     /**
      * Just the version number (without -SNAPSHOT if snapshot).
      */
@@ -194,7 +208,7 @@ public class Version implements Serializable {
     }
 
     public static void main(String[] args) {
-        System.out.println("ElasticSearch Client Lite Version: " + Version.CURRENT);
+        System.out.println("ElasticSearch Version: " + Version.CURRENT + ", JVM: " + JvmInfo.jvmInfo().vmVersion());
     }
 
     @Override
@@ -205,5 +219,22 @@ public class Version implements Serializable {
             sb.append("-SNAPSHOT");
         }
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Version version = (Version) o;
+
+        if (id != version.id) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 }

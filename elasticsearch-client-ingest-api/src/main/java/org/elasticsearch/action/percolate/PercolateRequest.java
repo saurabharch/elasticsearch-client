@@ -39,7 +39,7 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
 /**
  *
  */
-public class PercolateRequest extends SingleCustomOperationRequest {
+public class PercolateRequest extends SingleCustomOperationRequest<PercolateRequest> {
 
     private String index;
     private String type;
@@ -143,16 +143,6 @@ public class PercolateRequest extends SingleCustomOperationRequest {
     public PercolateRequest source(BytesReference source, boolean unsafe) {
         this.source = source;
         this.sourceUnsafe = unsafe;
-        return this;
-    }
-
-    /**
-     * if this operation hits a node with a local relevant shard, should it be preferred
-     * to be executed on, or just do plain round robin. Defaults to <tt>true</tt>
-     */
-    @Override
-    public PercolateRequest preferLocal(boolean preferLocal) {
-        super.preferLocal(preferLocal);
         return this;
     }
 

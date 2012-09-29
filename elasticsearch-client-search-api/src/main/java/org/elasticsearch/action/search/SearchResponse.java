@@ -27,22 +27,22 @@ import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.common.xcontent.XContentFactory;
-//import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.facet.Facets;
-//import org.elasticsearch.search.internal.InternalSearchResponse;
+import org.elasticsearch.search.internal.InternalSearchResponse;
 
 import java.io.IOException;
 
 import static org.elasticsearch.action.search.ShardSearchFailure.readShardSearchFailure;
-//import static org.elasticsearch.search.internal.InternalSearchResponse.readInternalSearchResponse;
+import static org.elasticsearch.search.internal.InternalSearchResponse.readInternalSearchResponse;
 
 /**
  * A response of a search request.
  */
-public class SearchResponse implements ActionResponse, ToXContent {
+public class SearchResponse extends ActionResponse implements ToXContent {
 
-   // private InternalSearchResponse internalResponse;
+    private InternalSearchResponse internalResponse;
 
     private String scrollId;
 
@@ -57,8 +57,8 @@ public class SearchResponse implements ActionResponse, ToXContent {
     public SearchResponse() {
     }
 
-    public SearchResponse(/*InternalSearchResponse internalResponse, */String scrollId, int totalShards, int successfulShards, long tookInMillis, ShardSearchFailure[] shardFailures) {
-       // this.internalResponse = internalResponse;
+    public SearchResponse(InternalSearchResponse internalResponse, String scrollId, int totalShards, int successfulShards, long tookInMillis, ShardSearchFailure[] shardFailures) {
+        this.internalResponse = internalResponse;
         this.scrollId = scrollId;
         this.totalShards = totalShards;
         this.successfulShards = successfulShards;
@@ -66,7 +66,7 @@ public class SearchResponse implements ActionResponse, ToXContent {
         this.shardFailures = shardFailures;
     }
 
-    /*public RestStatus status() {
+    public RestStatus status() {
         if (shardFailures.length == 0) {
             return RestStatus.OK;
         }
@@ -82,13 +82,13 @@ public class SearchResponse implements ActionResponse, ToXContent {
             return status;
         }
         return RestStatus.OK;
-    }*/
+    }
 
     /**
      * The search hits.
      */
     public SearchHits hits() {
-        return null; //internalResponse.hits();
+        return internalResponse.hits();
     }
 
     /**
@@ -102,7 +102,7 @@ public class SearchResponse implements ActionResponse, ToXContent {
      * The search facets.
      */
     public Facets facets() {
-        return null; //internalResponse.facets();
+        return internalResponse.facets();
     }
 
     /**
@@ -116,7 +116,7 @@ public class SearchResponse implements ActionResponse, ToXContent {
      * Has the search operation timed out.
      */
     public boolean timedOut() {
-        return false; //internalResponse.timedOut();
+        return internalResponse.timedOut();
     }
 
     /**
@@ -261,7 +261,7 @@ public class SearchResponse implements ActionResponse, ToXContent {
                     builder.field(Fields.INDEX, shardFailure.shard().index());
                     builder.field(Fields.SHARD, shardFailure.shard().shardId());
                 }
-                builder.field(Fields.STATUS, 0 /*shardFailure.status().getStatus() */);
+                builder.field(Fields.STATUS, shardFailure.status().getStatus());
                 builder.field(Fields.REASON, shardFailure.reason());
                 builder.endObject();
             }
@@ -269,7 +269,7 @@ public class SearchResponse implements ActionResponse, ToXContent {
         }
 
         builder.endObject();
-       // internalResponse.toXContent(builder, params);
+        internalResponse.toXContent(builder, params);
         return builder;
     }
 
@@ -281,7 +281,8 @@ public class SearchResponse implements ActionResponse, ToXContent {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-       // internalResponse = readInternalSearchResponse(in);
+        super.readFrom(in);
+        internalResponse = readInternalSearchResponse(in);
         totalShards = in.readVInt();
         successfulShards = in.readVInt();
         int size = in.readVInt();
@@ -293,15 +294,14 @@ public class SearchResponse implements ActionResponse, ToXContent {
                 shardFailures[i] = readShardSearchFailure(in);
             }
         }
-        if (in.readBoolean()) {
-            scrollId = in.readString();
-        }
+        scrollId = in.readOptionalString();
         tookInMillis = in.readVLong();
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        //internalResponse.writeTo(out);
+        super.writeTo(out);
+        internalResponse.writeTo(out);
         out.writeVInt(totalShards);
         out.writeVInt(successfulShards);
 
@@ -310,12 +310,7 @@ public class SearchResponse implements ActionResponse, ToXContent {
             shardSearchFailure.writeTo(out);
         }
 
-        if (scrollId == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(scrollId);
-        }
+        out.writeOptionalString(scrollId);
         out.writeVLong(tookInMillis);
     }
 

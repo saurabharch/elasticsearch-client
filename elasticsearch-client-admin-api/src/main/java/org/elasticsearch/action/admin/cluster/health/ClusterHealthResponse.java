@@ -36,30 +36,19 @@ import static org.elasticsearch.action.admin.cluster.health.ClusterIndexHealth.r
 /**
  *
  */
-public class ClusterHealthResponse implements ActionResponse, Iterable<ClusterIndexHealth> {
+public class ClusterHealthResponse extends ActionResponse implements Iterable<ClusterIndexHealth> {
 
     private String clusterName;
-
     int numberOfNodes = 0;
-
     int numberOfDataNodes = 0;
-
     int activeShards = 0;
-
     int relocatingShards = 0;
-
     int activePrimaryShards = 0;
-
     int initializingShards = 0;
-
     int unassignedShards = 0;
-
     boolean timedOut = false;
-
     ClusterHealthStatus status = ClusterHealthStatus.RED;
-
     private List<String> validationFailures;
-
     Map<String, ClusterIndexHealth> indices = Maps.newHashMap();
 
     ClusterHealthResponse() {
@@ -201,6 +190,7 @@ public class ClusterHealthResponse implements ActionResponse, Iterable<ClusterIn
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         clusterName = in.readString();
         activePrimaryShards = in.readVInt();
         activeShards = in.readVInt();
@@ -228,6 +218,7 @@ public class ClusterHealthResponse implements ActionResponse, Iterable<ClusterIn
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeString(clusterName);
         out.writeVInt(activePrimaryShards);
         out.writeVInt(activeShards);
@@ -245,7 +236,7 @@ public class ClusterHealthResponse implements ActionResponse, Iterable<ClusterIn
 
         out.writeVInt(validationFailures.size());
         for (String failure : validationFailures) {
-            out.writeString(failure);
+            out.writeUTF(failure);
         }
     }
 

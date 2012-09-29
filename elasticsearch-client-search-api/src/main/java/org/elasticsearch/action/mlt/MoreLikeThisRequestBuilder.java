@@ -21,9 +21,9 @@ package org.elasticsearch.action.mlt;
 
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.support.BaseSearchRequestBuilder;
 import org.elasticsearch.client.SearchClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.search.Scroll;
@@ -33,7 +33,7 @@ import java.util.Map;
 
 /**
  */
-public class MoreLikeThisRequestBuilder extends BaseSearchRequestBuilder<MoreLikeThisRequest, SearchResponse> {
+public class MoreLikeThisRequestBuilder extends ActionRequestBuilder<MoreLikeThisRequest, SearchResponse, MoreLikeThisRequestBuilder> {
 
     public MoreLikeThisRequestBuilder(SearchClient client) {
         super(client, new MoreLikeThisRequest());
@@ -238,6 +238,6 @@ public class MoreLikeThisRequestBuilder extends BaseSearchRequestBuilder<MoreLik
 
     @Override
     protected void doExecute(ActionListener<SearchResponse> listener) {
-        //client.moreLikeThis(request, listener);
+        ((SearchClient) client).moreLikeThis(request, listener);
     }
 }

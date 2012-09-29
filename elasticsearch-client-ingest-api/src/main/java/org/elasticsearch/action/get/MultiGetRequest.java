@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultiGetRequest implements ActionRequest {
+public class MultiGetRequest extends ActionRequest<MultiGetRequest> {
 
     /**
      * A single get item.
@@ -111,45 +111,45 @@ public class MultiGetRequest implements ActionRequest {
 
         @Override
         public void readFrom(StreamInput in) throws IOException {
-            index = in.readString();
+            index = in.readUTF();
             if (in.readBoolean()) {
-                type = in.readString();
+                type = in.readUTF();
             }
-            id = in.readString();
+            id = in.readUTF();
             if (in.readBoolean()) {
-                routing = in.readString();
+                routing = in.readUTF();
             }
             int size = in.readVInt();
             if (size > 0) {
                 fields = new String[size];
                 for (int i = 0; i < size; i++) {
-                    fields[i] = in.readString();
+                    fields[i] = in.readUTF();
                 }
             }
         }
 
         @Override
         public void writeTo(StreamOutput out) throws IOException {
-            out.writeString(index);
+            out.writeUTF(index);
             if (type == null) {
                 out.writeBoolean(false);
             } else {
                 out.writeBoolean(true);
-                out.writeString(type);
+                out.writeUTF(type);
             }
-            out.writeString(id);
+            out.writeUTF(id);
             if (routing == null) {
                 out.writeBoolean(false);
             } else {
                 out.writeBoolean(true);
-                out.writeString(routing);
+                out.writeUTF(routing);
             }
             if (fields == null) {
                 out.writeVInt(0);
             } else {
                 out.writeVInt(fields.length);
                 for (String field : fields) {
-                    out.writeString(field);
+                    out.writeUTF(field);
                 }
             }
         }
@@ -170,17 +170,6 @@ public class MultiGetRequest implements ActionRequest {
 
     public MultiGetRequest add(String index, @Nullable String type, String id) {
         items.add(new Item(index, type, id));
-        return this;
-    }
-
-    @Override
-    public boolean listenerThreaded() {
-        return listenerThreaded;
-    }
-
-    @Override
-    public MultiGetRequest listenerThreaded(boolean listenerThreaded) {
-        this.listenerThreaded = listenerThreaded;
         return this;
     }
 
@@ -305,9 +294,8 @@ public class MultiGetRequest implements ActionRequest {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-        if (in.readBoolean()) {
-            preference = in.readString();
-        }
+        super.readFrom(in);
+        preference = in.readOptionalString();
         refresh = in.readBoolean();
         byte realtime = in.readByte();
         if (realtime == 0) {
@@ -325,12 +313,8 @@ public class MultiGetRequest implements ActionRequest {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        if (preference == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(preference);
-        }
+        super.writeTo(out);
+        out.writeOptionalString(preference);
         out.writeBoolean(refresh);
         if (realtime == null) {
             out.writeByte((byte) -1);

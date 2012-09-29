@@ -23,6 +23,7 @@ import org.apache.lucene.search.Explanation;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
+import org.elasticsearch.index.get.GetResult;
 
 import java.io.IOException;
 
@@ -32,10 +33,11 @@ import static org.elasticsearch.common.lucene.Lucene.writeExplanation;
 /**
  * Response containing the score explanation.
  */
-public class ExplainResponse implements ActionResponse {
+public class ExplainResponse extends ActionResponse {
 
-    private Explanation explanation;
     private boolean exists;
+    private Explanation explanation;
+    private GetResult getResult;
 
     ExplainResponse() {
     }
@@ -47,6 +49,12 @@ public class ExplainResponse implements ActionResponse {
     public ExplainResponse(boolean exists, Explanation explanation) {
         this.exists = exists;
         this.explanation = explanation;
+    }
+
+    public ExplainResponse(boolean exists, Explanation explanation, GetResult getResult) {
+        this.exists = exists;
+        this.explanation = explanation;
+        this.getResult = getResult;
     }
 
     public Explanation getExplanation() {
@@ -77,20 +85,39 @@ public class ExplainResponse implements ActionResponse {
         return exists();
     }
 
+    public GetResult getResult() {
+        return getResult;
+    }
+
+    public GetResult getGetResult() {
+        return getResult();
+    }
+
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         exists = in.readBoolean();
         if (in.readBoolean()) {
             explanation = readExplanation(in);
         }
+        if (in.readBoolean()) {
+            getResult = GetResult.readGetResult(in);
+        }
     }
 
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeBoolean(exists);
         if (explanation == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
             writeExplanation(out, explanation);
+        }
+        if (getResult == null) {
+            out.writeBoolean(false);
+        } else {
+            out.writeBoolean(true);
+            getResult.writeTo(out);
         }
     }
 }

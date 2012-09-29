@@ -21,7 +21,7 @@ package org.elasticsearch.cluster.block;
 
 import com.google.common.collect.ImmutableSet;
 import org.elasticsearch.ElasticSearchException;
-//import org.elasticsearch.rest.RestStatus;
+import org.elasticsearch.rest.RestStatus;
 
 /**
  *
@@ -51,13 +51,12 @@ public class ClusterBlockException extends ElasticSearchException {
     private static String buildMessage(ImmutableSet<ClusterBlock> blocks) {
         StringBuilder sb = new StringBuilder("blocked by: ");
         for (ClusterBlock block : blocks) {
-            //sb.append("[").append(block.status()).append("/").append(block.id()).append("/").append(block.description()).append("];");
-            sb.append("[").append(block.id()).append("/").append(block.description()).append("];");
+            sb.append("[").append(block.status()).append("/").append(block.id()).append("/").append(block.description()).append("];");
         }
         return sb.toString();
     }
 
-    /*@Override
+    @Override
     public RestStatus status() {
         RestStatus status = null;
         for (ClusterBlock block : blocks) {
@@ -68,5 +67,5 @@ public class ClusterBlockException extends ElasticSearchException {
             }
         }
         return status;
-    }*/
+    }
 }

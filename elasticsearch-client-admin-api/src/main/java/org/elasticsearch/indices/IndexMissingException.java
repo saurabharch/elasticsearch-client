@@ -19,10 +19,9 @@
 
 package org.elasticsearch.indices;
 
-import org.elasticsearch.action.OperationStatus;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.IndexException;
-
+import org.elasticsearch.rest.RestStatus;
 
 /**
  *
@@ -34,7 +33,7 @@ public class IndexMissingException extends IndexException {
     }
 
     @Override
-    public OperationStatus status() {
-        return OperationStatus.NOT_FOUND;
+    public RestStatus status() {
+        return RestStatus.NOT_FOUND;
     }
 }

@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.io.stream.Streamable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,20 +31,15 @@ import java.util.List;
 /**
  * A response of an index operation,
  *
- *
  * @see org.elasticsearch.action.index.IndexRequest
  * @see org.elasticsearch.client.Client#index(IndexRequest)
  */
-public class IndexResponse implements ActionResponse, Streamable {
+public class IndexResponse extends ActionResponse {
 
     private String index;
-
     private String id;
-
     private String type;
-
     private long version;
-
     private List<String> matches;
 
     public IndexResponse() {
@@ -138,6 +132,7 @@ public class IndexResponse implements ActionResponse, Streamable {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
+        super.readFrom(in);
         index = in.readString();
         id = in.readString();
         type = in.readString();
@@ -167,6 +162,7 @@ public class IndexResponse implements ActionResponse, Streamable {
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
+        super.writeTo(out);
         out.writeString(index);
         out.writeString(id);
         out.writeString(type);

@@ -32,7 +32,7 @@ import org.elasticsearch.monitor.jvm.JvmInfo;
 import org.elasticsearch.monitor.network.NetworkInfo;
 import org.elasticsearch.monitor.os.OsInfo;
 import org.elasticsearch.monitor.process.ProcessInfo;
-import org.elasticsearch.threadpool.ThreadPoolInfo;
+import org.elasticsearch.threadpool.ClientThreadPoolInfo;
 import org.elasticsearch.transport.TransportInfo;
 
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class NodeInfo extends NodeOperationResponse {
     private JvmInfo jvm;
 
     @Nullable
-    private ThreadPoolInfo threadPool;
+    private ClientThreadPoolInfo threadPool;
 
     @Nullable
     private NetworkInfo network;
@@ -77,7 +77,7 @@ public class NodeInfo extends NodeOperationResponse {
     }
 
     public NodeInfo(@Nullable String hostname, DiscoveryNode node, @Nullable ImmutableMap<String, String> serviceAttributes, @Nullable Settings settings,
-                    @Nullable OsInfo os, @Nullable ProcessInfo process, @Nullable JvmInfo jvm, @Nullable ThreadPoolInfo threadPool, @Nullable NetworkInfo network,
+                    @Nullable OsInfo os, @Nullable ProcessInfo process, @Nullable JvmInfo jvm, @Nullable ClientThreadPoolInfo threadPool, @Nullable NetworkInfo network,
                     @Nullable TransportInfo transport, @Nullable HttpInfo http) {
         super(node);
         this.hostname = hostname;
@@ -189,12 +189,12 @@ public class NodeInfo extends NodeOperationResponse {
     }
 
     @Nullable
-    public ThreadPoolInfo threadPool() {
+    public ClientThreadPoolInfo threadPool() {
         return this.threadPool;
     }
 
     @Nullable
-    public ThreadPoolInfo getThreadPool() {
+    public ClientThreadPoolInfo getThreadPool() {
         return threadPool();
     }
 
@@ -244,13 +244,13 @@ public class NodeInfo extends NodeOperationResponse {
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
         if (in.readBoolean()) {
-            hostname = in.readString();
+            hostname = in.readUTF();
         }
         if (in.readBoolean()) {
             ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
             int size = in.readVInt();
             for (int i = 0; i < size; i++) {
-                builder.put(in.readString(), in.readString());
+                builder.put(in.readUTF(), in.readUTF());
             }
             serviceAttributes = builder.build();
         }
@@ -267,7 +267,7 @@ public class NodeInfo extends NodeOperationResponse {
             jvm = JvmInfo.readJvmInfo(in);
         }
         if (in.readBoolean()) {
-            threadPool = ThreadPoolInfo.readThreadPoolInfo(in);
+            threadPool = ClientThreadPoolInfo.readThreadPoolInfo(in);
         }
         if (in.readBoolean()) {
             network = NetworkInfo.readNetworkInfo(in);
@@ -287,7 +287,7 @@ public class NodeInfo extends NodeOperationResponse {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(hostname);
+            out.writeUTF(hostname);
         }
         if (serviceAttributes() == null) {
             out.writeBoolean(false);
@@ -295,8 +295,8 @@ public class NodeInfo extends NodeOperationResponse {
             out.writeBoolean(true);
             out.writeVInt(serviceAttributes.size());
             for (Map.Entry<String, String> entry : serviceAttributes.entrySet()) {
-                out.writeString(entry.getKey());
-                out.writeString(entry.getValue());
+                out.writeUTF(entry.getKey());
+                out.writeUTF(entry.getValue());
             }
         }
         if (settings == null) {

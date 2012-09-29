@@ -19,6 +19,9 @@
 
 package org.elasticsearch.action;
 
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.transport.TransportRequestOptions;
+
 /**
  * A generic action. Should strive to make it a singleton.
  */
@@ -45,6 +48,12 @@ public abstract class GenericAction<Request extends ActionRequest, Response exte
      */
     public abstract Response newResponse();
 
+    /**
+     * Optional request options for the action.
+     */
+    public TransportRequestOptions transportOptions(Settings settings) {
+        return TransportRequestOptions.EMPTY;
+    }
 
     @Override
     public boolean equals(Object o) {

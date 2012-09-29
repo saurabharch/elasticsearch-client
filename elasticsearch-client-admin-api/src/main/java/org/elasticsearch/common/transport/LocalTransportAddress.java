@@ -59,12 +59,12 @@ public class LocalTransportAddress implements TransportAddress {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-        id = in.readString();
+        id = in.readUTF();
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(id);
+        out.writeUTF(id);
     }
 
     @Override

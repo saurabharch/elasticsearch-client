@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.UnmodifiableIterator;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
+import org.elasticsearch.common.jsr166y.ThreadLocalRandom;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -33,7 +34,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.collect.Lists.newArrayList;
-import org.elasticsearch.common.jsr166y.ThreadLocalRandom;
 
 /**
  *
@@ -51,12 +51,12 @@ public class IndexShardRoutingTable implements Iterable<ShardRouting> {
 
     final AtomicInteger counter;
 
-    final boolean allocatedPostApi;
+    final boolean primaryAllocatedPostApi;
 
-    IndexShardRoutingTable(ShardId shardId, ImmutableList<ShardRouting> shards, boolean allocatedPostApi) {
+    IndexShardRoutingTable(ShardId shardId, ImmutableList<ShardRouting> shards, boolean primaryAllocatedPostApi) {
         this.shardId = shardId;
         this.shards = shards;
-        this.allocatedPostApi = allocatedPostApi;
+        this.primaryAllocatedPostApi = primaryAllocatedPostApi;
         this.counter = new AtomicInteger(ThreadLocalRandom.current().nextInt(shards.size()));
 
         ShardRouting primary = null;
@@ -120,15 +120,15 @@ public class IndexShardRoutingTable implements Iterable<ShardRouting> {
                 shardRoutings.add(new ImmutableShardRouting(shards.get(i), highestVersion));
             }
         }
-        return new IndexShardRoutingTable(shardId, ImmutableList.copyOf(shardRoutings), allocatedPostApi);
+        return new IndexShardRoutingTable(shardId, ImmutableList.copyOf(shardRoutings), primaryAllocatedPostApi);
     }
 
     /**
      * Has this shard group primary shard been allocated post API creation. Will be set to
      * <tt>true</tt> if it was created because of recovery action.
      */
-    public boolean allocatedPostApi() {
-        return allocatedPostApi;
+    public boolean primaryAllocatedPostApi() {
+        return primaryAllocatedPostApi;
     }
 
     public ShardId shardId() {
@@ -404,18 +404,18 @@ public class IndexShardRoutingTable implements Iterable<ShardRouting> {
 
         private final List<ShardRouting> shards;
 
-        private boolean allocatedPostApi;
+        private boolean primaryAllocatedPostApi;
 
         public Builder(IndexShardRoutingTable indexShard) {
             this.shardId = indexShard.shardId;
             this.shards = newArrayList(indexShard.shards);
-            this.allocatedPostApi = indexShard.allocatedPostApi();
+            this.primaryAllocatedPostApi = indexShard.primaryAllocatedPostApi();
         }
 
-        public Builder(ShardId shardId, boolean allocatedPostApi) {
+        public Builder(ShardId shardId, boolean primaryAllocatedPostApi) {
             this.shardId = shardId;
             this.shards = newArrayList();
-            this.allocatedPostApi = allocatedPostApi;
+            this.primaryAllocatedPostApi = primaryAllocatedPostApi;
         }
 
         public Builder addShard(ImmutableShardRouting shardEntry) {
@@ -438,18 +438,18 @@ public class IndexShardRoutingTable implements Iterable<ShardRouting> {
 
         public IndexShardRoutingTable build() {
             // we can automatically set allocatedPostApi to true if the primary is active
-            if (!allocatedPostApi) {
+            if (!primaryAllocatedPostApi) {
                 for (ShardRouting shardRouting : shards) {
                     if (shardRouting.primary() && shardRouting.active()) {
-                        allocatedPostApi = true;
+                        primaryAllocatedPostApi = true;
                     }
                 }
             }
-            return new IndexShardRoutingTable(shardId, ImmutableList.copyOf(shards), allocatedPostApi);
+            return new IndexShardRoutingTable(shardId, ImmutableList.copyOf(shards), primaryAllocatedPostApi);
         }
 
         public static IndexShardRoutingTable readFrom(StreamInput in) throws IOException {
-            String index = in.readString();
+            String index = in.readUTF();
             return readFromThin(in, index);
         }
 
@@ -468,13 +468,13 @@ public class IndexShardRoutingTable implements Iterable<ShardRouting> {
         }
 
         public static void writeTo(IndexShardRoutingTable indexShard, StreamOutput out) throws IOException {
-            out.writeString(indexShard.shardId().index().name());
+            out.writeUTF(indexShard.shardId().index().name());
             writeToThin(indexShard, out);
         }
 
         public static void writeToThin(IndexShardRoutingTable indexShard, StreamOutput out) throws IOException {
             out.writeVInt(indexShard.shardId.id());
-            out.writeBoolean(indexShard.allocatedPostApi());
+            out.writeBoolean(indexShard.primaryAllocatedPostApi());
 
             out.writeVInt(indexShard.shards.size());
             for (ShardRouting entry : indexShard) {

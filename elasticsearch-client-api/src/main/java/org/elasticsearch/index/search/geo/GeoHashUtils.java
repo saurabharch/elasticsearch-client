@@ -122,6 +122,7 @@ public class GeoHashUtils {
      * Decodes the given geohash into a latitude and longitude
      *
      * @param geohash Geohash to deocde
+     * @return Array with the latitude at index 0, and longitude at index 1
      */
     public static void decode(String geohash, double[] ret) {
 //        double[] latInterval = {-90.0, 90.0};

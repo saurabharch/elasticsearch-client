@@ -5,7 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  *
  */
-public class SettingsFilter  {
+public class SettingsFilter {
 
     public static interface Filter {
 

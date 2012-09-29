@@ -21,6 +21,7 @@ package org.elasticsearch.common.settings;
 
 import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.Version;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.SizeValue;
 import org.elasticsearch.common.unit.TimeValue;
@@ -64,6 +65,7 @@ public interface Settings {
     /**
      * The class loader associated with this settings, but only if explicitly set, otherwise <tt>null</tt>.
      */
+    @Nullable
     ClassLoader getClassLoaderIfSet();
 
     /**

@@ -33,7 +33,7 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
  * A request to analyze a text associated with a specific index. Allow to provide
  * the actual analyzer name to perform the analysis with.
  */
-public class AnalyzeRequest extends SingleCustomOperationRequest {
+public class AnalyzeRequest extends SingleCustomOperationRequest<AnalyzeRequest> {
 
     private String index;
 
@@ -118,16 +118,6 @@ public class AnalyzeRequest extends SingleCustomOperationRequest {
 
     public String field() {
         return this.field;
-    }
-
-    /**
-     * if this operation hits a node with a local relevant shard, should it be preferred
-     * to be executed on, or just do plain round robin. Defaults to <tt>true</tt>
-     */
-    @Override
-    public AnalyzeRequest preferLocal(boolean preferLocal) {
-        super.preferLocal(preferLocal);
-        return this;
     }
 
     @Override

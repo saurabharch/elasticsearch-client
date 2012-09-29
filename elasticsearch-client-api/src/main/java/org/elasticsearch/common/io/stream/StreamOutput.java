@@ -19,7 +19,10 @@
 
 package org.elasticsearch.common.io.stream;
 
+import org.elasticsearch.Version;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
+import org.elasticsearch.common.io.UTF8StreamWriter;
 import org.elasticsearch.common.text.Text;
 import org.joda.time.ReadableInstant;
 
@@ -34,6 +37,29 @@ import java.util.Map;
  *
  */
 public abstract class StreamOutput extends OutputStream {
+
+    private Version version = Version.CURRENT;
+
+    public Version getVersion() {
+        return this.version;
+    }
+
+    public StreamOutput setVersion(Version version) {
+        this.version = version;
+        return this;
+    }
+
+    public boolean seekPositionSupported() {
+        return false;
+    }
+
+    public long position() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void seek(long position) throws IOException {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Writes a single byte.
@@ -71,7 +97,7 @@ public abstract class StreamOutput extends OutputStream {
     /**
      * Writes the bytes reference, including a length header.
      */
-    public void writeBytesReference(BytesReference bytes) throws IOException {
+    public void writeBytesReference(@Nullable BytesReference bytes) throws IOException {
         if (bytes == null) {
             writeVInt(0);
             return;
@@ -129,7 +155,17 @@ public abstract class StreamOutput extends OutputStream {
         writeByte((byte) i);
     }
 
-    public void writeOptionalString(String str) throws IOException {
+    @Deprecated
+    public void writeOptionalUTF(@Nullable String str) throws IOException {
+        if (str == null) {
+            writeBoolean(false);
+        } else {
+            writeBoolean(true);
+            writeUTF(str);
+        }
+    }
+
+    public void writeOptionalString(@Nullable String str) throws IOException {
         if (str == null) {
             writeBoolean(false);
         } else {
@@ -139,9 +175,23 @@ public abstract class StreamOutput extends OutputStream {
     }
 
     public void writeText(Text text) throws IOException {
-        // always write the bytes...
-        // TODO: TextBytesOptimization we could potentially optimize this, and write the bytes directly to the output stream converting to UTF8 in case its a string
-        writeBytesReference(text.bytes());
+        if (!text.hasBytes() && seekPositionSupported()) {
+            long pos1 = position();
+            // make room for the size
+            seek(pos1 + 4);
+            UTF8StreamWriter utf8StreamWriter = ClientCachedStreamOutput.utf8StreamWriter();
+            utf8StreamWriter.setOutput(this);
+            utf8StreamWriter.write(text.string());
+            utf8StreamWriter.close();
+            long pos2 = position();
+            seek(pos1);
+            writeInt((int) (pos2 - pos1 - 4));
+            seek(pos2);
+        } else {
+            BytesReference bytes = text.bytes();
+            writeInt(bytes.length());
+            bytes.writeTo(this);
+        }
     }
 
     public void writeString(String str) throws IOException {
@@ -161,6 +211,16 @@ public abstract class StreamOutput extends OutputStream {
                 writeByte((byte) (0x80 | c >> 0 & 0x3F));
             }
         }
+    }
+
+    /**
+     * Writes a string.
+     *
+     * @deprecated use {@link #writeString(String)}
+     */
+    @Deprecated
+    public void writeUTF(String str) throws IOException {
+        writeString(str);
     }
 
     public void writeFloat(float v) throws IOException {
@@ -185,13 +245,11 @@ public abstract class StreamOutput extends OutputStream {
     /**
      * Forces any buffered output to be written.
      */
-    @Override
     public abstract void flush() throws IOException;
 
     /**
      * Closes this stream to further operations.
      */
-    @Override
     public abstract void close() throws IOException;
 
     public abstract void reset() throws IOException;
@@ -213,11 +271,25 @@ public abstract class StreamOutput extends OutputStream {
         }
     }
 
-    public void writeMap(Map<String, Object> map) throws IOException {
+    /**
+     * Writes a string array, for nullable string, writes it as 0 (empty string).
+     */
+    public void writeStringArrayNullable(@Nullable String[] array) throws IOException {
+        if (array == null) {
+            writeVInt(0);
+        } else {
+            writeVInt(array.length);
+            for (String s : array) {
+                writeString(s);
+            }
+        }
+    }
+
+    public void writeMap(@Nullable Map<String, Object> map) throws IOException {
         writeGenericValue(map);
     }
 
-    public void writeGenericValue(Object value) throws IOException {
+    public void writeGenericValue(@Nullable Object value) throws IOException {
         if (value == null) {
             writeByte((byte) -1);
             return;
@@ -283,6 +355,9 @@ public abstract class StreamOutput extends OutputStream {
         } else if (value instanceof BytesReference) {
             writeByte((byte) 14);
             writeBytesReference((BytesReference) value);
+        } else if (value instanceof Text) {
+            writeByte((byte) 15);
+            writeText((Text) value);
         } else {
             throw new IOException("Can't write type [" + type + "]");
         }

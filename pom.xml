@@ -6,7 +6,7 @@
 
     <groupId>org.elasticsearch.client</groupId>
     <artifactId>elasticsearch-client</artifactId>
-    <version>0.0.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -198,6 +198,11 @@
         <module>elasticsearch-client-ingest-api</module>
         <module>elasticsearch-client-search-api</module>
         <module>elasticsearch-client-admin-api</module>
+        <module>elasticsearch-client-compression-lzf</module>
+        <module>elasticsearch-client-compression-snappy</module>
+        <module>elasticsearch-transport-api</module>
+        <module>elasticsearch-transport-netty</module>
+        <module>elasticsearch-discovery-tao</module>
     </modules>
 
 </project>

@@ -20,7 +20,7 @@
 package org.elasticsearch.action.search;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.support.BaseSearchRequestBuilder;
+import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.client.SearchClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.Scroll;
@@ -28,7 +28,7 @@ import org.elasticsearch.search.Scroll;
 /**
  * A search scroll action request builder.
  */
-public class SearchScrollRequestBuilder extends BaseSearchRequestBuilder<SearchScrollRequest, SearchResponse> {
+public class SearchScrollRequestBuilder extends ActionRequestBuilder<SearchScrollRequest, SearchResponse, SearchScrollRequestBuilder> {
 
     public SearchScrollRequestBuilder(SearchClient client) {
         super(client, new SearchScrollRequest());
@@ -88,6 +88,6 @@ public class SearchScrollRequestBuilder extends BaseSearchRequestBuilder<SearchS
 
     @Override
     protected void doExecute(ActionListener<SearchResponse> listener) {
-        //client.searchScroll(request, listener);
+        ((SearchClient) client).searchScroll(request, listener);
     }
 }

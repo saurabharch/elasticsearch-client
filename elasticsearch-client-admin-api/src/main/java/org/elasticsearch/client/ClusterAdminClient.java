@@ -48,22 +48,20 @@ import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsResp
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequestBuilder;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
+import org.elasticsearch.client.internal.InternalClusterAdminClient;
 
 /**
  * Administrative actions/operations against indices.
  *
  * @see AdminClient#cluster()
  */
-public interface ClusterAdminClient extends Client {
+public interface ClusterAdminClient extends InternalClusterAdminClient {
 
-    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>> 
-             ActionFuture<Response> execute(final ClusterAction<Request, Response, RequestBuilder> action, final Request request);
+    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(final ClusterAction<Request, Response, RequestBuilder> action, final Request request);
 
-    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>> 
-            void execute(final ClusterAction<Request, Response, RequestBuilder> action, final Request request, ActionListener<Response> listener);
+    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> void execute(final ClusterAction<Request, Response, RequestBuilder> action, final Request request, ActionListener<Response> listener);
 
-    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response>> 
-            RequestBuilder prepareExecute(final ClusterAction<Request, Response, RequestBuilder> action);
+    <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> RequestBuilder prepareExecute(final ClusterAction<Request, Response, RequestBuilder> action);
 
     /**
      * The health of the cluster.

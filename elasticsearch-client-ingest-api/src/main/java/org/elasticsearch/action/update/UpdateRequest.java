@@ -30,7 +30,6 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
@@ -43,7 +42,7 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
 
 /**
  */
-public class UpdateRequest extends InstanceShardOperationRequest {
+public class UpdateRequest extends InstanceShardOperationRequest<UpdateRequest> {
 
     private String type;
     private String id;
@@ -96,14 +95,6 @@ public class UpdateRequest extends InstanceShardOperationRequest {
             validationException = addValidationError("script or doc is missing", validationException);
         }
         return validationException;
-    }
-
-    /**
-     * Sets the index the document will exists on.
-     */
-    public UpdateRequest index(String index) {
-        this.index = index;
-        return this;
     }
 
     /**
@@ -296,21 +287,6 @@ public class UpdateRequest extends InstanceShardOperationRequest {
     }
 
     /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public UpdateRequest timeout(TimeValue timeout) {
-        this.timeout = timeout;
-        return this;
-    }
-
-    /**
-     * A timeout to wait if the index operation can't be performed immediately. Defaults to <tt>1m</tt>.
-     */
-    public UpdateRequest timeout(String timeout) {
-        return timeout(TimeValue.parseTimeValue(timeout, null));
-    }
-
-    /**
      * Should a refresh be executed post this update operation causing the operation to
      * be searchable. Note, heavy indexing should not set this to <tt>true</tt>. Defaults
      * to <tt>false</tt>.
@@ -419,7 +395,8 @@ public class UpdateRequest extends InstanceShardOperationRequest {
     }
 
     /**
-     * Sets the index request to be used if the document does not exists. 
+     * Sets the index request to be used if the document does not exists. Otherwise, a {@link org.elasticsearch.index.engine.DocumentMissingException}
+     * is thrown.
      */
     public UpdateRequest upsert(IndexRequest upsertRequest) {
         this.upsertRequest = upsertRequest;

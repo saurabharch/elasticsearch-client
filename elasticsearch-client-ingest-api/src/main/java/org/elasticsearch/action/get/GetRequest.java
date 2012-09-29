@@ -40,7 +40,7 @@ import java.io.IOException;
  * @see org.elasticsearch.client.Requests#getRequest(String)
  * @see org.elasticsearch.client.Client#get(GetRequest)
  */
-public class GetRequest extends SingleShardOperationRequest {
+public class GetRequest extends SingleShardOperationRequest<GetRequest> {
 
     protected String type;
     protected String id;
@@ -89,15 +89,6 @@ public class GetRequest extends SingleShardOperationRequest {
             validationException = ValidateActions.addValidationError("id is missing", validationException);
         }
         return validationException;
-    }
-
-    /**
-     * Sets the index of the document to fetch.
-     */
-    @Required
-    public GetRequest index(String index) {
-        this.index = index;
-        return this;
     }
 
     /**
@@ -206,37 +197,13 @@ public class GetRequest extends SingleShardOperationRequest {
         return this;
     }
 
-    /**
-     * Should the listener be called on a separate thread if needed.
-     */
-    @Override
-    public GetRequest listenerThreaded(boolean threadedListener) {
-        super.listenerThreaded(threadedListener);
-        return this;
-    }
-
-    /**
-     * Controls if the operation will be executed on a separate thread when executed locally.
-     */
-    @Override
-    public GetRequest operationThreaded(boolean threadedOperation) {
-        super.operationThreaded(threadedOperation);
-        return this;
-    }
-
     @Override
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
-
         type = in.readString();
         id = in.readString();
-        if (in.readBoolean()) {
-            routing = in.readString();
-        }
-        if (in.readBoolean()) {
-            preference = in.readString();
-        }
-
+        routing = in.readOptionalString();
+        preference = in.readOptionalString();
         refresh = in.readBoolean();
         int size = in.readInt();
         if (size >= 0) {
@@ -256,21 +223,10 @@ public class GetRequest extends SingleShardOperationRequest {
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
-
         out.writeString(type);
         out.writeString(id);
-        if (routing == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(routing);
-        }
-        if (preference == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeString(preference);
-        }
+        out.writeOptionalString(routing);
+        out.writeOptionalString(preference);
 
         out.writeBoolean(refresh);
         if (fields == null) {

@@ -20,6 +20,7 @@
 package org.elasticsearch.common.util.concurrent;
 
 import com.google.common.annotations.Beta;
+import org.elasticsearch.common.Nullable;
 
 import java.util.concurrent.*;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
@@ -27,12 +28,12 @@ import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
- * An abstract implementation of the ListenableFuture interface. This
+ * An abstract implementation of the {@link com.google.common.util.concurrent.ListenableFuture} interface. This
  * class is preferable to {@link java.util.concurrent.FutureTask} for two
  * reasons: It implements {@code ListenableFuture}, and it does not implement
  * {@code Runnable}. (If you want a {@code Runnable} implementation of {@code
- * ListenableFuture}, create a ListenableFutureTask, or submit your
- * tasks to a ListeningExecutorService.)
+ * ListenableFuture}, create a {@link com.google.common.util.concurrent.ListenableFutureTask}, or submit your
+ * tasks to a {@link com.google.common.util.concurrent.ListeningExecutorService}.)
  * <p/>
  * <p>This class implements all methods in {@code ListenableFuture}.
  * Subclasses should provide a way to set the result of the computation through
@@ -48,7 +49,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * failure in changing the future's state.  Valid states are running,
  * completed, failed, or cancelled.
  * <p/>
- * <p>This class uses an ExecutionList to guarantee that all registered
+ * <p>This class uses an {@link com.google.common.util.concurrent.ExecutionList} to guarantee that all registered
  * listeners will be executed, either when the future finishes or, for listeners
  * that are added after the future completes, immediately.
  * {@code Runnable}-{@code Executor} pairs are stored in the execution list but
@@ -155,7 +156,7 @@ public abstract class BaseFuture<V> implements Future<V> {
      * @param value the value that was the result of the task.
      * @return true if the state was successfully changed.
      */
-    protected boolean set(V value) {
+    protected boolean set(@Nullable V value) {
         boolean result = sync.set(value);
         if (result) {
             done();
@@ -312,7 +313,7 @@ public abstract class BaseFuture<V> implements Future<V> {
         /**
          * Transition to the COMPLETED state and set the value.
          */
-        boolean set(V v) {
+        boolean set(@Nullable V v) {
             return complete(v, null, COMPLETED);
         }
 
@@ -334,22 +335,28 @@ public abstract class BaseFuture<V> implements Future<V> {
          * Implementation of completing a task.  Either {@code v} or {@code t} will
          * be set but not both.  The {@code finalState} is the state to change to
          * from {@link #RUNNING}.  If the state is not in the RUNNING state we
-         * return {@code false}.
+         * return {@code false} after waiting for the state to be set to a valid
+         * final state ({@link #COMPLETED} or {@link #CANCELLED}).
          *
          * @param v          the value to set as the result of the computation.
          * @param t          the exception to set as the result of the computation.
          * @param finalState the state to transition to.
          */
-        private boolean complete(V v, Throwable t, int finalState) {
-            if (compareAndSetState(RUNNING, COMPLETING)) {
+        private boolean complete(@Nullable V v, @Nullable Throwable t,
+                                 int finalState) {
+            boolean doCompletion = compareAndSetState(RUNNING, COMPLETING);
+            if (doCompletion) {
+                // If this thread successfully transitioned to COMPLETING, set the value
+                // and exception and then release to the final state.
                 this.value = v;
                 this.exception = t;
                 releaseShared(finalState);
-                return true;
+            } else if (getState() == COMPLETING) {
+                // If some other thread is currently completing the future, block until
+                // they are done so we can guarantee completion.
+                acquireShared(-1);
             }
-
-            // The state was not RUNNING, so there are no valid transitions.
-            return false;
+            return doCompletion;
         }
     }
 }

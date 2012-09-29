@@ -58,7 +58,7 @@ import static org.elasticsearch.common.unit.TimeValue.readTimeValue;
  * @see org.elasticsearch.client.Requests#createIndexRequest(String)
  * @see CreateIndexResponse
  */
-public class CreateIndexRequest extends MasterNodeOperationRequest {
+public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRequest> {
 
     private String cause = "";
 
@@ -343,15 +343,6 @@ public class CreateIndexRequest extends MasterNodeOperationRequest {
      */
     public CreateIndexRequest timeout(String timeout) {
         return timeout(TimeValue.parseTimeValue(timeout, null));
-    }
-
-    /**
-     * A timeout value in case the master has not been discovered yet or disconnected.
-     */
-    @Override
-    public CreateIndexRequest masterNodeTimeout(TimeValue timeout) {
-        this.masterNodeTimeout = timeout;
-        return this;
     }
 
     @Override

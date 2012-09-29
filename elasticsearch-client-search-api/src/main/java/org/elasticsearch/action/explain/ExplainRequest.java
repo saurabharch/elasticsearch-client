@@ -34,7 +34,7 @@ import java.io.IOException;
 /**
  * Explain request encapsulating the explain query and document identifier to get an explanation for.
  */
-public class ExplainRequest extends SingleShardOperationRequest {
+public class ExplainRequest extends SingleShardOperationRequest<ExplainRequest> {
 
     private static final XContentType contentType = SearchRequests.CONTENT_TYPE;
 
@@ -43,6 +43,7 @@ public class ExplainRequest extends SingleShardOperationRequest {
     private String routing;
     private String preference;
     private BytesReference source;
+    private String[] fields;
     private boolean sourceUnsafe;
 
     private String[] filteringAlias = Strings.EMPTY_ARRAY;
@@ -54,11 +55,6 @@ public class ExplainRequest extends SingleShardOperationRequest {
         this.index = index;
         this.type = type;
         this.id = id;
-    }
-
-    public ExplainRequest index(String index) {
-        this.index = index;
-        return this;
     }
 
     public String type() {
@@ -125,6 +121,15 @@ public class ExplainRequest extends SingleShardOperationRequest {
         return this;
     }
 
+    public String[] fields() {
+        return fields;
+    }
+
+    public ExplainRequest fields(String[] fields) {
+        this.fields = fields;
+        return this;
+    }
+
     public String[] filteringAlias() {
         return filteringAlias;
     }
@@ -135,18 +140,6 @@ public class ExplainRequest extends SingleShardOperationRequest {
         }
 
         this.filteringAlias = filteringAlias;
-    }
-
-    @Override
-    public ExplainRequest listenerThreaded(boolean threadedListener) {
-        super.listenerThreaded(threadedListener);
-        return this;
-    }
-
-    @Override
-    public ExplainRequest operationThreaded(boolean threadedOperation) {
-        super.operationThreaded(threadedOperation);
-        return this;
     }
 
     @Override
@@ -182,6 +175,9 @@ public class ExplainRequest extends SingleShardOperationRequest {
         source = in.readBytesReference();
         sourceUnsafe = false;
         filteringAlias = in.readStringArray();
+        if (in.readBoolean()) {
+            fields = in.readStringArray();
+        }
     }
 
     @Override
@@ -193,5 +189,11 @@ public class ExplainRequest extends SingleShardOperationRequest {
         out.writeOptionalString(preference);
         out.writeBytesReference(source);
         out.writeStringArray(filteringAlias);
+        if (fields != null) {
+            out.writeBoolean(true);
+            out.writeStringArray(fields);
+        } else {
+            out.writeBoolean(false);
+        }
     }
 }

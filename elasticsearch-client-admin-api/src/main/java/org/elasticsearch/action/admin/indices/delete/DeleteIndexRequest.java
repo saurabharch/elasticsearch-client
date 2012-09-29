@@ -34,7 +34,7 @@ import static org.elasticsearch.common.unit.TimeValue.timeValueSeconds;
 /**
  * A request to delete an index. Best created with {@link org.elasticsearch.client.Requests#deleteIndexRequest(String)}.
  */
-public class DeleteIndexRequest extends MasterNodeOperationRequest {
+public class DeleteIndexRequest extends MasterNodeOperationRequest<DeleteIndexRequest> {
 
     private String[] indices;
 

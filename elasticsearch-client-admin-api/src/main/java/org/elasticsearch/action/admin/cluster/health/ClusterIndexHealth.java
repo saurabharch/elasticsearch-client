@@ -170,7 +170,7 @@ public class ClusterIndexHealth implements Iterable<ClusterShardHealth>, Streama
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-        index = in.readString();
+        index = in.readUTF();
         numberOfShards = in.readVInt();
         numberOfReplicas = in.readVInt();
         activePrimaryShards = in.readVInt();
@@ -190,14 +190,14 @@ public class ClusterIndexHealth implements Iterable<ClusterShardHealth>, Streama
             validationFailures = ImmutableList.of();
         } else {
             for (int i = 0; i < size; i++) {
-                validationFailures.add(in.readString());
+                validationFailures.add(in.readUTF());
             }
         }
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(index);
+        out.writeUTF(index);
         out.writeVInt(numberOfShards);
         out.writeVInt(numberOfReplicas);
         out.writeVInt(activePrimaryShards);
@@ -214,7 +214,7 @@ public class ClusterIndexHealth implements Iterable<ClusterShardHealth>, Streama
 
         out.writeVInt(validationFailures.size());
         for (String failure : validationFailures) {
-            out.writeString(failure);
+            out.writeUTF(failure);
         }
     }
 }

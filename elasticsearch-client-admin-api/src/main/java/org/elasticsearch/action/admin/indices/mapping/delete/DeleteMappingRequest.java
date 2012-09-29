@@ -31,7 +31,7 @@ import static org.elasticsearch.action.ValidateActions.addValidationError;
 /**
  *
  */
-public class DeleteMappingRequest extends MasterNodeOperationRequest {
+public class DeleteMappingRequest extends MasterNodeOperationRequest<DeleteMappingRequest> {
 
     private String[] indices;
 

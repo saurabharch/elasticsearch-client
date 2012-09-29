@@ -75,11 +75,11 @@ public class Index implements Serializable, Streamable {
 
     @Override
     public void readFrom(StreamInput in) throws IOException {
-        name = in.readString().intern();
+        name = in.readUTF().intern();
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(name);
+        out.writeUTF(name);
     }
 }

@@ -20,7 +20,7 @@
 package org.elasticsearch.indices;
 
 import org.elasticsearch.ElasticSearchException;
-import org.elasticsearch.action.OperationStatus;
+import org.elasticsearch.rest.RestStatus;
 
 /**
  *
@@ -39,7 +39,7 @@ public class IndexTemplateAlreadyExistsException extends ElasticSearchException 
     }
 
     @Override
-    public OperationStatus status() {
-        return OperationStatus.BAD_REQUEST;
+    public RestStatus status() {
+        return RestStatus.BAD_REQUEST;
     }
 }

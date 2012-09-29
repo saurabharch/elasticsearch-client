@@ -29,6 +29,7 @@ import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.FilterBuilder;
 
 import java.io.IOException;
 import java.util.Map;
@@ -131,6 +132,22 @@ public class AliasAction implements Streamable {
         }
     }
 
+    public AliasAction filter(FilterBuilder filterBuilder) {
+        if (filterBuilder == null) {
+            this.filter = null;
+            return this;
+        }
+        try {
+            XContentBuilder builder = XContentFactory.jsonBuilder();
+            filterBuilder.toXContent(builder, ToXContent.EMPTY_PARAMS);
+            builder.close();
+            this.filter = builder.string();
+            return this;
+        } catch (IOException e) {
+            throw new ElasticSearchGenerationException("Failed to build json for alias request", e);
+        }
+    }
+
     public AliasAction routing(String routing) {
         this.indexRouting = routing;
         this.searchRouting = routing;
@@ -164,41 +181,41 @@ public class AliasAction implements Streamable {
     @Override
     public void readFrom(StreamInput in) throws IOException {
         actionType = Type.fromValue(in.readByte());
-        index = in.readString();
-        alias = in.readString();
+        index = in.readUTF();
+        alias = in.readUTF();
         if (in.readBoolean()) {
-            filter = in.readString();
+            filter = in.readUTF();
         }
         if (in.readBoolean()) {
-            indexRouting = in.readString();
+            indexRouting = in.readUTF();
         }
         if (in.readBoolean()) {
-            searchRouting = in.readString();
+            searchRouting = in.readUTF();
         }
     }
 
     @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeByte(actionType.value());
-        out.writeString(index);
-        out.writeString(alias);
+        out.writeUTF(index);
+        out.writeUTF(alias);
         if (filter == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(filter);
+            out.writeUTF(filter);
         }
         if (indexRouting == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(indexRouting);
+            out.writeUTF(indexRouting);
         }
         if (searchRouting == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.writeString(searchRouting);
+            out.writeUTF(searchRouting);
         }
     }
 

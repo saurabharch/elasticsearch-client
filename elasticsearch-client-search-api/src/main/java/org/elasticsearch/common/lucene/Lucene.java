@@ -19,9 +19,12 @@
 
 package org.elasticsearch.common.lucene;
 
+import org.apache.lucene.analysis.KeywordAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.logging.ESLogger;
@@ -44,7 +47,7 @@ public class Lucene {
 
     public static final int BATCH_ENUM_DOCS = 32;
 
-    public static Version parseVersion(String version, Version defaultVersion, ESLogger logger) {
+    public static Version parseVersion(@Nullable String version, Version defaultVersion, ESLogger logger) {
         if (version == null) {
             return defaultVersion;
         }
@@ -110,69 +113,9 @@ public class Lucene {
         }
     }
 
-    public static TopDocs readTopDocs(StreamInput in) throws IOException {
-        if (!in.readBoolean()) {
-            // no docs
-            return null;
-        }
-        if (in.readBoolean()) {
-            int totalHits = in.readVInt();
-            float maxScore = in.readFloat();
-
-            SortField[] fields = new SortField[in.readVInt()];
-            for (int i = 0; i < fields.length; i++) {
-                String field = null;
-                if (in.readBoolean()) {
-                    field = in.readString();
-                }
-                fields[i] = new SortField(field, in.readVInt(), in.readBoolean());
-            }
-
-            FieldDoc[] fieldDocs = new FieldDoc[in.readVInt()];
-            for (int i = 0; i < fieldDocs.length; i++) {
-                Comparable[] cFields = new Comparable[in.readVInt()];
-                for (int j = 0; j < cFields.length; j++) {
-                    byte type = in.readByte();
-                    if (type == 0) {
-                        cFields[j] = null;
-                    } else if (type == 1) {
-                        cFields[j] = in.readString();
-                    } else if (type == 2) {
-                        cFields[j] = in.readInt();
-                    } else if (type == 3) {
-                        cFields[j] = in.readLong();
-                    } else if (type == 4) {
-                        cFields[j] = in.readFloat();
-                    } else if (type == 5) {
-                        cFields[j] = in.readDouble();
-                    } else if (type == 6) {
-                        cFields[j] = in.readByte();
-                    } else if (type == 7) {
-                        cFields[j] = in.readShort();
-                    } else if (type == 8) {
-                        cFields[j] = in.readBoolean();
-                    } else {
-                        throw new IOException("Can't match type [" + type + "]");
-                    }
-                }
-                fieldDocs[i] = new FieldDoc(in.readVInt(), in.readFloat(), cFields);
-            }
-            return new TopFieldDocs(totalHits, fieldDocs, fields, maxScore);
-        } else {
-            int totalHits = in.readVInt();
-            float maxScore = in.readFloat();
-
-            ScoreDoc[] scoreDocs = new ScoreDoc[in.readVInt()];
-            for (int i = 0; i < scoreDocs.length; i++) {
-                scoreDocs[i] = new ScoreDoc(in.readVInt(), in.readFloat());
-            }
-            return new TopDocs(totalHits, scoreDocs, maxScore);
-        }
-    }
-
     public static Explanation readExplanation(StreamInput in) throws IOException {
         float value = in.readFloat();
-        String description = in.readString();
+        String description = in.readUTF();
         Explanation explanation = new Explanation(value, description);
         if (in.readBoolean()) {
             int size = in.readVInt();
@@ -185,7 +128,7 @@ public class Lucene {
 
     public static void writeExplanation(StreamOutput out, Explanation explanation) throws IOException {
         out.writeFloat(explanation.getValue());
-        out.writeString(explanation.getDescription());
+        out.writeUTF(explanation.getDescription());
         Explanation[] subExplanations = explanation.getDetails();
         if (subExplanations == null) {
             out.writeBoolean(false);
