@@ -75,9 +75,17 @@ The selected Maven project group ID is **org.elasticsearch.client** and the Mave
         
 		**elasticsearch-client-admin-api** (jar)
 
-This modularization allows client development for the full or only for parts of the Elasticsearch API. 
+		**elasticsearch-client-compression-lzf** (jar)
 
-Furthermore, by not having the Admin client or the Ingest client present, client installations could realize a simple security pattern in order to protect against some malfunctions caused by accidentally initiated crucial operations (deletions, shutdowns, overwrites).
+		**elasticsearch-client-compression-snappy** (jar)
+
+		**elasticsearch-client-transport-api** (jar)
+
+		**elasticsearch-client-transport-netty** (jar)
+
+		**elasticsearch-client-discovery-tao** (jar)
+
+This modularization allows client development for the full or only for parts of the Elasticsearch API. 
 
 
 Generating the client codebase
@@ -91,13 +99,9 @@ Unfortunately, the code required some modifications. These are the main changes 
 
 - Lucene UnicodeUtil (and deps) copied to org.elasticseach.common.lucene.util
 
-- shorter org.elasticsearch.client.Client API, methods split to IngestClient, SearchClient
+- shorter org.elasticsearch.client.Client API, methods split to IngestClient, SearchClient, AdminClient
 
-- readUTF/writeUTF renamed to readString/writeString (because of deprecation)
-
-- moved all NAME strings beyond org.elasticsearch.index.query from the ...Action class to the corresponding ...Builder class to cut deps
-
-- org.elasticsearch.rest.RestStatus renamed to org.elasticsearch.action.OperationStatus (for non-RESTful clients)
+- moved all NAME strings beyond org.elasticsearch.index.query from the ...Action class to the corresponding ...Builder class 
 
 - ClusterBlocks: org.elasticsearch.cluster.metadata.MetaDataStateIndexService.INDEX_CLOSED_BLOCK moved to ClusterBlocks.INDEX_CLOSED_BLOCK
 
@@ -107,7 +111,9 @@ Unfortunately, the code required some modifications. These are the main changes 
 
 - in org.elasticsearch.cluster.metadata.AliasAction, method AliasAction filter(FilterBuilder filterBuilder) removed 
 
-- Compressor: removed Lucene/Netty deps, renamed to ClientCompressor
+- Service API for ES compressors, submodules for each compression algo
+
+- Compressor: many compressor instances, regarding to Netty depnedency (and Lucene)
 
 - IndexMetadata: MapperService.DEFAULT_MAPPING moved to IndexMetadata.DEFAULT_MAPPING
 
@@ -115,8 +121,10 @@ Unfortunately, the code required some modifications. These are the main changes 
 
 - constructor MappingMetaData(DocumentMapper docMapper)  removed
 
-- ThreadPool: lighter version with removed AbstractComponent and less executors, renamed to ClientThreadPool. ThreadPool.Info subclass moved to ThreadPoolInfo.Info
+- ThreadPool: reduced versions for client-api and transport-api submodules (ClientThreadPool, TransportThreadPool)
 
-- IndexAction: removed process() method, it is only called by TransportIndexAction / TransportBulkAction
+- ThreadPool.Info subclass moved to ThreadPoolInfo.Info
 
-- org.elasticsearch.action.Action: got a fourth class parameter, the client class
+- IndexAction: removed process() method, because it is only related to TransportIndexAction / TransportBulkAction
+
+- org.elasticsearch.action.Action: got a fourth class parameter (the client class)
