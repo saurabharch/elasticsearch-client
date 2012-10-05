@@ -17,14 +17,14 @@
     <name>elasticsearch-transport-netty</name>
     
     <description>
-        Elasticsearch Transport Netty
+        Netty-based implementation for Elasticsearch Transport
     </description>
 
     <dependencies>
 
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-transport-api</artifactId>
+            <artifactId>elasticsearch-transport</artifactId>
             <version>${project.version}</version>
         </dependency>        
                 
@@ -34,28 +34,7 @@
             <version>3.5.7.Final</version>
             <scope>compile</scope>
         </dependency>
-        
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.4</version>
-            <optional>true</optional>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.6.4</version>
-            <optional>true</optional>
-        </dependency>
-        
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.16</version>
-            <optional>true</optional>
-        </dependency>
-        
+       
     </dependencies>
 
 </project>

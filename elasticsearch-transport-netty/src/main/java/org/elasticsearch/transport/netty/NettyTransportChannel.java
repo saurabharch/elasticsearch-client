@@ -70,7 +70,7 @@ public class NettyTransportChannel implements TransportChannel {
 
     @Override
     public void sendResponse(TransportResponse response, TransportResponseOptions options) throws IOException {
-        if (transport.compress) {
+        if (transport.compress()) {
             options.withCompress(true);
         }
         NettyCachedStreamOutput.Entry cachedEntry = NettyCachedStreamOutput.popEntry();
@@ -95,7 +95,7 @@ public class NettyTransportChannel implements TransportChannel {
         ChannelBuffer buffer = ((NettyBytesArray)cachedEntry.bytes().bytes()).toChannelBuffer();
         NettyHeader.writeHeader(buffer, requestId, status, version);
         ChannelFuture future = channel.write(buffer);
-        future.addListener(new NettyTransport.CacheFutureListener(cachedEntry));
+        future.addListener(new ClientNettyTransport.CacheFutureListener(cachedEntry));
     }
 
     @Override
@@ -126,6 +126,6 @@ public class NettyTransportChannel implements TransportChannel {
         ChannelBuffer buffer = ((NettyBytesArray)cachedEntry.bytes().bytes()).toChannelBuffer();
         NettyHeader.writeHeader(buffer, requestId, status, version);
         ChannelFuture future = channel.write(buffer);
-        future.addListener(new NettyTransport.CacheFutureListener(cachedEntry));
+        future.addListener(new ClientNettyTransport.CacheFutureListener(cachedEntry));
     }
 }

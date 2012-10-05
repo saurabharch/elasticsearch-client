@@ -23,7 +23,7 @@ import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.compress.BasicCompressor;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.io.stream.BytesStreamInput;
-import org.elasticsearch.common.io.stream.ClientCachedStreamOutput;
+import org.elasticsearch.common.io.stream.BasicCachedStreamOutput;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.settings.Settings;
@@ -85,26 +85,26 @@ public abstract class ClientSnappyCompressor implements BasicCompressor {
     @Override
     public byte[] compress(byte[] data, int offset, int length) throws IOException {
         // this needs to be the same format as regular streams reading from it!
-        ClientCachedStreamOutput.Entry entry = ClientCachedStreamOutput.popEntry();
+        BasicCachedStreamOutput.Entry entry = BasicCachedStreamOutput.popEntry();
         try {
             StreamOutput compressed = entry.bytes(this);
             compressed.writeBytes(data, offset, length);
             compressed.close();
             return entry.bytes().bytes().copyBytesArray().toBytes();
         } finally {
-            ClientCachedStreamOutput.pushEntry(entry);
+            BasicCachedStreamOutput.pushEntry(entry);
         }
     }
 
     @Override
     public byte[] uncompress(byte[] data, int offset, int length) throws IOException {
         StreamInput compressed = streamInput(new BytesStreamInput(data, offset, length, false));
-        ClientCachedStreamOutput.Entry entry = ClientCachedStreamOutput.popEntry();
+        BasicCachedStreamOutput.Entry entry = BasicCachedStreamOutput.popEntry();
         try {
             Streams.copy(compressed, entry.bytes());
             return entry.bytes().bytes().copyBytesArray().toBytes();
         } finally {
-            ClientCachedStreamOutput.pushEntry(entry);
+            BasicCachedStreamOutput.pushEntry(entry);
         }
     }
 }

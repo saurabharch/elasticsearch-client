@@ -20,8 +20,8 @@ import org.elasticsearch.cluster.node.DiscoveryNode;
 import static org.elasticsearch.cluster.node.DiscoveryNode.readNode;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.BytesStreamInput;
-import org.elasticsearch.common.io.stream.ClientCachedStreamInput;
-import org.elasticsearch.common.io.stream.ClientCachedStreamOutput;
+import org.elasticsearch.common.io.stream.BasicCachedStreamInput;
+import org.elasticsearch.common.io.stream.BasicCachedStreamOutput;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.logging.ESLogger;
@@ -39,14 +39,13 @@ import org.elasticsearch.discovery.tao.ping.TaoPing;
 import org.elasticsearch.discovery.tao.ping.TaoPing.PingResponse;
 import org.elasticsearch.threadpool.TransportThreadPool;
 import org.elasticsearch.transport.BaseTransportRequestHandler;
-//import org.elasticsearch.transport.ClientTransportService;
 import org.elasticsearch.transport.EmptyTransportResponseHandler;
 import org.elasticsearch.transport.TransportChannel;
 import org.elasticsearch.transport.TransportException;
 import org.elasticsearch.transport.TransportRequest;
 import org.elasticsearch.transport.TransportResponse;
 import org.elasticsearch.transport.TransportResponseHandler;
-import org.elasticsearch.transport.TransportService;
+import org.elasticsearch.transport.client.ClientTransportService;
 
 public class MulticastTaoPing implements TaoPing {
 
@@ -54,7 +53,7 @@ public class MulticastTaoPing implements TaoPing {
     private final Settings settings;
     private final TransportNetworkService networkService;
     private final TransportThreadPool threadPool;
-    private final TransportService transportService;
+    private final ClientTransportService transportService;
     private final DiscoveryNode localNode;
     private final ClusterName clusterName;
     private static final byte[] INTERNAL_HEADER = new byte[]{1, 9, 8, 4};
@@ -75,7 +74,8 @@ public class MulticastTaoPing implements TaoPing {
     private final Object receiveMutex = new Object();
 
     public MulticastTaoPing(Settings settings,
-            TransportThreadPool threadPool, TransportService transportService,
+            TransportThreadPool threadPool, 
+            ClientTransportService transportService,
             ClusterName clusterName, DiscoveryNode localNode) {
         this.settings = settings;
         this.logger = Loggers.getLogger(getClass(), settings);
@@ -216,7 +216,7 @@ public class MulticastTaoPing implements TaoPing {
             return;
         }
         synchronized (sendMutex) {
-            ClientCachedStreamOutput.Entry cachedEntry = ClientCachedStreamOutput.popEntry();
+            BasicCachedStreamOutput.Entry cachedEntry = BasicCachedStreamOutput.popEntry();
             try {
                 StreamOutput out = cachedEntry.handles();
                 out.writeBytes(INTERNAL_HEADER);
@@ -237,7 +237,7 @@ public class MulticastTaoPing implements TaoPing {
                     logger.warn("failed to send multicast ping request: {}", ExceptionsHelper.detailedMessage(e));
                 }
             } finally {
-                ClientCachedStreamOutput.pushEntry(cachedEntry);
+                BasicCachedStreamOutput.pushEntry(cachedEntry);
             }
         }
     }
@@ -336,7 +336,7 @@ public class MulticastTaoPing implements TaoPing {
                                 }
                             }
                             if (internal) {
-                                StreamInput input = ClientCachedStreamInput.cachedHandles(new BytesStreamInput(datagramPacketReceive.getData(), datagramPacketReceive.getOffset() + INTERNAL_HEADER.length, datagramPacketReceive.getLength(), true));
+                                StreamInput input = BasicCachedStreamInput.cachedHandles(new BytesStreamInput(datagramPacketReceive.getData(), datagramPacketReceive.getOffset() + INTERNAL_HEADER.length, datagramPacketReceive.getLength(), true));
                                 Version version = Version.readVersion(input);
                                 id = input.readInt();
                                 clusterName = ClusterName.readClusterName(input);

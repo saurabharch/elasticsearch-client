@@ -24,6 +24,8 @@ import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.cluster.node.DiscoveryNode;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -42,7 +44,7 @@ import org.elasticsearch.transport.TransportException;
 import org.elasticsearch.transport.TransportRequest;
 import org.elasticsearch.transport.TransportRequestOptions;
 import org.elasticsearch.transport.TransportResponse;
-import org.elasticsearch.transport.TransportService;
+import org.elasticsearch.transport.client.ClientTransportService;
 
 import java.io.IOException;
 import java.util.*;
@@ -51,8 +53,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.common.collect.Lists.newArrayList;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
 import static org.elasticsearch.common.settings.ImmutableSettings.Builder.EMPTY_SETTINGS;
 import static org.elasticsearch.common.unit.TimeValue.readTimeValue;
 import static org.elasticsearch.common.util.concurrent.ConcurrentCollections.newConcurrentMap;
@@ -69,7 +69,7 @@ public class UnicastTaoPing implements TaoPing {
 
     private final TransportThreadPool threadPool;
 
-    private final TransportService transportService;
+    private final ClientTransportService transportService;
 
     private final ClusterName clusterName;
 
@@ -90,11 +90,11 @@ public class UnicastTaoPing implements TaoPing {
 
     private final CopyOnWriteArrayList<UnicastHostsProvider> hostsProviders = new CopyOnWriteArrayList<UnicastHostsProvider>();
 
-    public UnicastTaoPing(TransportThreadPool threadPool, TransportService transportService, ClusterName clusterName, DiscoveryNode localNode) {
+    public UnicastTaoPing(TransportThreadPool threadPool, ClientTransportService transportService, ClusterName clusterName, DiscoveryNode localNode) {
         this(EMPTY_SETTINGS, threadPool, transportService, clusterName, localNode, null);
     }
 
-    public UnicastTaoPing(Settings settings, TransportThreadPool threadPool, TransportService transportService, ClusterName clusterName, DiscoveryNode localNode,
+    public UnicastTaoPing(Settings settings, TransportThreadPool threadPool, ClientTransportService transportService, ClusterName clusterName, DiscoveryNode localNode,
             @Nullable Set<UnicastHostsProvider> unicastHostsProviders) {
         this.settings = settings;
         this.logger = Loggers.getLogger(getClass(), settings);
