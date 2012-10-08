@@ -25,9 +25,7 @@ import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.ElasticSearchIllegalStateException;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.Strings;
-//import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.compress.NettyCompressorFactory;
-//import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.io.stream.NettyCachedStreamOutput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.netty.NettyStaticSetup;
@@ -41,10 +39,14 @@ import org.elasticsearch.common.transport.PortsRange;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.bytes.NettyBytesArray;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.monitor.jvm.JvmInfo;
-import org.elasticsearch.threadpool.TransportThreadPool;
 import org.elasticsearch.transport.*;
 import org.elasticsearch.transport.support.TransportStatus;
+import org.elasticsearch.threadpool.ThreadPool;
+
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -71,10 +73,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.elasticsearch.common.bytes.ChannelBufferBytesReference;
-import org.elasticsearch.common.bytes.NettyBytesArray;
-import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.common.logging.Loggers;
 
 import static org.elasticsearch.common.network.TransportNetworkService.TcpSettings.*;
 import static org.elasticsearch.common.settings.ImmutableSettings.Builder.EMPTY_SETTINGS;
@@ -135,7 +133,7 @@ public class ClientNettyTransport implements NettyTransport {
     final ByteSizeValue maxCumulationBufferCapacity;
     final int maxCompositeBufferComponents;
 
-    private final TransportThreadPool threadPool;
+    private final ThreadPool threadPool;
 
     private volatile OpenChannelsHandler serverOpenChannels;
 
@@ -158,16 +156,15 @@ public class ClientNettyTransport implements NettyTransport {
     // connections while no connect operations is going on... (this might help with 100% CPU when stopping the transport?)
     private final ReadWriteLock globalLock = new ReentrantReadWriteLock();
 
-    public ClientNettyTransport(TransportThreadPool threadPool) {
+    public ClientNettyTransport(ThreadPool threadPool) {
         this(EMPTY_SETTINGS, threadPool, new TransportNetworkService(EMPTY_SETTINGS));
     }
 
-    public ClientNettyTransport(Settings settings, TransportThreadPool threadPool) {
+    public ClientNettyTransport(Settings settings, ThreadPool threadPool) {
         this(settings, threadPool, new TransportNetworkService(settings));
     }
 
-    //@Inject
-    public ClientNettyTransport(Settings settings, TransportThreadPool threadPool, TransportNetworkService networkService) {
+    public ClientNettyTransport(Settings settings, ThreadPool threadPool, TransportNetworkService networkService) {
         //super(settings);
         this.logger = Loggers.getLogger(getClass(), settings);
         this.settings = settings;
@@ -245,11 +242,10 @@ public class ClientNettyTransport implements NettyTransport {
     }
 
     @Override
-    public TransportThreadPool threadPool() {
+    public ThreadPool threadPool() {
         return threadPool;
     }
 
-    //@Override
     public ClientNettyTransport start() throws ElasticSearchException {
         if (blockingClient) {
             clientBootstrap = new ClientBootstrap(new OioClientSocketChannelFactory(Executors.newCachedThreadPool(daemonThreadFactory(settings, "transport_client_worker"))));

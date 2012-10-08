@@ -26,6 +26,7 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.index.get.GetField;
 import org.elasticsearch.index.get.GetResult;
 
@@ -165,6 +166,13 @@ public class GetResponse extends ActionResponse implements Iterable<GetField>, T
     public String getSourceAsString() {
         return sourceAsString();
     }
+
+    /**
+     * The source of the document (As a map).
+     */
+    public Map<String, Object> sourceAsMap() throws ElasticSearchParseException {        
+        return XContentHelper.convertToMap(getResult.internalSourceRef(), false).v2();
+    }    
 
     public Map<String, GetField> fields() {
         return getResult.fields();

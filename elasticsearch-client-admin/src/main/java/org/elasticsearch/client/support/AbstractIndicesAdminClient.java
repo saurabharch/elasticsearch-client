@@ -127,17 +127,6 @@ import org.elasticsearch.threadpool.client.ClientThreadPool;
  */
 public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
 
-    private final ThreadPool threadPool;
-    
-    public AbstractIndicesAdminClient() {
-        this.threadPool = new ClientThreadPool();
-    }
-    
-    @Override
-    public ThreadPool threadPool() {
-        return threadPool;
-    }
-    
     @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> RequestBuilder prepareExecute(final IndicesAction<Request, Response, RequestBuilder> action) {
         return action.newRequestBuilder(this);

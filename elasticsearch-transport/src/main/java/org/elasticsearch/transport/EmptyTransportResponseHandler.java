@@ -19,7 +19,7 @@
 
 package org.elasticsearch.transport;
 
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.transport.TransportThreadPool;
 
 /**
  *

@@ -61,17 +61,6 @@ import org.elasticsearch.threadpool.client.ClientThreadPool;
  *
  */
 public abstract class AbstractClusterAdminClient implements ClusterAdminClient {
-
-    private final ThreadPool threadPool;
-    
-    public AbstractClusterAdminClient() {
-        this.threadPool = new ClientThreadPool();
-    }
-    
-    @Override
-    public ThreadPool threadPool() {
-        return threadPool;
-    }
     
     @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 

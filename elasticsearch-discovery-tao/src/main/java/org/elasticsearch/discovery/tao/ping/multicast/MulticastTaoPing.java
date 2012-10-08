@@ -37,7 +37,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.discovery.tao.ping.TaoPing;
 import org.elasticsearch.discovery.tao.ping.TaoPing.PingResponse;
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.transport.TransportThreadPool;
 import org.elasticsearch.transport.BaseTransportRequestHandler;
 import org.elasticsearch.transport.EmptyTransportResponseHandler;
 import org.elasticsearch.transport.TransportChannel;

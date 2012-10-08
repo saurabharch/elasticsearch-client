@@ -3,7 +3,7 @@ package org.elasticsearch.transport.netty;
 import java.net.SocketAddress;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.Transport;
 import org.elasticsearch.transport.TransportServiceAdapter;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -13,7 +13,7 @@ public interface NettyTransport extends Transport {
     
     Settings settings();
 
-    TransportThreadPool threadPool();
+    ThreadPool threadPool();
     
     TransportServiceAdapter transportServiceAdapter();
     

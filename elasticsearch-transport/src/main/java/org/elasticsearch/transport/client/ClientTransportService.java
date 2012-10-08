@@ -46,7 +46,7 @@ import org.elasticsearch.transport.TransportResponse;
 import org.elasticsearch.transport.TransportResponseHandler;
 import org.elasticsearch.transport.TransportServiceAdapter;
 import org.elasticsearch.transport.TransportStats;
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.transport.TransportThreadPool;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

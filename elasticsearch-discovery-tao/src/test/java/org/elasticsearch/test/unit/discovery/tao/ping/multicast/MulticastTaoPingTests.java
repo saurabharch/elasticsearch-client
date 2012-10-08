@@ -30,7 +30,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.discovery.tao.ping.TaoPing;
 import org.elasticsearch.discovery.tao.ping.multicast.MulticastTaoPing;
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.transport.TransportThreadPool;
 import org.elasticsearch.transport.client.ClientTransportService;
 import org.elasticsearch.transport.local.LocalClientTransport;
 import org.testng.Assert;

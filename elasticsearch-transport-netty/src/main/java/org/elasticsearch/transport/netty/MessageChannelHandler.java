@@ -28,7 +28,8 @@ import org.elasticsearch.common.io.ThrowableObjectInputStream;
 import org.elasticsearch.common.io.stream.NettyCachedStreamInput;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.logging.ESLogger;
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.ThreadPool;
+import org.elasticsearch.threadpool.transport.TransportThreadPool;
 import org.elasticsearch.transport.*;
 import org.elasticsearch.transport.support.TransportStatus;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -44,7 +45,7 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
 
     private final ESLogger logger;
 
-    private final TransportThreadPool threadPool;
+    private final ThreadPool threadPool;
 
     private final TransportServiceAdapter transportServiceAdapter;
 

@@ -27,7 +27,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.discovery.tao.ping.TaoPing;
 import org.elasticsearch.discovery.tao.ping.unicast.UnicastTaoPing;
-import org.elasticsearch.threadpool.TransportThreadPool;
+import org.elasticsearch.threadpool.transport.TransportThreadPool;
 import org.elasticsearch.transport.client.ClientTransportService;
 import org.elasticsearch.transport.local.LocalClientTransport;
 import org.elasticsearch.transport.netty.ClientNettyTransport;

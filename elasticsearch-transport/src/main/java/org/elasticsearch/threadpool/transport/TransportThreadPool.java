@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.elasticsearch.threadpool;
+package org.elasticsearch.threadpool.transport;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -37,11 +37,14 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMinutes;
 import org.elasticsearch.common.util.concurrent.*;
+import org.elasticsearch.threadpool.ThreadPool;
+import org.elasticsearch.threadpool.ThreadPoolInfoElement;
+import org.elasticsearch.threadpool.ThreadPoolStatsElement;
 
 /**
  *
  */
-public class TransportThreadPool {
+public class TransportThreadPool implements ThreadPool {
 
     private static ESLogger logger = ESLoggerFactory.getLogger(TransportThreadPool.class.getName());
 
@@ -69,7 +72,9 @@ public class TransportThreadPool {
 
         Map<String, ExecutorHolder> executors = Maps.newHashMap();
         executors.put(Names.GENERIC, build(Names.GENERIC, "cached", groupSettings.get(Names.GENERIC), settingsBuilder().put("keep_alive", "30s").build()));
-        executors.put(Names.SAME, new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new TransportThreadPoolInfo.Info(Names.SAME, "same")));
+        executors.put(org.elasticsearch.threadpool.ThreadPool.Names.INDEX, build(org.elasticsearch.threadpool.ThreadPool.Names.INDEX, "cached", groupSettings.get(org.elasticsearch.threadpool.ThreadPool.Names.INDEX), ImmutableSettings.Builder.EMPTY_SETTINGS));
+        executors.put(org.elasticsearch.threadpool.ThreadPool.Names.BULK, build(org.elasticsearch.threadpool.ThreadPool.Names.BULK, "cached", groupSettings.get(org.elasticsearch.threadpool.ThreadPool.Names.BULK), ImmutableSettings.Builder.EMPTY_SETTINGS));
+        executors.put(Names.SAME, new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new TransportThreadPoolInfoElement(Names.SAME, "same")));
         this.executors = ImmutableMap.copyOf(executors);
         this.scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, ClientEsExecutors.daemonThreadFactory(settings, "scheduler"));
         this.scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
@@ -85,8 +90,9 @@ public class TransportThreadPool {
         return estimatedTimeThread.estimatedTimeInMillis();
     }
 
+    @Override
     public TransportThreadPoolInfo info() {
-        List<TransportThreadPoolInfo.Info> infos = new ArrayList();
+        List<ThreadPoolInfoElement> infos = new ArrayList();
         for (ExecutorHolder holder : executors.values()) {
             String name = holder.info.name();
             // no need to have info on "same" thread pool
@@ -98,8 +104,9 @@ public class TransportThreadPool {
         return new TransportThreadPoolInfo(infos);
     }
 
+    @Override
     public TransportThreadPoolStats stats() {
-        List<TransportThreadPoolStats.Stats> stats = new ArrayList<TransportThreadPoolStats.Stats>();
+        List<ThreadPoolStatsElement> stats = new ArrayList();
         for (ExecutorHolder holder : executors.values()) {
             String name = holder.info.name();
             // no need to have info on "same" thread pool
@@ -120,7 +127,7 @@ public class TransportThreadPool {
                     rejected = ((XRejectedExecutionHandler) rejectedExecutionHandler).rejected();
                 }
             }
-            stats.add(new TransportThreadPoolStats.Stats(name, threads, queue, active, rejected));
+            stats.add(new TransportThreadPoolStatsElement(name, threads, queue, active, rejected));
         }
         return new TransportThreadPoolStats(stats);
     }
@@ -130,6 +137,9 @@ public class TransportThreadPool {
     }
 
     public Executor executor(String name) {
+        if (executors.get(name) == null) {
+            throw new ElasticSearchIllegalArgumentException("No executor found for [" + name + "]");            
+        }
         Executor executor = executors.get(name).executor;
         if (executor == null) {
             throw new ElasticSearchIllegalArgumentException("No executor found for [" + name + "]");
@@ -192,7 +202,7 @@ public class TransportThreadPool {
         ThreadFactory threadFactory = ClientEsExecutors.daemonThreadFactory(this.settings, name);
         if ("same".equals(type)) {
             logger.debug("creating thread_pool [{}], type [{}]", name, type);
-            return new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new TransportThreadPoolInfo.Info(name, type));
+            return new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new TransportThreadPoolInfoElement(name, type));
         } else if ("cached".equals(type)) {
             TimeValue keepAlive = settings.getAsTime("keep_alive", defaultSettings.getAsTime("keep_alive", timeValueMinutes(5)));
             logger.debug("creating thread_pool [{}], type [{}], keep_alive [{}]", name, type, keepAlive);
@@ -200,7 +210,7 @@ public class TransportThreadPool {
                     keepAlive.millis(), TimeUnit.MILLISECONDS,
                     new SynchronousQueue<Runnable>(),
                     threadFactory);
-            return new ExecutorHolder(executor, new TransportThreadPoolInfo.Info(name, type, -1, -1, keepAlive, null));
+            return new ExecutorHolder(executor, new TransportThreadPoolInfoElement(name, type, -1, -1, keepAlive, null));
         }
         throw new ElasticSearchIllegalArgumentException("No type found [" + type + "], for [" + name + "]");
     }
@@ -309,9 +319,9 @@ public class TransportThreadPool {
 
     static class ExecutorHolder {
         public final Executor executor;
-        public final TransportThreadPoolInfo.Info info;
+        public final TransportThreadPoolInfoElement info;
 
-        ExecutorHolder(Executor executor, TransportThreadPoolInfo.Info info) {
+        ExecutorHolder(Executor executor, TransportThreadPoolInfoElement info) {
             this.executor = executor;
             this.info = info;
         }
