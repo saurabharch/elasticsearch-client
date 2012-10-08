@@ -24,7 +24,7 @@ import org.apache.log4j.PropertyConfigurator;
 import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.env.Environment;
+import org.elasticsearch.env.ClientEnvironment;
 import org.elasticsearch.env.FailedToResolveConfigException;
 
 import java.util.Map;
@@ -70,7 +70,7 @@ public class LogConfigurator {
             return;
         }
         loaded = true;
-        Environment environment = new Environment(settings);
+        ClientEnvironment environment = new ClientEnvironment(settings);
         ImmutableSettings.Builder settingsBuilder = settingsBuilder().put(settings);
         try {
             settingsBuilder.loadFromUrl(environment.resolveConfig("logging.yml"));

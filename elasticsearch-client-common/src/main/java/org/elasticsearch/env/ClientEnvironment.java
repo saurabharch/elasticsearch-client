@@ -34,7 +34,7 @@ import static org.elasticsearch.common.settings.ImmutableSettings.Builder.EMPTY_
 /**
  * The environment of where things exists.
  */
-public class Environment {
+public class ClientEnvironment {
 
     protected final Settings settings;
 
@@ -48,11 +48,11 @@ public class Environment {
 
     protected final File logsFile;
 
-    public Environment() {
+    public ClientEnvironment() {
         this(EMPTY_SETTINGS);
     }
 
-    public Environment(Settings settings) {
+    public ClientEnvironment(Settings settings) {
         this.settings = settings;
         if (settings.get("path.home") != null) {
             homeFile = new File(cleanPath(settings.get("path.home")));

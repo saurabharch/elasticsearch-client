@@ -30,7 +30,9 @@ import java.io.IOException;
  */
 public class QueryFilterBuilder extends BaseFilterBuilder {
 
-    public static final String NAME = "fquery";
+    public static final String QUERY_NAME = "query";
+
+    public static final String FILTER_QUERY_NAME = "fquery";
 
     private final QueryBuilder queryBuilder;
 
@@ -66,10 +68,10 @@ public class QueryFilterBuilder extends BaseFilterBuilder {
     @Override
     protected void doXContent(XContentBuilder builder, Params params) throws IOException {
         if (filterName == null && cache == null) {
-            builder.field(NAME);
+            builder.field(QUERY_NAME);
             queryBuilder.toXContent(builder, params);
         } else {
-            builder.startObject(NAME);
+            builder.startObject(FILTER_QUERY_NAME);
             builder.field("query");
             queryBuilder.toXContent(builder, params);
             if (filterName != null) {

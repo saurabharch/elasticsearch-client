@@ -54,7 +54,7 @@ public class BasicCompressorFactory {
             if (defaultCompressor == null) {
                 defaultCompressor = compressor;
             }
-        }
+        }        
         compressors = compressorsX.toArray(new BasicCompressor[compressorsX.size()]);
 
         MapBuilder<String, BasicCompressor> compressorsByTypeX = MapBuilder.newMapBuilder();

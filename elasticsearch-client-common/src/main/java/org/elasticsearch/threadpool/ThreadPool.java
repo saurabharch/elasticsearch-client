@@ -7,12 +7,30 @@ import java.util.concurrent.TimeUnit;
 import org.elasticsearch.common.unit.TimeValue;
 
 public interface ThreadPool {
-     
+
+    interface Names {
+        String SAME = "same";
+        String GENERIC = "generic";
+        String GET = "get";
+        String INDEX = "index";
+        String BULK = "bulk";
+        String SEARCH = "search";
+        String PERCOLATE = "percolate";
+        String MANAGEMENT = "management";
+        String FLUSH = "flush";
+        String MERGE = "merge";
+        String CACHE = "cache";
+        String REFRESH = "refresh";
+        String SNAPSHOT = "snapshot";
+    }    
+    
     ThreadPoolInfo info();
     
     ThreadPoolStats stats();
     
     Executor generic();
+    
+    long estimatedTimeInMillis();
     
     Executor executor(String name);
     
