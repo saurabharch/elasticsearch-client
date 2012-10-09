@@ -119,8 +119,6 @@ import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerRequestBuilder
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.common.Nullable;
-import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.threadpool.client.ClientThreadPool;
 
 /**
  *

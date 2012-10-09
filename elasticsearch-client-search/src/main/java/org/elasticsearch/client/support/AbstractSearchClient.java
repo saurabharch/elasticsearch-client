@@ -53,22 +53,9 @@ import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.client.GenericClient;
 import org.elasticsearch.client.SearchClient;
-import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.threadpool.client.ClientThreadPool;
 
 public abstract class AbstractSearchClient implements SearchClient {
-    
-    private final ThreadPool threadPool;
-    
-    public AbstractSearchClient() {
-        this.threadPool = new ClientThreadPool();
-    }
-    
-    @Override
-    public ThreadPool threadPool() {
-        return threadPool;
-    }
-    
+
     @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder, SearchClient> action) {

@@ -17,38 +17,26 @@
  * under the License.
  */
 
-package org.elasticsearch.transport;
+package org.elasticsearch.test.unit.common.unit;
 
-import org.elasticsearch.threadpool.ThreadPool;
+import org.elasticsearch.common.unit.DistanceUnit;
+import org.hamcrest.MatcherAssert;
+import org.testng.annotations.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
 
 /**
  *
  */
-public class EmptyTransportResponseHandler implements TransportResponseHandler<TransportResponse.Empty> {
+@Test
+public class DistanceUnitTests {
 
-    public static final EmptyTransportResponseHandler INSTANCE_SAME = new EmptyTransportResponseHandler(ThreadPool.Names.SAME);
-
-    private final String executor;
-
-    public EmptyTransportResponseHandler(String executor) {
-        this.executor = executor;
-    }
-
-    @Override
-    public TransportResponse.Empty newInstance() {
-        return TransportResponse.Empty.INSTANCE;
-    }
-
-    @Override
-    public void handleResponse(TransportResponse.Empty response) {
-    }
-
-    @Override
-    public void handleException(TransportException exp) {
-    }
-
-    @Override
-    public String executor() {
-        return executor;
+    @Test
+    void testSimpleDistanceUnit() {
+        MatcherAssert.assertThat(DistanceUnit.MILES.toKilometers(10), closeTo(16.09344, 0.001));
+        assertThat(DistanceUnit.MILES.toMiles(10), closeTo(10, 0.001));
+        assertThat(DistanceUnit.KILOMETERS.toMiles(10), closeTo(6.21371192, 0.001));
+        assertThat(DistanceUnit.KILOMETERS.toKilometers(10), closeTo(10, 0.001));
     }
 }

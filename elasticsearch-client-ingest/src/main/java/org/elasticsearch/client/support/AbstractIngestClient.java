@@ -56,21 +56,8 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GenericClient;
 import org.elasticsearch.client.IngestClient;
 import org.elasticsearch.common.Nullable;
-import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.threadpool.client.ClientThreadPool;
 
 public abstract class AbstractIngestClient implements IngestClient {
-
-    private final ThreadPool threadPool;
-    
-    public AbstractIngestClient() {
-        this.threadPool = new ClientThreadPool();
-    }
-    
-    @Override
-    public ThreadPool threadPool() {
-        return threadPool;
-    }
     
     @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, IngestClient extends GenericClient> 

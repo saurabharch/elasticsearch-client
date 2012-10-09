@@ -30,7 +30,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.BoundTransportAddress;
 import org.elasticsearch.common.transport.LocalTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.threadpool.transport.TransportThreadPool;
+import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.*;
 import org.elasticsearch.transport.support.ClientTransportStreams;
 
@@ -52,7 +52,7 @@ public class LocalClientTransport implements Transport {
         
     private final ESLogger logger;
 
-    private final TransportThreadPool threadPool;
+    private final ThreadPool threadPool;
 
     private volatile TransportServiceAdapter transportServiceAdapter;
 
@@ -66,11 +66,11 @@ public class LocalClientTransport implements Transport {
 
     private final ConcurrentMap<DiscoveryNode, LocalClientTransport> connectedNodes = newConcurrentMap();
 
-    public LocalClientTransport(TransportThreadPool threadPool) {
+    public LocalClientTransport(ThreadPool threadPool) {
         this(ImmutableSettings.Builder.EMPTY_SETTINGS, threadPool);
     }
 
-    public LocalClientTransport(Settings settings, TransportThreadPool threadPool) {
+    public LocalClientTransport(Settings settings, ThreadPool threadPool) {
         this.settings = settings;
         this.logger = Loggers.getLogger(getClass(), settings);
         this.threadPool = threadPool;
@@ -198,7 +198,7 @@ public class LocalClientTransport implements Transport {
         }
     }
 
-    TransportThreadPool threadPool() {
+    ThreadPool threadPool() {
         return this.threadPool;
     }
 

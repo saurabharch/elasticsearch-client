@@ -29,7 +29,6 @@ import org.elasticsearch.common.io.stream.NettyCachedStreamInput;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.threadpool.transport.TransportThreadPool;
 import org.elasticsearch.transport.*;
 import org.elasticsearch.transport.support.TransportStatus;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -152,7 +151,7 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
             return;
         }
         try {
-            if (handler.executor() == TransportThreadPool.Names.SAME) {
+            if (handler.executor() == ThreadPool.Names.SAME) {
                 //noinspection unchecked
                 handler.handleResponse(response);
             } else {
@@ -179,7 +178,7 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
             error = new RemoteTransportException(error.getMessage(), error);
         }
         final RemoteTransportException rtx = (RemoteTransportException) error;
-        if (handler.executor() == TransportThreadPool.Names.SAME) {
+        if (handler.executor() == ThreadPool.Names.SAME) {
             handler.handleException(rtx);
         } else {
             threadPool.executor(handler.executor()).execute(new Runnable() {
@@ -206,7 +205,7 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
             }
             final TransportRequest request = handler.newInstance();
             request.readFrom(buffer);
-            if (handler.executor() == TransportThreadPool.Names.SAME) {
+            if (handler.executor() == ThreadPool.Names.SAME) {
                 //noinspection unchecked
                 handler.messageReceived(request, transportChannel);
             } else {

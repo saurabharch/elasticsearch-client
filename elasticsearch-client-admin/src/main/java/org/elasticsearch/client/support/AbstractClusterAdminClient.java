@@ -54,8 +54,6 @@ import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequestBuilder;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
 import org.elasticsearch.client.ClusterAdminClient;
-import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.threadpool.client.ClientThreadPool;
 
 /**
  *

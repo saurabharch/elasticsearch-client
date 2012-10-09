@@ -46,7 +46,7 @@ import org.elasticsearch.transport.TransportResponse;
 import org.elasticsearch.transport.TransportResponseHandler;
 import org.elasticsearch.transport.TransportServiceAdapter;
 import org.elasticsearch.transport.TransportStats;
-import org.elasticsearch.threadpool.transport.TransportThreadPool;
+import org.elasticsearch.threadpool.ThreadPool;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -72,7 +72,7 @@ public class ClientTransportService {
     
     private final Transport transport;
 
-    private final TransportThreadPool threadPool;
+    private final ThreadPool threadPool;
 
     volatile ImmutableMap<String, TransportRequestHandler> serverHandlers = ImmutableMap.of();
     final Object serverHandlersMutex = new Object();
@@ -94,11 +94,11 @@ public class ClientTransportService {
     private boolean throwConnectException = false;
     private final ClientTransportService.Adapter adapter = new Adapter();
 
-    public ClientTransportService(Transport transport, TransportThreadPool threadPool) {
+    public ClientTransportService(Transport transport, ThreadPool threadPool) {
         this(EMPTY_SETTINGS, transport, threadPool);
     }
 
-    public ClientTransportService(Settings settings, Transport transport, TransportThreadPool threadPool) {
+    public ClientTransportService(Settings settings, Transport transport, ThreadPool threadPool) {
         this.settings = settings;
         this.logger = Loggers.getLogger(getClass(), settings);
         this.transport = transport;
@@ -203,7 +203,7 @@ public class ClientTransportService {
         try {
             if (options.timeout() != null) {
                 timeoutHandler = new TimeoutHandler(requestId);
-                timeoutHandler.future = threadPool.schedule(options.timeout(), TransportThreadPool.Names.GENERIC, timeoutHandler);
+                timeoutHandler.future = threadPool.schedule(options.timeout(), ThreadPool.Names.GENERIC, timeoutHandler);
             }
             clientHandlers.put(requestId, new RequestHolder<T>(handler, node, action, timeoutHandler));
             transport.sendRequest(node, requestId, action, request, options);
@@ -222,7 +222,7 @@ public class ClientTransportService {
             // callback that an exception happened, but on a different thread since we don't
             // want handlers to worry about stack overflows
             final SendRequestTransportException sendRequestException = new SendRequestTransportException(node, action, e);
-            threadPool.executor(TransportThreadPool.Names.GENERIC).execute(new Runnable() {
+            threadPool.executor(ThreadPool.Names.GENERIC).execute(new Runnable() {
                 @Override
                 public void run() {
                     handler.handleException(sendRequestException);
