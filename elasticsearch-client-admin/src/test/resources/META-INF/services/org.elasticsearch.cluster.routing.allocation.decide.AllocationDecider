@@ -1,0 +1,5 @@
+org.elasticsearch.cluster.routing.allocation.decider.ClusterRebalanceAllocationDecider
+org.elasticsearch.cluster.routing.allocation.decider.RebalanceOnlyWhenActiveAllocationDecider
+org.elasticsearch.cluster.routing.allocation.decider.ReplicaAfterPrimaryActiveAllocationDecider
+org.elasticsearch.cluster.routing.allocation.decider.SameShardAllocationDecider
+org.elasticsearch.cluster.routing.allocation.decider.ShardsLimitAllocationDecider

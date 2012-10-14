@@ -24,6 +24,7 @@ import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.restart.NodesRestartRequest;
 import org.elasticsearch.action.admin.cluster.node.shutdown.NodesShutdownRequest;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequest;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
@@ -296,6 +297,10 @@ public class AdminRequests {
      */
     public static ClusterStateRequest clusterStateRequest() {
         return new ClusterStateRequest();
+    }
+
+    public static ClusterRerouteRequest clusterRerouteRequest() {
+        return new ClusterRerouteRequest();
     }
 
     public static ClusterUpdateSettingsRequest clusterUpdateSettingsRequest() {

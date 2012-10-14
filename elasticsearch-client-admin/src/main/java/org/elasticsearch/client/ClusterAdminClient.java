@@ -39,6 +39,9 @@ import org.elasticsearch.action.admin.cluster.node.shutdown.NodesShutdownRespons
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequest;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequestBuilder;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsResponse;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequest;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequestBuilder;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteResponse;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequestBuilder;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsResponse;
@@ -221,4 +224,20 @@ public interface ClusterAdminClient extends InternalClusterAdminClient {
      * Restarts nodes in the cluster.
      */
     NodesRestartRequestBuilder prepareNodesRestart(String... nodesIds);
+    
+    /**
+     * Reroutes allocation of shards. Advance API.
+     */
+    ActionFuture<ClusterRerouteResponse> reroute(ClusterRerouteRequest request);
+
+    /**
+     * Reroutes allocation of shards. Advance API.
+     */
+    void reroute(ClusterRerouteRequest request, ActionListener<ClusterRerouteResponse> listener);
+
+    /**
+     * Update settings in the cluster.
+     */
+    ClusterRerouteRequestBuilder prepareReroute();
+    
 }

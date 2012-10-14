@@ -45,6 +45,10 @@ import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsAction;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequest;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequestBuilder;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsResponse;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteAction;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequest;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequestBuilder;
+import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteResponse;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsAction;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequestBuilder;
@@ -95,7 +99,22 @@ public abstract class AbstractClusterAdminClient implements ClusterAdminClient {
     public ClusterStateRequestBuilder prepareState() {
         return new ClusterStateRequestBuilder(this);
     }
+    
+    @Override
+    public ActionFuture<ClusterRerouteResponse> reroute(final ClusterRerouteRequest request) {
+        return execute(ClusterRerouteAction.INSTANCE, request);
+    }
 
+    @Override
+    public void reroute(final ClusterRerouteRequest request, final ActionListener<ClusterRerouteResponse> listener) {
+        execute(ClusterRerouteAction.INSTANCE, request, listener);
+    }
+
+    @Override
+    public ClusterRerouteRequestBuilder prepareReroute() {
+        return new ClusterRerouteRequestBuilder(this);
+    }    
+    
     @Override
     public ActionFuture<ClusterUpdateSettingsResponse> updateSettings(final ClusterUpdateSettingsRequest request) {
         return execute(ClusterUpdateSettingsAction.INSTANCE, request);
