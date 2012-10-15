@@ -20,6 +20,7 @@
 package org.elasticsearch.index.query;
 
 import com.spatial4j.core.shape.Shape;
+import org.elasticsearch.common.Nullable;
 
 /**
  * A static factory for simple "import static" usage.
@@ -53,7 +54,7 @@ public abstract class FilterBuilders {
      *
      * @param types The types to match the ids against.
      */
-    public static IdsFilterBuilder idsFilter(String... types) {
+    public static IdsFilterBuilder idsFilter(@Nullable String... types) {
         return new IdsFilterBuilder(types);
     }
 
@@ -348,6 +349,10 @@ public abstract class FilterBuilders {
         return new GeoShapeFilterBuilder(name, shape);
     }
 
+    public static GeoShapeFilterBuilder geoShapeFilter(String name, String indexedShapeId, String indexedShapeType) {
+        return new GeoShapeFilterBuilder(name, indexedShapeId, indexedShapeType);
+    }
+
     /**
      * A filter to filter only documents where a field exists in them.
      *
@@ -375,6 +380,10 @@ public abstract class FilterBuilders {
      */
     public static HasChildFilterBuilder hasChildFilter(String type, QueryBuilder query) {
         return new HasChildFilterBuilder(type, query);
+    }
+
+    public static HasParentFilterBuilder hasParentFilter(String parentType, QueryBuilder query) {
+        return new HasParentFilterBuilder(parentType, query);
     }
 
     public static BoolFilterBuilder boolFilter() {

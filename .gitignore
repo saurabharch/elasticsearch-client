@@ -1,0 +1,14 @@
+/elasticsearch-client-ingest-api/target/
+/elasticsearch-client-api/target/
+/elasticsearch-client-search-api/target/
+/elasticsearch-client-admin-api/target/
+/target/
+/elasticsearch-discovery-tao/target/
+/elasticsearch-transport-api/target/
+/elasticsearch-client-compression-lzf/target/
+/elasticsearch-transport-netty/target/
+/elasticsearch-client-compression-snappy/target/
+/elasticsearch-client-common/target/
+/elasticsearch-client-search/target/
+/elasticsearch-client-ingest/target/
+/elasticsearch-client-admin/target/

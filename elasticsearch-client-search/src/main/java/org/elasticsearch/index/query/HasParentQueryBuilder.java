@@ -1,13 +1,13 @@
 /*
- * Licensed to Elastic Search and Shay Banon under one
+ * Licensed to ElasticSearch and Shay Banon under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership. Elastic Search licenses this
+ * regarding copyright ownership. ElasticSearch licenses this
  * file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -22,67 +22,62 @@ package org.elasticsearch.index.query;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
-import org.elasticsearch.common.xcontent.ToXContent.Params;
 
 /**
- *
+ * Builder for the 'has_parent' query.
  */
-public class HasChildFilterBuilder extends BaseFilterBuilder {
+public class HasParentQueryBuilder extends BaseQueryBuilder implements BoostableQueryBuilder<HasParentQueryBuilder> {
 
-    public static final String NAME = "has_child";
+    public static final String NAME = "has_parent";
 
     private final QueryBuilder queryBuilder;
-
-    private String childType;
-
+    private final String parentType;
     private String scope;
-
-    private String filterName;
-
     private String executionType;
+    private float boost = 1.0f;
 
-    public HasChildFilterBuilder(String type, QueryBuilder queryBuilder) {
-        this.childType = type;
-        this.queryBuilder = queryBuilder;
+    /**
+     * @param parentType The parent type
+     * @param parentQuery The query that will be matched with parent documents
+     */
+    public HasParentQueryBuilder(String parentType, QueryBuilder parentQuery) {
+        this.parentType = parentType;
+        this.queryBuilder = parentQuery;
     }
 
-    public HasChildFilterBuilder scope(String scope) {
+    public HasParentQueryBuilder scope(String scope) {
         this.scope = scope;
         return this;
     }
 
     /**
-     * Sets the filter name for the filter that can be used when searching for matched_filters per hit.
-     */
-    public HasChildFilterBuilder filterName(String filterName) {
-        this.filterName = filterName;
-        return this;
-    }
-
-    /**
-     * Expert: Sets the low level child to parent filtering implementation. Can be: 'bitset' or 'uid'
+     * Expert: Sets the low level parent to child filtering implementation. Can be: 'bitset' or 'uid'
      *
      * This option is experimental and will be removed.
      */
-    public HasChildFilterBuilder executionType(String executionType) {
+    public HasParentQueryBuilder executionType(String executionType) {
         this.executionType = executionType;
         return this;
     }
 
-    @Override
+    public HasParentQueryBuilder boost(float boost) {
+        this.boost = boost;
+        return this;
+    }
+
     protected void doXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(NAME);
         builder.field("query");
         queryBuilder.toXContent(builder, params);
-        builder.field("child_type", childType);
+        builder.field("parent_type", parentType);
         if (scope != null) {
             builder.field("_scope", scope);
         }
-        if (filterName != null) {
-            builder.field("_name", filterName);
-        }
         if (executionType != null) {
             builder.field("execution_type", executionType);
+        }
+        if (boost != 1.0f) {
+            builder.field("boost", boost);
         }
         builder.endObject();
     }

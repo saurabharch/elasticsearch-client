@@ -22,6 +22,7 @@ package org.elasticsearch.index.query;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
+import org.elasticsearch.common.xcontent.ToXContent.Params;
 
 /**
  *
@@ -37,6 +38,8 @@ public class HasChildQueryBuilder extends BaseQueryBuilder implements BoostableQ
     private String scope;
 
     private float boost = 1.0f;
+
+    private String executionType;
 
     public HasChildQueryBuilder(String type, QueryBuilder queryBuilder) {
         this.childType = type;
@@ -61,17 +64,30 @@ public class HasChildQueryBuilder extends BaseQueryBuilder implements BoostableQ
         return this;
     }
 
+    /**
+     * Expert: Sets the low level child to parent filtering implementation. Can be: 'bitset' or 'uid'
+     *
+     * This option is experimental and will be removed.
+     */
+    public HasChildQueryBuilder executionType(String executionType) {
+        this.executionType = executionType;
+        return this;
+    }
+
     @Override
     protected void doXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(NAME);
         builder.field("query");
         queryBuilder.toXContent(builder, params);
-        builder.field("type", childType);
+        builder.field("child_type", childType);
         if (scope != null) {
             builder.field("_scope", scope);
         }
         if (boost != 1.0f) {
             builder.field("boost", boost);
+        }
+        if (executionType != null) {
+            builder.field("execution_type", executionType);
         }
         builder.endObject();
     }
