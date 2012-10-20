@@ -10,38 +10,20 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     
-    <artifactId>elasticsearch-client-search</artifactId>
+    <artifactId>elasticsearch-client-scripting</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>elasticsearch-client-search</name>
+    <name>elasticsearch-client-scripting</name>
     <description>
-        Elasticsearch Search Client
+        Elasticsearch Client - Scripting
     </description>
-
-    <properties>
-        <lucene.version>3.6.1</lucene.version>
-    </properties>
 
     <dependencies>
 
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-queries</artifactId>
-            <version>${lucene.version}</version>
-            <type>jar</type>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>jakarta-regexp</groupId>
-                    <artifactId>jakarta-regexp</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-client-geo</artifactId>
+            <artifactId>elasticsearch-client-common</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
             <scope>compile</scope>

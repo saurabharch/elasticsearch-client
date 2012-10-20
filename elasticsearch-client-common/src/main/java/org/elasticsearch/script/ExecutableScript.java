@@ -17,13 +17,23 @@
  * under the License.
  */
 
-package org.elasticsearch.common.compress.lzf;
-
-import org.elasticsearch.common.compress.CompressorContext;
+package org.elasticsearch.script;
 
 /**
+ * An executable script, can't be used concurrently.
  */
-public class LZFCompressorContext implements CompressorContext {
+public interface ExecutableScript {
 
-    public static final LZFCompressorContext INSTANCE = new LZFCompressorContext();
+    void setNextVar(String name, Object value);
+
+    /**
+     * Executes the script.
+     */
+    Object run();
+
+    /**
+     * Unwraps a possible script value. For example, when passing vars and expecting the returned value to
+     * be part of the vars.
+     */
+    Object unwrap(Object value);
 }

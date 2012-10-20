@@ -32,7 +32,7 @@ public class HandlesStreamInput extends AdapterStreamInput {
 
     private final TIntObjectHashMap<String> identityHandles = new TIntObjectHashMap<String>();
 
-    HandlesStreamInput() {
+    public HandlesStreamInput() {
         super();
     }
 

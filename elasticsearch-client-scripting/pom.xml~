@@ -3,39 +3,50 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
+    
     <parent>
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-client</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-
-    <artifactId>elasticsearch-client-admin</artifactId>
+    
+    <artifactId>elasticsearch-client-geo</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>elasticsearch-client-admin</name>
-
+    <name>elasticsearch-client-geo</name>
     <description>
-        Elasticsearch Admin Client. The Admin Client sends administrative commands.
+        Elasticsearch Client - Geographical Search
     </description>
 
     <dependencies>
 
         <dependency>
             <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-client-search</artifactId>
+            <artifactId>elasticsearch-client-common</artifactId>
             <version>${project.version}</version>
+        </dependency>        
+
+        <dependency>
+            <groupId>com.spatial4j</groupId>
+            <artifactId>spatial4j</artifactId>
+            <version>0.3</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-transport</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <version>1.12</version>
             <type>jar</type>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>

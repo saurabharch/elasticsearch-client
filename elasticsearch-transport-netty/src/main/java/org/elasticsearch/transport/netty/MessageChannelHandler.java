@@ -21,7 +21,6 @@ package org.elasticsearch.transport.netty;
 
 import org.elasticsearch.ElasticSearchIllegalStateException;
 import org.elasticsearch.Version;
-//import org.elasticsearch.common.component.Lifecycle;
 import org.elasticsearch.common.compress.NettyCompressor;
 import org.elasticsearch.common.compress.NettyCompressorFactory;
 import org.elasticsearch.common.io.ThrowableObjectInputStream;

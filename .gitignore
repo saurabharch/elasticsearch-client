@@ -12,3 +12,5 @@
 /elasticsearch-client-search/target/
 /elasticsearch-client-ingest/target/
 /elasticsearch-client-admin/target/
+/elasticsearch-client-geo/target/
+/elasticsearch-client-scripting/target/

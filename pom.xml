@@ -122,7 +122,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>2.3.2</version>
+                    <version>2.5.1</version>
                     <configuration>
                         <source>${compiler.source.version}</source>
                         <target>${compiler.target.version}</target>
@@ -131,7 +131,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.12.3</version>
+                    <version>2.12.4</version>
                     <configuration>
                         <includes>
                             <include>**/*Tests.java</include>
@@ -141,7 +141,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.1.2</version>
+                    <version>2.2.1</version>
                     <executions>
                         <execution>
                             <id>attach-sources</id>
@@ -211,15 +211,17 @@
     </build>
 
     <modules>
+        <module>elasticsearch-client-compression-lzf</module>
         <module>elasticsearch-client-common</module>
+        <module>elasticsearch-client-geo</module>
         <module>elasticsearch-client-ingest</module>
         <module>elasticsearch-client-search</module>
         <module>elasticsearch-client-admin</module>
-        <module>elasticsearch-client-compression-lzf</module>
         <module>elasticsearch-client-compression-snappy</module>
         <module>elasticsearch-transport</module>
         <module>elasticsearch-transport-netty</module>
         <module>elasticsearch-discovery-tao</module>
+        <module>elasticsearch-client-scripting</module>
     </modules>
 
 </project>
