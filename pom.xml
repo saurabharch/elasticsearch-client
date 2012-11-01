@@ -42,13 +42,36 @@
     <distributionManagement>
         <repository>
             <id>repo</id>
-            <url>https://github.com/xbib/maven-repo/raw/master/releases</url>
+            <url>https://raw.github.com/xbib/maven-repo/master/releases</url>
         </repository>
         <snapshotRepository>
             <id>snapshot-repo</id>
-            <url>https://github.com/xbib/maven-repo/raw/master/snapshots</url>
+            <url>https://raw.github.com/xbib/maven-repo/master/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Repository</name>
+            <layout>default</layout>
+            <url>http://repo1.maven.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>        
+        <repository>
+            <id>xbib-repo</id>
+            <name>xbib Maven Repository</name>
+            <url>http://raw.github.com/xbib/maven-repo/master/releases</url>
+        </repository>
+        <repository>
+            <id>xbib-snapshot-repo</id>
+            <name>xbib Maven Repository</name>
+            <url>http://raw.github.com/xbib/maven-repo/master/snapshots</url>
+        </repository>
+    </repositories>
+
 
     <dependencies>
 
@@ -57,6 +80,16 @@
             <artifactId>testng</artifactId>
             <version>6.8</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>hamcrest-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

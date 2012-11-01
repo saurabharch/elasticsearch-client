@@ -1,3 +1,6 @@
+.project
+.classpath
+.settings
 /elasticsearch-client-ingest-api/target/
 /elasticsearch-client-api/target/
 /elasticsearch-client-search-api/target/
@@ -14,3 +17,4 @@
 /elasticsearch-client-admin/target/
 /elasticsearch-client-geo/target/
 /elasticsearch-client-scripting/target/
+/elasticsearch-transport/target/
