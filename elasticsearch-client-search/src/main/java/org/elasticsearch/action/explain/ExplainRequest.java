@@ -41,6 +41,7 @@ public class ExplainRequest extends SingleShardOperationRequest<ExplainRequest> 
     private String type = "_all";
     private String id;
     private String routing;
+    private String parent;
     private String preference;
     private BytesReference source;
     private String[] fields;
@@ -84,11 +85,18 @@ public class ExplainRequest extends SingleShardOperationRequest<ExplainRequest> 
         return this;
     }
 
+    public String parent() {
+        return parent;
+    }
+
     /**
      * Simple sets the routing. Since the parent is only used to get to the right shard.
      */
     public ExplainRequest parent(String parent) {
-        this.routing = parent;
+        this.parent = parent;
+        if (routing == null) {
+            this.routing = parent;
+        }
         return this;
     }
 

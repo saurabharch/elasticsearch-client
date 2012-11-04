@@ -52,6 +52,10 @@ public class NodesShutdownRequest extends MasterNodeOperationRequest<NodesShutdo
         this.nodesIds = nodesIds;
         return this;
     }
+    
+    public String[] nodesIds() {
+        return this.nodesIds;
+    }
 
     /**
      * The delay for the shutdown to occur. Defaults to <tt>1s</tt>.

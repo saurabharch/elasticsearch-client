@@ -88,7 +88,7 @@ public class DeleteByQueryRequest extends IndicesReplicationOperationRequest<Del
     /**
      * The query source to execute.
      */
-    BytesReference querySource() {
+    public BytesReference querySource() {
         if (querySourceUnsafe) {
             querySource = querySource.copyBytesArray();
         }

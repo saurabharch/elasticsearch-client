@@ -110,7 +110,7 @@ public class CountRequest extends BroadcastOperationRequest<CountRequest> {
     /**
      * The minimum score of the documents to include in the count.
      */
-    float minScore() {
+    public float minScore() {
         return minScore;
     }
 
@@ -126,7 +126,7 @@ public class CountRequest extends BroadcastOperationRequest<CountRequest> {
     /**
      * The query source to execute.
      */
-    BytesReference querySource() {
+    public BytesReference querySource() {
         return querySource;
     }
 

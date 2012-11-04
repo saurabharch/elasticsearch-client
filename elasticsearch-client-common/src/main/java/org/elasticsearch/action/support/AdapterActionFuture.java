@@ -19,6 +19,7 @@
 
 package org.elasticsearch.action.support;
 
+import java.net.ConnectException;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.ElasticSearchInterruptedException;
 import org.elasticsearch.ElasticSearchTimeoutException;

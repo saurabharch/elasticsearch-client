@@ -172,6 +172,10 @@ public class MultiGetRequest extends ActionRequest<MultiGetRequest> {
         items.add(new Item(index, type, id));
         return this;
     }
+    
+    public List<Item> items() {
+        return items;
+    }
 
     @Override
     public ActionRequestValidationException validate() {

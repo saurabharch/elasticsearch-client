@@ -18,3 +18,6 @@
 /elasticsearch-client-geo/target/
 /elasticsearch-client-scripting/target/
 /elasticsearch-transport/target/
+/elasticsearch-http-netty/target/
+/elasticsearch-client-admin-http/target/
+/elasticsearch-client-search-http/target/

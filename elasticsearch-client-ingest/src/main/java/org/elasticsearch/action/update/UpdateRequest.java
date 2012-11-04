@@ -48,7 +48,8 @@ public class UpdateRequest extends InstanceShardOperationRequest<UpdateRequest> 
     private String id;
     @Nullable
     private String routing;
-
+    @Nullable
+    private String parent;
     @Nullable
     String script;
     @Nullable
@@ -145,12 +146,17 @@ public class UpdateRequest extends InstanceShardOperationRequest<UpdateRequest> 
      * used for routing with delete requests.
      */
     public UpdateRequest parent(String parent) {
+        this.parent = parent;
         if (routing == null) {
             routing = parent;
         }
         return this;
     }
 
+    public String parent() {
+        return this.parent;
+    }
+    
     /**
      * Controls the shard routing of the request. Using this value to hash the shard
      * and not the id.
@@ -186,6 +192,10 @@ public class UpdateRequest extends InstanceShardOperationRequest<UpdateRequest> 
     public UpdateRequest scriptLang(String scriptLang) {
         this.scriptLang = scriptLang;
         return this;
+    }
+    
+    public String scriptLang() {
+        return scriptLang;
     }
 
     /**

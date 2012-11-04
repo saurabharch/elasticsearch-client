@@ -57,11 +57,11 @@ public class ClusterUpdateSettingsRequest extends MasterNodeOperationRequest<Clu
         return validationException;
     }
 
-    Settings transientSettings() {
+    public Settings transientSettings() {
         return transientSettings;
     }
 
-    Settings persistentSettings() {
+    public Settings persistentSettings() {
         return persistentSettings;
     }
 

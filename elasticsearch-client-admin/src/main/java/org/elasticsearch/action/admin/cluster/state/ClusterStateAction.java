@@ -32,6 +32,10 @@ public class ClusterStateAction extends ClusterAction<ClusterStateRequest, Clust
     private ClusterStateAction() {
         super(NAME);
     }
+    
+    protected ClusterStateAction(String name) {
+        super(name);
+    }
 
     @Override
     public ClusterStateResponse newResponse() {

@@ -47,7 +47,7 @@ public class GetResponse extends ActionResponse implements Iterable<GetField>, T
     GetResponse() {
     }
 
-    GetResponse(GetResult getResult) {
+    public GetResponse(GetResult getResult) {
         this.getResult = getResult;
     }
 

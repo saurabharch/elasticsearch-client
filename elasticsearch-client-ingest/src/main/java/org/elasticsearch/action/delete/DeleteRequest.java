@@ -48,6 +48,8 @@ public class DeleteRequest extends ShardReplicationOperationRequest<DeleteReques
     private String id;
     @Nullable
     private String routing;
+    @Nullable
+    private String parent;
     private boolean refresh;
     private long version;
     private VersionType versionType = VersionType.INTERNAL;
@@ -135,10 +137,15 @@ public class DeleteRequest extends ShardReplicationOperationRequest<DeleteReques
      * used for routing with delete requests.
      */
     public DeleteRequest parent(String parent) {
+        this.parent = parent;
         if (routing == null) {
             routing = parent;
         }
         return this;
+    }
+    
+    public String parent() {
+        return parent;
     }
 
     /**

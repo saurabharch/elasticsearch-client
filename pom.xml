@@ -255,6 +255,10 @@
         <module>elasticsearch-transport-netty</module>
         <module>elasticsearch-discovery-tao</module>
         <module>elasticsearch-client-scripting</module>
+        <module>elasticsearch-http-netty</module>
+        <module>elasticsearch-client-ingest-http</module>
+        <module>elasticsearch-client-search-http</module>
+        <module>elasticsearch-client-admin-http</module>
     </modules>
 
 </project>

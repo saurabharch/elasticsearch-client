@@ -26,6 +26,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import java.net.ConnectException;
 
 /**
  * An abstract implementation of the {@link com.google.common.util.concurrent.ListenableFuture} interface. This

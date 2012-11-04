@@ -57,8 +57,6 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
 
     private Map<String, GetField> fields;
 
-    private Map<String, Object> sourceAsMap;
-
     private BytesReference source;
 
     private byte[] sourceAsBytes;
@@ -203,26 +201,6 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
             throw new ElasticSearchParseException("failed to convert source to a json string");
         }
     }
-
-    /**
-     * The source of the document (As a map).
-     */
-    /*@SuppressWarnings({"unchecked"})
-    public Map<String, Object> sourceAsMap() throws ElasticSearchParseException {
-        if (source == null) {
-            return null;
-        }
-        if (sourceAsMap != null) {
-            return sourceAsMap;
-        }
-
-        sourceAsMap = SourceLookup.sourceAsMap(source);
-        return sourceAsMap;
-    }
-
-    public Map<String, Object> getSource() {
-        return sourceAsMap();
-    }*/
 
     public Map<String, GetField> fields() {
         return this.fields;
