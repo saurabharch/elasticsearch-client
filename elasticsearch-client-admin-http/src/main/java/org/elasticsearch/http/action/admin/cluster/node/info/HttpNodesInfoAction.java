@@ -19,25 +19,26 @@
 
 package org.elasticsearch.http.action.admin.cluster.node.info;
 
-import java.io.IOException;
-import java.util.Map;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
-public class HttpNodesInfoAction extends HttpAction<HttpClusterAdminClient, NodesInfoRequest, NodesInfoResponse> {
+import java.io.IOException;
+import java.util.Map;
+
+public class HttpNodesInfoAction extends HttpAction<NodesInfoRequest, NodesInfoResponse> {
 
     public static final String NAME = "nodes_info";
     private static final String METHOD = "GET";
     private static final String ENDPOINT = "/_nodes";
 
     @Override
-    protected void doExecute(HttpClusterAdminClient client, NodesInfoRequest request, ActionListener<NodesInfoResponse> listener) {
+    protected void doExecute(HttpClient client, NodesInfoRequest request, ActionListener<NodesInfoResponse> listener) {
         String endpoint = ENDPOINT;
         if (request.settings()) {
             endpoint += "/settings";
@@ -56,8 +57,7 @@ public class HttpNodesInfoAction extends HttpAction<HttpClusterAdminClient, Node
         } else if (request.http()) {
             endpoint += "/http";
         }
-
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, endpoint)
+        HttpRequest httpRequest = new HttpRequest(METHOD, endpoint)
                 .param("nodeId", request.nodesIds());
         submit(client, httpRequest, listener);
     }

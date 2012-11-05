@@ -25,20 +25,20 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpSearchClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
-public class HttpCountAction extends HttpAction<HttpSearchClient, CountRequest, CountResponse> {
+public class HttpCountAction extends HttpAction<CountRequest, CountResponse> {
 
     public final static String NAME = "count";
     private final static String METHOD = "GET";
     private final static String ENDPOINT = "_count";
     
     @Override
-    protected void doExecute(HttpSearchClient client, CountRequest request, ActionListener<CountResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, CountRequest request, ActionListener<CountResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
                 .param("ignore_indices", request.indices())

@@ -25,13 +25,13 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsRequest;
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 
-public class HttpNodesHotThreadsAction extends HttpAction<HttpClusterAdminClient, NodesHotThreadsRequest, NodesHotThreadsResponse>{
+public class HttpNodesHotThreadsAction extends HttpAction<NodesHotThreadsRequest, NodesHotThreadsResponse>{
 
     public static final String NAME = "cluster_nodes_hotthreads";
     
@@ -40,8 +40,8 @@ public class HttpNodesHotThreadsAction extends HttpAction<HttpClusterAdminClient
     private static final String ENDPOINT = "/_cluster/nodes/hotthreads";
     
     @Override
-    protected void doExecute(HttpClusterAdminClient client, NodesHotThreadsRequest request, ActionListener<NodesHotThreadsResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, NodesHotThreadsRequest request, ActionListener<NodesHotThreadsResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("threads", request.threads())
                 .param("type", request.interval())

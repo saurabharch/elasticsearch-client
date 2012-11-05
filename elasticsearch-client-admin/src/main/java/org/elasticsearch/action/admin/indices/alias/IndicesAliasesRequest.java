@@ -137,7 +137,7 @@ public class IndicesAliasesRequest extends MasterNodeOperationRequest<IndicesAli
         return this;
     }
 
-    List<AliasAction> aliasActions() {
+    public List<AliasAction> aliasActions() {
         return this.aliasActions;
     }
 

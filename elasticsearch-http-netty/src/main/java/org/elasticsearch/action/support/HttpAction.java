@@ -32,7 +32,6 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.ActionResponse;
-import org.elasticsearch.client.GenericClient;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
@@ -42,20 +41,18 @@ import static org.elasticsearch.action.support.PlainActionFuture.newFuture;
 
 import java.io.IOException;
 
-public abstract class HttpAction<Client extends GenericClient, 
-                                       Request extends ActionRequest, 
-                                       Response extends ActionResponse> {
+public abstract class HttpAction<Request extends ActionRequest, Response extends ActionResponse> {
 
     protected ESLogger logger = ESLoggerFactory.getLogger(HttpAction.class.getName());
 
-    public ActionFuture<Response> execute(Client client, Request request) throws ElasticSearchException {
+    public ActionFuture<Response> execute(HttpClient client, Request request) throws ElasticSearchException {
         PlainActionFuture<Response> future = newFuture();
         request.listenerThreaded(false);
         execute(client, request, future);
         return future;
     }
 
-    public void execute(Client client, Request request, ActionListener<Response> listener) {
+    public void execute(HttpClient client, Request request, ActionListener<Response> listener) {
         ActionRequestValidationException validationException = request.validate();
         if (validationException != null) {
             listener.onFailure(validationException);
@@ -69,13 +66,12 @@ public abstract class HttpAction<Client extends GenericClient,
         }
     }
 
-    protected abstract void doExecute(Client client, Request request, ActionListener<Response> listener);
+    protected abstract void doExecute(HttpClient client, Request request, ActionListener<Response> listener);
 
     protected abstract Response toResponse(HttpResponse response) throws IOException;
 
-    protected void submit(Client client, HttpRequest request, ActionListener<Response> listener) {
-        
-        AsyncHttpClient.BoundRequestBuilder builder = request.buildClient().prepareRequest(request.buildRequest());
+    protected void submit(HttpClient client, HttpRequest request, ActionListener<Response> listener) {        
+        AsyncHttpClient.BoundRequestBuilder builder = client.prepareRequest(request.buildRequest(client.settings()));
         if (logger.isDebugEnabled()) {
             logger.debug("submitting request = {}, body = {}", builder.build().toString(), builder.build().getStringData());
         }

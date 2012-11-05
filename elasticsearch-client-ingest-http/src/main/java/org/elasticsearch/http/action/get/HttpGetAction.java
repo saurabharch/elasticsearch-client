@@ -23,9 +23,9 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.index.get.GetField;
@@ -38,14 +38,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HttpGetAction extends HttpAction<HttpIngestClient, GetRequest, GetResponse> {
+public class HttpGetAction extends HttpAction<GetRequest, GetResponse> {
 
     public static final String NAME = "get";
     private static final String METHOD = "GET";
 
     @Override
-    protected void doExecute(final HttpIngestClient client, final GetRequest request, final ActionListener<GetResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, null)
+    protected void doExecute(final HttpClient client, final GetRequest request, final ActionListener<GetResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

@@ -29,9 +29,9 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
@@ -39,14 +39,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class HttpBulkAction extends HttpAction<HttpIngestClient, BulkRequest, BulkResponse> {
+public class HttpBulkAction extends HttpAction<BulkRequest, BulkResponse> {
 
     public static final String NAME = "bulk";
     private static final String METHOD = "POST";
     private static final String ENDPOINT = "_bulk";
 
     @Override
-    protected void doExecute(final HttpIngestClient client, final BulkRequest bulkRequest, final ActionListener<BulkResponse> listener) {
+    protected void doExecute(HttpClient client, BulkRequest bulkRequest, ActionListener<BulkResponse> listener) {
         try {
             StringBuilder out = new StringBuilder();
             for (ActionRequest request : bulkRequest.requests()) {
@@ -58,7 +58,7 @@ public class HttpBulkAction extends HttpAction<HttpIngestClient, BulkRequest, Bu
                     formatBulk(out, deleteRequest);
                 }
             }
-            HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+            HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                     .param("replication", bulkRequest.replicationType().name().toLowerCase())
                     .param("consistency", bulkRequest.consistencyLevel().name().toLowerCase())
                     .param("refresh", Boolean.toString(bulkRequest.refresh()))

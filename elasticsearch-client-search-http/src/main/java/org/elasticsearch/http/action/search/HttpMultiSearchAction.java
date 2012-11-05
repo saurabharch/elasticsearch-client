@@ -18,14 +18,15 @@
  */
 package org.elasticsearch.http.action.search;
 
+import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpSearchClient;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -35,15 +36,15 @@ import java.util.Map;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class HttpMultiSearchAction extends HttpAction<HttpSearchClient, MultiSearchRequest, MultiSearchResponse> {
+public class HttpMultiSearchAction extends HttpAction<MultiSearchRequest, MultiSearchResponse> {
 
     public final static String NAME = "msearch";
     private final static String METHOD = "POST";
     private final static String ENDPOINT = "_msearch";
 
     @Override
-    protected void doExecute(HttpSearchClient client, MultiSearchRequest request, ActionListener<MultiSearchResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, MultiSearchRequest request, ActionListener<MultiSearchResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         StringBuilder sb = new StringBuilder();
         for (SearchRequest sr : request.requests()) {
@@ -78,7 +79,7 @@ public class HttpMultiSearchAction extends HttpAction<HttpSearchClient, MultiSea
             builder.endObject();
             sb.append(builder.string()).append("\n").append(sr.source().toUtf8().replace('\n', ' ')).append("\n");
         } catch (IOException e) {
-            //
+            throw new ElasticSearchGenerationException("Failed to generate", e);
         }
     }
 }

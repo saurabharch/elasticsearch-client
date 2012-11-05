@@ -26,9 +26,9 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -43,15 +43,15 @@ import java.util.Map;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
-public class HttpMultiGetAction extends HttpAction<HttpIngestClient, MultiGetRequest, MultiGetResponse> {
+public class HttpMultiGetAction extends HttpAction<MultiGetRequest, MultiGetResponse> {
 
     public static final String NAME = "mget";
     private static final String METHOD = "POST";
     private static final String ENDPOINT = "_mget";
 
     @Override
-    protected void doExecute(final HttpIngestClient client, final MultiGetRequest request, final ActionListener<MultiGetResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT);
+    protected void doExecute(final HttpClient client, final MultiGetRequest request, final ActionListener<MultiGetResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
         try {
             XContentBuilder builder = jsonBuilder().startObject().startArray("docs");
             for (Item item : request.items()) {

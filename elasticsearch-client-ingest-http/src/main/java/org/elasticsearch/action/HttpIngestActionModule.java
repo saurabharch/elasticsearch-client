@@ -29,7 +29,6 @@ import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.percolate.PercolateAction;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.update.UpdateAction;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.http.action.bulk.HttpBulkAction;
 import org.elasticsearch.http.action.delete.HttpDeleteAction;
 import org.elasticsearch.http.action.get.HttpGetAction;
@@ -65,20 +64,20 @@ public class HttpIngestActionModule {
      * @param <Response>              The response type.
      */
     private static <Request extends ActionRequest, Response extends ActionResponse> 
-            void registerAction(GenericAction<Request, Response> action, HttpAction<HttpIngestClient, Request, Response> httpAction, Class... supportHttpActions) {
+            void registerAction(GenericAction<Request, Response> action, HttpAction<Request, Response> httpAction, Class... supportHttpActions) {
         actions.put(action.name(), new ActionEntry(action, httpAction, supportHttpActions));
     }
         
-    public <Request extends ActionRequest, Response extends ActionResponse> HttpAction<HttpIngestClient, Request, Response> getAction(String action) {
+    public <Request extends ActionRequest, Response extends ActionResponse> HttpAction<Request, Response> getAction(String action) {
         return actions.get(action).httpAction;
     }
 
     static class ActionEntry<Request extends ActionRequest, Response extends ActionResponse> {
         public final GenericAction<Request, Response> action;
-        public final HttpAction<HttpIngestClient, Request, Response> httpAction;
+        public final HttpAction<Request, Response> httpAction;
         public final Class[] supportHttpActions;
 
-        ActionEntry(GenericAction<Request, Response> action, HttpAction<HttpIngestClient, Request, Response> httpAction, Class... supportHttpActions) {
+        ActionEntry(GenericAction<Request, Response> action, HttpAction<Request, Response> httpAction, Class... supportHttpActions) {
             this.action = action;
             this.httpAction = httpAction;
             this.supportHttpActions = supportHttpActions;

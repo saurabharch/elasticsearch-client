@@ -25,21 +25,21 @@ import org.elasticsearch.action.explain.ExplainResponse;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpSearchClient;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpExplainAction extends HttpAction<HttpSearchClient, ExplainRequest, ExplainResponse> {
+public class HttpExplainAction extends HttpAction<ExplainRequest, ExplainResponse> {
 
     public final static String NAME = "explain";
     private final static String METHOD = "GET";
     private final static String ENDPOINT = "_explain";
     
     @Override
-    protected void doExecute(HttpSearchClient client, ExplainRequest request, ActionListener<ExplainResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, ExplainRequest request, ActionListener<ExplainResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("routing", request.routing())
                 .param("parent", request.parent())
                 .param("preference", request.preference())

@@ -23,24 +23,24 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.percolate.PercolateRequest;
 import org.elasticsearch.action.percolate.PercolateResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class HttpPercolateAction extends HttpAction<HttpIngestClient, PercolateRequest, PercolateResponse> {
+public class HttpPercolateAction extends HttpAction<PercolateRequest, PercolateResponse> {
 
     public static final String NAME = "percolate";
     private static final String METHOD = "POST";
     private static final String ENDPOINT = "_percolate";
 
     @Override
-    protected void doExecute(HttpIngestClient client, PercolateRequest request, ActionListener<PercolateResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, PercolateRequest request, ActionListener<PercolateResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .type(request.type())
                 .param("prefer_local", Boolean.toString(request.preferLocalShard()))

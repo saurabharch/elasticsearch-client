@@ -18,15 +18,11 @@
  */
 package org.elasticsearch.action.support;
 
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.ProxyServer;
 import com.ning.http.client.Realm;
 import com.ning.http.client.Realm.AuthScheme;
 import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
-import com.ning.http.client.providers.netty.NettyAsyncHttpProvider;
-import com.ning.http.client.providers.netty.NettyAsyncHttpProviderConfig;
 
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -39,19 +35,16 @@ import java.util.concurrent.Executors;
 
 public class HttpRequest {
 
-    private final Settings settings;
     private final String method;
     private final RequestBuilder builder;
     private Realm.RealmBuilder realmBuilder;
-    private AsyncHttpClient client;
     private URI uri;
     private String index;
     private String type;
     private String id;
     private String endpoint;
 
-    public HttpRequest(Settings settings, String method, String endpoint) {
-        this.settings = settings;
+    public HttpRequest(String method, String endpoint) {
         this.method = method;
         this.endpoint = endpoint;
         this.builder = new RequestBuilder(method);
@@ -210,7 +203,7 @@ public class HttpRequest {
         return sb.toString();
     }
 
-    public Request buildRequest() {
+    public Request buildRequest(Settings settings) {
         if (settings.get("http.user") != null) {
             realmBuilder = realmBuilder.setPrincipal(settings.get("http.user"));
         }
@@ -222,28 +215,4 @@ public class HttpRequest {
         return builder.setUrl(buildPath(url, index, type, id)).setRealm(realmBuilder.build()).build();
     }
 
-    public AsyncHttpClient buildClient() {
-        NettyAsyncHttpProviderConfig providerConfig = new NettyAsyncHttpProviderConfig();
-        providerConfig.addProperty(NettyAsyncHttpProviderConfig.EXECUTE_ASYNC_CONNECT, "true");
-        providerConfig.addProperty(NettyAsyncHttpProviderConfig.USE_BLOCKING_IO, "false");
-        AsyncHttpClientConfig.Builder config = new AsyncHttpClientConfig.Builder()
-                .setAsyncHttpClientProviderConfig(providerConfig)
-                .setExecutorService(Executors.newFixedThreadPool(settings.getAsInt("http.connection.poolsize", 4)))
-                .setAllowPoolingConnection(settings.getAsBoolean("http.connection.pooling", Boolean.TRUE))
-                .setConnectionTimeoutInMs(settings.getAsInt("http.connection.timeout", 3000))
-                .setMaximumConnectionsTotal(settings.getAsInt("http.connection.max", 4))
-                .setRequestTimeoutInMs((int) settings.getAsTime("http.request.timeout", TimeValue.timeValueSeconds(30L)).getMillis())
-                .setFollowRedirects(settings.getAsBoolean("http.connection.followredirect", Boolean.TRUE))
-                .setMaxRequestRetry(settings.getAsInt("http.request.maxretries", 3))
-                .setCompressionEnabled(settings.getAsBoolean("http.compression.enabled", Boolean.TRUE));
-        if (settings.get("http.proxy.host") != null && settings.getAsInt("http.proxy.port", -1) != -1) {
-            config.setProxyServer(new ProxyServer(settings.get("http.proxy.host"), settings.getAsInt("http.proxy.port", -1)));
-        }
-        this.client = new AsyncHttpClient(new NettyAsyncHttpProvider(config.build()));
-        return client;
-    }
-
-    public void shutdown() {
-        client.close();
-    }
 }

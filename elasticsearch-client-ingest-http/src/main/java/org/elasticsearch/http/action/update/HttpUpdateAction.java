@@ -21,24 +21,24 @@ package org.elasticsearch.http.action.update;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.util.Map;
 
-public class HttpUpdateAction extends HttpAction<HttpIngestClient, UpdateRequest, UpdateResponse> {
+public class HttpUpdateAction extends HttpAction<UpdateRequest, UpdateResponse> {
 
     public static final String NAME = "update";
     private static final String METHOD = "POST";
     private static final String ENDPOINT = "_update";
 
     @Override
-    protected void doExecute(final HttpIngestClient client, final UpdateRequest request, final ActionListener<UpdateResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(final HttpClient client, final UpdateRequest request, final ActionListener<UpdateResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

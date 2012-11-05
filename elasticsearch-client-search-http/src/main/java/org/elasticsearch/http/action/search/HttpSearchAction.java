@@ -23,23 +23,23 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpSearchClient;
+import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
 import java.util.Map;
-import org.elasticsearch.common.xcontent.XContentHelper;
 
-public class HttpSearchAction extends HttpAction<HttpSearchClient, SearchRequest, SearchResponse> {
+public class HttpSearchAction extends HttpAction<SearchRequest, SearchResponse> {
 
     public final static String NAME = "search";
     private final static String METHOD = "POST";
     private final static String ENDPOINT = "_search";
     
     @Override
-    protected void doExecute(HttpSearchClient client, SearchRequest request, ActionListener<SearchResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, SearchRequest request, ActionListener<SearchResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase())

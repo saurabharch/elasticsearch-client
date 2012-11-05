@@ -20,8 +20,9 @@
 package org.elasticsearch.client.http;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+
 import org.elasticsearch.ElasticSearchException;
-import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
@@ -30,9 +31,10 @@ import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.HttpClusterAdminActionModule;
 import org.elasticsearch.action.admin.cluster.ClusterAction;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.client.GenericClient;
-import org.elasticsearch.client.support.AbstractClusterAdminClient;
+import org.elasticsearch.action.support.HttpClient;
+import org.elasticsearch.client.http.support.InternalHttpAdminClient;
 import org.elasticsearch.client.internal.InternalClientSettingsPreparer;
+import org.elasticsearch.client.support.AbstractClusterAdminClient;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.compress.BasicCompressorFactory;
 import org.elasticsearch.common.io.CachedStreams;
@@ -44,12 +46,13 @@ import org.elasticsearch.env.ClientEnvironment;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.threadpool.client.ClientThreadPool;
 
+import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 
-
-public class HttpClusterAdminClient extends AbstractClusterAdminClient implements GenericClient {
+public class HttpClusterAdminClient extends AbstractClusterAdminClient {
 
     private final Settings settings;
 
@@ -58,6 +61,10 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient implement
     private final ThreadPool threadPool;
 
     private final HttpClusterAdminActionModule actions = new HttpClusterAdminActionModule();
+    
+    private final HttpClient internalClient;
+    
+    private Set<TransportAddress> addresses;
     
     public HttpClusterAdminClient() throws ElasticSearchException {
         this(ImmutableSettings.Builder.EMPTY_SETTINGS, true);
@@ -77,34 +84,34 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient implement
 
     public HttpClusterAdminClient(Settings pSettings, boolean loadConfigSettings) throws ElasticSearchException {
         Tuple<Settings, ClientEnvironment> tuple = InternalClientSettingsPreparer.prepareSettings(pSettings, loadConfigSettings);
-        Settings settings = settingsBuilder().put(tuple.v1())
+        // some defaults, not really needed, just for TransportClient compatibility
+        this.settings = settingsBuilder().put(tuple.v1())
                 .put("network.server", false)
                 .put("node.client", true)
                 .build();
         this.environment = tuple.v2();
-        this.settings = settings;
-
+        this.threadPool = new ClientThreadPool();
+        this.addresses = Sets.newHashSet();
+        this.internalClient = new InternalHttpAdminClient(settings, actions);
         BasicCompressorFactory.configure(settings);
-
-        threadPool = new ClientThreadPool();
     }
 
     public ImmutableList<TransportAddress> transportAddresses() {
-        return null; //nodesService.transportAddresses();
+        return ImmutableList.copyOf(addresses);
     }
 
-    public HttpClusterAdminClient addTransportAddress(TransportAddress transportAddress) {
-        //nodesService.addTransportAddresses(transportAddress);
+    public HttpClusterAdminClient addTransportAddress(TransportAddress address) {
+        addresses.add(address);
         return this;
     }
 
-    public HttpClusterAdminClient addTransportAddresses(TransportAddress... transportAddress) {
-        //nodesService.addTransportAddresses(transportAddress);
+    public HttpClusterAdminClient addTransportAddresses(TransportAddress... address) {
+        addresses.addAll(Arrays.asList(address));
         return this;
     }
 
-    public HttpClusterAdminClient removeTransportAddress(TransportAddress transportAddress) {
-        //nodesService.removeTransportAddress(transportAddress);
+    public HttpClusterAdminClient removeTransportAddress(TransportAddress address) {
+        addresses.remove(address);
         return this;
     }
 
@@ -115,6 +122,7 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient implement
     
     @Override
     public void close() {
+        internalClient.close();
         threadPool.shutdown();
         try {
             threadPool.awaitTermination(10, TimeUnit.SECONDS);
@@ -126,7 +134,6 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient implement
         } catch (Exception e) {
             // ignore
         }
-
         CachedStreams.clear();
         ThreadLocals.clearReferencesThreadLocals();
     }
@@ -137,40 +144,16 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient implement
     }
 
     @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
-            ActionFuture<Response> execute(Action<Request, Response, RequestBuilder, Client> action, Request request) {
-        HttpAction<HttpClusterAdminClient, Request,Response> httpAction = actions.getAction(action.name());
-        return httpAction.execute(this, request);
-    }
-
-    @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
-            void execute(Action<Request, Response, RequestBuilder, Client> action, Request request, ActionListener<Response> listener) {
-        HttpAction<HttpClusterAdminClient, Request, Response> httpAction = actions.getAction(action.name());
-        httpAction.execute(this, request, listener);
-    }
-
-    @Override
-    public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
-            RequestBuilder prepareExecute(Action<Request, Response, RequestBuilder, Client> action) {
-        return action.newRequestBuilder((Client)this);
-    }
-
-    // ClusterAction interface. Hm.
-    
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             ActionFuture<Response> execute(ClusterAction<Request, Response, RequestBuilder> action, Request request) {
-        HttpAction<HttpClusterAdminClient, Request,Response> httpAction = actions.getAction(action.name());
-        return httpAction.execute(this, request);
+        HttpAction<Request,Response> httpAction = actions.getAction(action.name());
+        return httpAction.execute(internalClient, request);
     }
 
     @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             void execute(ClusterAction<Request, Response, RequestBuilder> action, Request request, ActionListener<Response> listener) {
-        HttpAction<HttpClusterAdminClient, Request, Response> httpAction = actions.getAction(action.name());
-        httpAction.execute(this, request, listener);
+        HttpAction<Request,Response> httpAction = actions.getAction(action.name());
+        httpAction.execute(internalClient, request);
     }
-
-
 }

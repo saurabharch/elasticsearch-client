@@ -24,21 +24,21 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequest.OpType;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpIngestClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.util.Map;
 
-public class HttpIndexAction extends HttpAction<HttpIngestClient, IndexRequest, IndexResponse> {
+public class HttpIndexAction extends HttpAction<IndexRequest, IndexResponse> {
 
     public static final String NAME = "index";
     private static final String METHOD = "PUT";
 
     @Override
-    protected void doExecute(final HttpIngestClient client, final IndexRequest request, final ActionListener<IndexResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, request.opType().equals(OpType.CREATE) ? "_create" : null)
+    protected void doExecute(final HttpClient client, final IndexRequest request, final ActionListener<IndexResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, request.opType().equals(OpType.CREATE) ? "_create" : null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

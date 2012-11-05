@@ -26,8 +26,21 @@
             <groupId>org.elasticsearch.client</groupId>
             <artifactId>elasticsearch-transport-netty</artifactId>
             <version>${project.version}</version>
+            <type>jar</type>
+            <scope>compile</scope>
         </dependency>        
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>                
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

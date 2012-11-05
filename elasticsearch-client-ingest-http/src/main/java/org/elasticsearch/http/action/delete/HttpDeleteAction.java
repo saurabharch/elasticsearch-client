@@ -23,6 +23,7 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.client.http.HttpIngestClient;
@@ -31,14 +32,14 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpDeleteAction extends HttpAction<HttpIngestClient, DeleteRequest, DeleteResponse> {
+public class HttpDeleteAction extends HttpAction<DeleteRequest, DeleteResponse> {
 
     public static final String NAME = "delete";
     private static final String METHOD = "DELETE";
 
     @Override
-    protected void doExecute(final HttpIngestClient client, final DeleteRequest request, final ActionListener<DeleteResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, null)
+    protected void doExecute(HttpClient client, DeleteRequest request, ActionListener<DeleteResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

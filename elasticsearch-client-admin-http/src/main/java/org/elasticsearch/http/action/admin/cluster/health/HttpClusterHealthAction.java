@@ -22,16 +22,19 @@ package org.elasticsearch.http.action.admin.cluster.health;
 import java.io.IOException;
 import java.util.Map;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ActionRequestBuilder;
+import org.elasticsearch.action.admin.cluster.HttpClusterAction;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
+import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 
-public class HttpClusterHealthAction extends HttpAction<HttpClusterAdminClient, ClusterHealthRequest, ClusterHealthResponse>{
+public class HttpClusterHealthAction extends HttpAction<ClusterHealthRequest, ClusterHealthResponse>{
 
     public static final String NAME = "cluster_health";
     
@@ -40,8 +43,8 @@ public class HttpClusterHealthAction extends HttpAction<HttpClusterAdminClient, 
     private static final String ENDPOINT = "_cluster/health";
     
     @Override
-    protected void doExecute(HttpClusterAdminClient client, ClusterHealthRequest request, ActionListener<ClusterHealthResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, ClusterHealthRequest request, ActionListener<ClusterHealthResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .param("master_timeout", request.masterNodeTimeout())
                 .param("timeout", request.timeout())

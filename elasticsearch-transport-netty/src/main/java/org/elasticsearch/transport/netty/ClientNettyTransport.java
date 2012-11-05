@@ -147,7 +147,6 @@ public class ClientNettyTransport implements NettyTransport {
     // node id to actual channel
     final ConcurrentMap<DiscoveryNode, NodeChannels> connectedNodes = newConcurrentMap();
 
-
     private volatile Channel serverChannel;
 
     private volatile TransportServiceAdapter transportServiceAdapter;
@@ -168,7 +167,6 @@ public class ClientNettyTransport implements NettyTransport {
     }
 
     public ClientNettyTransport(Settings settings, ThreadPool threadPool, TransportNetworkService networkService) {
-        //super(settings);
         this.logger = Loggers.getLogger(getClass(), settings);
         this.settings = settings;
         this.componentSettings = settings.getComponentSettings(getClass());
@@ -499,9 +497,6 @@ public class ClientNettyTransport implements NettyTransport {
     }
 
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
-        //if (!lifecycle.started()) {
-            // ignore
-        //}
         if (isCloseConnectionException(e.getCause())) {
             if (logger.isTraceEnabled()) {
                 logger.trace("close connection exception caught on transport layer [{}], disconnecting from relevant node", e.getCause(), ctx.getChannel());
@@ -565,18 +560,6 @@ public class ClientNettyTransport implements NettyTransport {
 
         ChannelFuture future = targetChannel.write(buffer);
         future.addListener(new CacheFutureListener(cachedEntry));
-        // We handle close connection exception in the #exceptionCaught method, which is the main reason we want to add this future
-//        channelFuture.addListener(new ChannelFutureListener() {
-//            @Override public void operationComplete(ChannelFuture future) throws Exception {
-//                if (!future.isSuccess()) {
-//                    // maybe add back the retry?
-//                    TransportResponseHandler handler = transportServiceAdapter.remove(requestId);
-//                    if (handler != null) {
-//                        handler.handleException(new RemoteTransportException("Failed write request", new SendRequestTransportException(node, action, future.getCause())));
-//                    }
-//                }
-//            }
-//        });
     }
 
     @Override
@@ -595,21 +578,12 @@ public class ClientNettyTransport implements NettyTransport {
     }
 
     public void connectToNode(DiscoveryNode node, boolean light) {
-        //if (!lifecycle.started()) {
-        //    throw new ElasticSearchIllegalStateException("can't add nodes to a stopped transport");
-        //}
         if (node == null) {
             throw new ConnectTransportException(null, "can't connect to a null node");
         }
         globalLock.readLock().lock();
         try {
-            //if (!lifecycle.started()) {
-            //    throw new ElasticSearchIllegalStateException("can't add nodes to a stopped transport");
-            //}
             synchronized (connectLock(node.id())) {
-                //if (!lifecycle.started()) {
-                //    throw new ElasticSearchIllegalStateException("can't add nodes to a stopped transport");
-                //}
                 try {
                     NodeChannels nodeChannels = connectedNodes.get(node);
                     if (nodeChannels != null) {

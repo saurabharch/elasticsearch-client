@@ -21,6 +21,7 @@ package org.elasticsearch.action;
 
 import com.google.common.collect.Maps;
 import java.util.Map;
+//import org.elasticsearch.action.admin.cluster.HttpClusterAction;
 import org.elasticsearch.action.admin.cluster.ClusterAction;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthAction;
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsAction;
@@ -33,7 +34,6 @@ import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsAction;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsAction;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateAction;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.http.action.admin.cluster.health.HttpClusterHealthAction;
 import org.elasticsearch.http.action.admin.cluster.node.hotthreads.HttpNodesHotThreadsAction;
 import org.elasticsearch.http.action.admin.cluster.node.info.HttpNodesInfoAction;
@@ -55,14 +55,14 @@ public class HttpClusterAdminActionModule {
     static {
         registerAction(ClusterHealthAction.INSTANCE, new HttpClusterHealthAction());
         registerAction(NodesHotThreadsAction.INSTANCE, new HttpNodesHotThreadsAction());
-        registerAction(NodesInfoAction.INSTANCE, new HttpNodesInfoAction());
+   /*     registerAction(NodesInfoAction.INSTANCE, new HttpNodesInfoAction());
         registerAction(NodesRestartAction.INSTANCE, new HttpNodesRestartAction());
         registerAction(NodesShutdownAction.INSTANCE, new HttpNodesShutdownAction());
         registerAction(NodesStatsAction.INSTANCE, new HttpNodesStatsAction());
         registerAction(ClusterRerouteAction.INSTANCE, new HttpClusterRerouteAction());
         registerAction(ClusterGetSettingsAction.INSTANCE, new HttpClusterGetSettingsAction());
         registerAction(ClusterUpdateSettingsAction.INSTANCE, new HttpClusterUpdateSettingsAction());
-        registerAction(ClusterStateAction.INSTANCE, new HttpClusterStateAction());
+        registerAction(ClusterStateAction.INSTANCE, new HttpClusterStateAction());*/
     }
 
     /**
@@ -75,25 +75,23 @@ public class HttpClusterAdminActionModule {
      * @param <Request> The request type.
      * @param <Response> The response type.
      */
-    private static <Request extends ActionRequest, Response extends ActionResponse> 
-            void registerAction(GenericAction<Request, Response> action, HttpAction<HttpClusterAdminClient, Request, Response> httpAction, Class... supportHttpActions) {
-        if (action instanceof ClusterAction) {
-            actions.put(action.name(), new ActionEntry(action, httpAction, supportHttpActions));
-        }
+    private static <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
+            void registerAction(ClusterAction<Request, Response, RequestBuilder> action, HttpAction<Request, Response> httpAction, Class... supportHttpActions) {
+        actions.put(action.name(), new ActionEntry(action, httpAction, supportHttpActions));
     }
 
     public <Request extends ActionRequest, Response extends ActionResponse> 
-            HttpAction<HttpClusterAdminClient, Request, Response> getAction(String action) {
+            HttpAction<Request, Response> getAction(String action) {
         return actions.get(action).httpAction;
     }
 
-    static class ActionEntry<Request extends ActionRequest, Response extends ActionResponse> {
+    static class ActionEntry<Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> {
 
-        public final GenericAction<Request, Response> action;
-        public final HttpAction<HttpClusterAdminClient, Request, Response> httpAction;
+        public final ClusterAction<Request, Response, RequestBuilder> action;
+        public final HttpAction<Request, Response> httpAction;
         public final Class[] supportHttpActions;
 
-        ActionEntry(GenericAction<Request, Response> action, HttpAction<HttpClusterAdminClient, Request, Response> httpAction, Class... supportHttpActions) {
+        ActionEntry(ClusterAction<Request, Response, RequestBuilder> action, HttpAction<Request, Response> httpAction, Class... supportHttpActions) {
             this.action = action;
             this.httpAction = httpAction;
             this.supportHttpActions = supportHttpActions;

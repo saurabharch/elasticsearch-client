@@ -23,7 +23,6 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import org.elasticsearch.action.count.CountAction;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.client.http.HttpSearchClient;
 import org.elasticsearch.http.action.count.HttpCountAction;
 
 public class HttpSearchActionModule {
@@ -47,20 +46,20 @@ public class HttpSearchActionModule {
      * @param <Response>              The response type.
      */
     private static <Request extends ActionRequest, Response extends ActionResponse> 
-            void registerAction(GenericAction<Request, Response> action, HttpAction<HttpSearchClient, Request, Response> httpAction, Class... supportHttpActions) {
+            void registerAction(GenericAction<Request, Response> action, HttpAction<Request, Response> httpAction, Class... supportHttpActions) {
         actions.put(action.name(), new ActionEntry(action, httpAction, supportHttpActions));
     }
         
-    public <Request extends ActionRequest, Response extends ActionResponse> HttpAction<HttpSearchClient,Request, Response> getAction(String action) {
+    public <Request extends ActionRequest, Response extends ActionResponse> HttpAction<Request, Response> getAction(String action) {
         return actions.get(action).httpAction;
     }
 
     static class ActionEntry<Request extends ActionRequest, Response extends ActionResponse> {
         public final GenericAction<Request, Response> action;
-        public final HttpAction<HttpSearchClient,Request, Response> httpAction;
+        public final HttpAction<Request, Response> httpAction;
         public final Class[] supportHttpActions;
 
-        ActionEntry(GenericAction<Request, Response> action, HttpAction<HttpSearchClient,Request, Response> httpAction, Class... supportHttpActions) {
+        ActionEntry(GenericAction<Request, Response> action, HttpAction<Request, Response> httpAction, Class... supportHttpActions) {
             this.action = action;
             this.httpAction = httpAction;
             this.supportHttpActions = supportHttpActions;

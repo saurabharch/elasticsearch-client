@@ -3,12 +3,11 @@ package org.elasticsearch.client.http;
 import java.net.ConnectException;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkResponse;
+import static org.elasticsearch.client.IngestRequests.indexRequest;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.util.concurrent.UncategorizedExecutionException;
 import org.testng.annotations.Test;
-
-import static org.elasticsearch.client.IngestRequests.indexRequest;
 
 public class BulkTests {
 

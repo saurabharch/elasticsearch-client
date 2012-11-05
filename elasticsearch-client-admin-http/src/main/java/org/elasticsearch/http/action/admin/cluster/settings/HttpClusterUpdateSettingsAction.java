@@ -23,9 +23,9 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -35,15 +35,15 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpClusterUpdateSettingsAction extends HttpAction<HttpClusterAdminClient, ClusterUpdateSettingsRequest, ClusterUpdateSettingsResponse> {
+public class HttpClusterUpdateSettingsAction extends HttpAction<ClusterUpdateSettingsRequest, ClusterUpdateSettingsResponse> {
 
     public static final String NAME = "cluster_update_settings";
     private static final String METHOD = "PUT";
     private static final String ENDPOINT = "_cluster/settings";
 
     @Override
-    protected void doExecute(HttpClusterAdminClient client, ClusterUpdateSettingsRequest request, ActionListener<ClusterUpdateSettingsResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT);
+    protected void doExecute(HttpClient client, ClusterUpdateSettingsRequest request, ActionListener<ClusterUpdateSettingsResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
         if (request.persistentSettings() != null) {
             httpRequest.body(toBody(request.persistentSettings(), "persistent"));
         }

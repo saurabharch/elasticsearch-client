@@ -22,24 +22,24 @@ package org.elasticsearch.http.action.mlt;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.action.mlt.MoreLikeThisRequest;
 import org.elasticsearch.common.xcontent.XContentHelper;
-import org.elasticsearch.client.http.HttpSearchClient;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpMoreLikeThisAction extends HttpAction<HttpSearchClient, MoreLikeThisRequest, SearchResponse> {
+public class HttpMoreLikeThisAction extends HttpAction<MoreLikeThisRequest, SearchResponse> {
 
     public final static String NAME = "mlt";
     private final static String METHOD = "POST";
     private final static String ENDPOINT = "_mlt";
 
     @Override
-    protected void doExecute(HttpSearchClient client, MoreLikeThisRequest request, ActionListener<SearchResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, MoreLikeThisRequest request, ActionListener<SearchResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("mlt_fields", request.fields())
                 .param("percent_terms_to_match", request.percentTermsToMatch())
                 .param("min_term_freq", request.minTermFreq())

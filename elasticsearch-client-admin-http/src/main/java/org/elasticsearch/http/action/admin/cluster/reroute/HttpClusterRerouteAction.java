@@ -23,15 +23,15 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequest;
 import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpClusterRerouteAction extends HttpAction<HttpClusterAdminClient, ClusterRerouteRequest, ClusterRerouteResponse>{
+public class HttpClusterRerouteAction extends HttpAction<ClusterRerouteRequest, ClusterRerouteResponse>{
 
     public static final String NAME = "cluster_reroute";
     
@@ -40,8 +40,8 @@ public class HttpClusterRerouteAction extends HttpAction<HttpClusterAdminClient,
     private static final String ENDPOINT = "_cluster/reroute";
     
     @Override
-    protected void doExecute(HttpClusterAdminClient client, ClusterRerouteRequest request, ActionListener<ClusterRerouteResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, ClusterRerouteRequest request, ActionListener<ClusterRerouteResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("master_timeout", request.masterNodeTimeout())
                 ;
         submit(client, httpRequest, listener);        

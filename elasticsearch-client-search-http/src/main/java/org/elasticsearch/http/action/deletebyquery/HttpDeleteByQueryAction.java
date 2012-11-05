@@ -25,20 +25,20 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpSearchClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
-public class HttpDeleteByQueryAction extends HttpAction<HttpSearchClient, DeleteByQueryRequest, DeleteByQueryResponse> {
+public class HttpDeleteByQueryAction extends HttpAction<DeleteByQueryRequest, DeleteByQueryResponse> {
     
     public final static String NAME = "deletebyquery";
     private final static String METHOD = "DELETE";
     private final static String ENDPOINT = "_query";
     
     @Override
-    protected void doExecute(HttpSearchClient client, DeleteByQueryRequest request, ActionListener<DeleteByQueryResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, DeleteByQueryRequest request, ActionListener<DeleteByQueryResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("routing", request.routing())
                 .param("consistencylevel", request.consistencyLevel().name().toLowerCase())
                 .param("replication", request.replicationType().name().toLowerCase())

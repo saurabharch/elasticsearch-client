@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.admin.cluster.node.shutdown;
 
 import java.io.IOException;
@@ -25,27 +24,24 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.shutdown.NodesShutdownRequest;
 import org.elasticsearch.action.admin.cluster.node.shutdown.NodesShutdownResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
-public class HttpNodesShutdownAction extends HttpAction<HttpClusterAdminClient, NodesShutdownRequest, NodesShutdownResponse>{
+public class HttpNodesShutdownAction extends HttpAction<NodesShutdownRequest, NodesShutdownResponse> {
 
     public static final String NAME = "cluster_nodes_shutdown";
-    
     private static final String METHOD = "POST";
-    
     private static final String ENDPOINT = "/_cluster/nodes/_shutdown";
-    
+
     @Override
-    protected void doExecute(HttpClusterAdminClient client, NodesShutdownRequest request, ActionListener<NodesShutdownResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, NodesShutdownRequest request, ActionListener<NodesShutdownResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("delay", request.delay())
-                .param("exit", request.exit())
-                ;
-        submit(client, httpRequest, listener);        
+                .param("exit", request.exit());
+        submit(client, httpRequest, listener);
     }
 
     @Override
@@ -54,5 +50,4 @@ public class HttpNodesShutdownAction extends HttpAction<HttpClusterAdminClient, 
         logger.info("response = {}", map);
         return null;
     }
-    
 }

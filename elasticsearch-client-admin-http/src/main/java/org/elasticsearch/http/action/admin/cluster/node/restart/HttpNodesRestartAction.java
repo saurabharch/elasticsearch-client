@@ -16,37 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.admin.cluster.node.restart;
 
-import java.io.IOException;
-import java.util.Map;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.restart.NodesRestartRequest;
 import org.elasticsearch.action.admin.cluster.node.restart.NodesRestartResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
+import java.io.IOException;
+import java.util.Map;
 
-public class HttpNodesRestartAction extends HttpAction<HttpClusterAdminClient, NodesRestartRequest, NodesRestartResponse>{
+public class HttpNodesRestartAction extends HttpAction<NodesRestartRequest, NodesRestartResponse> {
 
     public static final String NAME = "cluster_nodes_restart";
-    
     private static final String METHOD = "POST";
-    
     private static final String ENDPOINT = "/_cluster/nodes/_restart";
-    
+
     @Override
-    protected void doExecute(HttpClusterAdminClient client, NodesRestartRequest request, ActionListener<NodesRestartResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, NodesRestartRequest request, ActionListener<NodesRestartResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("delay", request.delay())
-                .param("timeout", request.timeout())
-                ;
-        submit(client, httpRequest, listener);        
+                .param("timeout", request.timeout());
+        submit(client, httpRequest, listener);
     }
 
     @Override
@@ -55,5 +51,4 @@ public class HttpNodesRestartAction extends HttpAction<HttpClusterAdminClient, N
         logger.info("response = {}", map);
         return null;
     }
-    
 }

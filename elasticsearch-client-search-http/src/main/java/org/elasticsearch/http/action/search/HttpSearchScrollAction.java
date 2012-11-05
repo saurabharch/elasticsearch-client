@@ -23,23 +23,23 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpSearchClient;
+import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
 import java.util.Map;
-import org.elasticsearch.common.xcontent.XContentHelper;
 
-public class HttpSearchScrollAction extends HttpAction<HttpSearchClient, SearchScrollRequest, SearchResponse> {
+public class HttpSearchScrollAction extends HttpAction<SearchScrollRequest, SearchResponse> {
 
     public final static String NAME = "search/scroll";
     private final static String METHOD = "POST";
     private final static String ENDPOINT = "_search/scroll";
     
     @Override
-    protected void doExecute(HttpSearchClient client, SearchScrollRequest request, ActionListener<SearchResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, SearchScrollRequest request, ActionListener<SearchResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("scroll", request.scroll().keepAlive().format())
                 .param("scroll_id", request.scrollId());

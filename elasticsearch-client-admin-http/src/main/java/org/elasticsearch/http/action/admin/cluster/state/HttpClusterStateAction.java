@@ -23,25 +23,23 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
 import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.client.http.HttpClusterAdminClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpClusterStateAction extends HttpAction<HttpClusterAdminClient, ClusterStateRequest, ClusterStateResponse>{
+public class HttpClusterStateAction extends HttpAction<ClusterStateRequest, ClusterStateResponse>{
 
     public static final String NAME = "cluster_get_state";
-    
     private static final String METHOD = "GET";
-    
     private static final String ENDPOINT = "_cluster/state";
     
     @Override
-    protected void doExecute(HttpClusterAdminClient client, ClusterStateRequest request, ActionListener<ClusterStateResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(client.settings(), METHOD, ENDPOINT)
+    protected void doExecute(HttpClient client, ClusterStateRequest request, ActionListener<ClusterStateResponse> listener) {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("master_timeout", request.masterNodeTimeout())
                 .param("filter_nodes", request.filterNodes())
                 .param("filter_routing_table", request.filterRoutingTable())
