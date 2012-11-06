@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Written by Doug Lea with assistance from members of JCP JSR-166<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Expert Group and released to the public domain, as explained at<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * http://creativecommons.org/publicdomain/zero/1.0/<a name="line.4"></a>
+<span class="sourceLineNo">005</span> */<a name="line.5"></a>
+<span class="sourceLineNo">006</span><a name="line.6"></a>
+<span class="sourceLineNo">007</span>package org.elasticsearch.common.util.concurrent.jsr166e;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import java.util.concurrent.atomic.AtomicLong;<a name="line.8"></a>
+<span class="sourceLineNo">009</span>import java.io.IOException;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import java.io.Serializable;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import java.io.ObjectInputStream;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import java.io.ObjectOutputStream;<a name="line.12"></a>
+<span class="sourceLineNo">013</span><a name="line.13"></a>
+<span class="sourceLineNo">014</span>/**<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * One or more variables that together maintain an initially zero<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * {@code long} sum.  When updates (method {@link #add}) are contended<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * across threads, the set of variables may grow dynamically to reduce<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * contention. Method {@link #sum} (or, equivalently, {@link<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * #longValue}) returns the current total combined across the<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * variables maintaining the sum.<a name="line.20"></a>
+<span class="sourceLineNo">021</span> *<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * &lt;p&gt; This class is usually preferable to {@link AtomicLong} when<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * multiple threads update a common sum that is used for purposes such<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * as collecting statistics, not for fine-grained synchronization<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * control.  Under low update contention, the two classes have similar<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * characteristics. But under high contention, expected throughput of<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * this class is significantly higher, at the expense of higher space<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * consumption.<a name="line.28"></a>
+<span class="sourceLineNo">029</span> *<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * &lt;p&gt;This class extends {@link Number}, but does &lt;em&gt;not&lt;/em&gt; define<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * methods such as {@code hashCode} and {@code compareTo} because<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * instances are expected to be mutated, and so are not useful as<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * collection keys.<a name="line.33"></a>
+<span class="sourceLineNo">034</span> *<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * &lt;p&gt;&lt;em&gt;jsr166e note: This class is targeted to be placed in<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * java.util.concurrent.atomic&lt;em&gt;<a name="line.36"></a>
+<span class="sourceLineNo">037</span> *<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * @since 1.8<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * @author Doug Lea<a name="line.39"></a>
+<span class="sourceLineNo">040</span> */<a name="line.40"></a>
+<span class="sourceLineNo">041</span>public class LongAdder extends Striped64 implements Serializable {<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    private static final long serialVersionUID = 7249069246863182397L;<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>    /**<a name="line.44"></a>
+<span class="sourceLineNo">045</span>     * Version of plus for use in retryUpdate<a name="line.45"></a>
+<span class="sourceLineNo">046</span>     */<a name="line.46"></a>
+<span class="sourceLineNo">047</span>    final long fn(long v, long x) { return v + x; }<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>    /**<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * Creates a new adder with initial sum of zero.<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     */<a name="line.51"></a>
+<span class="sourceLineNo">052</span>    public LongAdder() {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    /**<a name="line.55"></a>
+<span class="sourceLineNo">056</span>     * Adds the given value.<a name="line.56"></a>
+<span class="sourceLineNo">057</span>     *<a name="line.57"></a>
+<span class="sourceLineNo">058</span>     * @param x the value to add<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     */<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    public void add(long x) {<a name="line.60"></a>
+<span class="sourceLineNo">061</span>        Cell[] as; long b, v; HashCode hc; Cell a; int n;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>        if ((as = cells) != null || !casBase(b = base, b + x)) {<a name="line.62"></a>
+<span class="sourceLineNo">063</span>            boolean uncontended = true;<a name="line.63"></a>
+<span class="sourceLineNo">064</span>            int h = (hc = threadHashCode.get()).code;<a name="line.64"></a>
+<span class="sourceLineNo">065</span>            if (as == null || (n = as.length) &lt; 1 ||<a name="line.65"></a>
+<span class="sourceLineNo">066</span>                (a = as[(n - 1) &amp; h]) == null ||<a name="line.66"></a>
+<span class="sourceLineNo">067</span>                !(uncontended = a.cas(v = a.value, v + x)))<a name="line.67"></a>
+<span class="sourceLineNo">068</span>                retryUpdate(x, hc, uncontended);<a name="line.68"></a>
+<span class="sourceLineNo">069</span>        }<a name="line.69"></a>
+<span class="sourceLineNo">070</span>    }<a name="line.70"></a>
+<span class="sourceLineNo">071</span><a name="line.71"></a>
+<span class="sourceLineNo">072</span>    /**<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * Equivalent to {@code add(1)}.<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     */<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    public void increment() {<a name="line.75"></a>
+<span class="sourceLineNo">076</span>        add(1L);<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    }<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    /**<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * Equivalent to {@code add(-1)}.<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     */<a name="line.81"></a>
+<span class="sourceLineNo">082</span>    public void decrement() {<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        add(-1L);<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    }<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>    /**<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * Returns the current sum.  The returned value is &lt;em&gt;NOT&lt;/em&gt; an<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * atomic snapshot: Invocation in the absence of concurrent<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * updates returns an accurate result, but concurrent updates that<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * occur while the sum is being calculated might not be<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * incorporated.<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     *<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * @return the sum<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     */<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    public long sum() {<a name="line.95"></a>
+<span class="sourceLineNo">096</span>        long sum = base;<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        Cell[] as = cells;<a name="line.97"></a>
+<span class="sourceLineNo">098</span>        if (as != null) {<a name="line.98"></a>
+<span class="sourceLineNo">099</span>            int n = as.length;<a name="line.99"></a>
+<span class="sourceLineNo">100</span>            for (int i = 0; i &lt; n; ++i) {<a name="line.100"></a>
+<span class="sourceLineNo">101</span>                Cell a = as[i];<a name="line.101"></a>
+<span class="sourceLineNo">102</span>                if (a != null)<a name="line.102"></a>
+<span class="sourceLineNo">103</span>                    sum += a.value;<a name="line.103"></a>
+<span class="sourceLineNo">104</span>            }<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        }<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        return sum;<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    }<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>    /**<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * Resets variables maintaining the sum to zero.  This method may<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * be a useful alternative to creating a new adder, but is only<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * effective if there are no concurrent updates.  Because this<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * method is intrinsically racy, it should only be used when it is<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * known that no threads are concurrently updating.<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     */<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    public void reset() {<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        internalReset(0L);<a name="line.117"></a>
+<span class="sourceLineNo">118</span>    }<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>    /**<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * Equivalent in effect to {@link #sum} followed by {@link<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * #reset}. This method may apply for example during quiescent<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * points between multithreaded computations.  If there are<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * updates concurrent with this method, the returned value is<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * &lt;em&gt;not&lt;/em&gt; guaranteed to be the final value occurring before<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * the reset.<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     *<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * @return the sum<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     */<a name="line.129"></a>
+<span class="sourceLineNo">130</span>    public long sumThenReset() {<a name="line.130"></a>
+<span class="sourceLineNo">131</span>        long sum = base;<a name="line.131"></a>
+<span class="sourceLineNo">132</span>        Cell[] as = cells;<a name="line.132"></a>
+<span class="sourceLineNo">133</span>        base = 0L;<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        if (as != null) {<a name="line.134"></a>
+<span class="sourceLineNo">135</span>            int n = as.length;<a name="line.135"></a>
+<span class="sourceLineNo">136</span>            for (int i = 0; i &lt; n; ++i) {<a name="line.136"></a>
+<span class="sourceLineNo">137</span>                Cell a = as[i];<a name="line.137"></a>
+<span class="sourceLineNo">138</span>                if (a != null) {<a name="line.138"></a>
+<span class="sourceLineNo">139</span>                    sum += a.value;<a name="line.139"></a>
+<span class="sourceLineNo">140</span>                    a.value = 0L;<a name="line.140"></a>
+<span class="sourceLineNo">141</span>                }<a name="line.141"></a>
+<span class="sourceLineNo">142</span>            }<a name="line.142"></a>
+<span class="sourceLineNo">143</span>        }<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        return sum;<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    }<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>    /**<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * Returns the String representation of the {@link #sum}.<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * @return the String representation of the {@link #sum}<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     */<a name="line.150"></a>
+<span class="sourceLineNo">151</span>    public String toString() {<a name="line.151"></a>
+<span class="sourceLineNo">152</span>        return Long.toString(sum());<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    }<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span>    /**<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * Equivalent to {@link #sum}.<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     *<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * @return the sum<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     */<a name="line.159"></a>
+<span class="sourceLineNo">160</span>    public long longValue() {<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        return sum();<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    }<a name="line.162"></a>
+<span class="sourceLineNo">163</span><a name="line.163"></a>
+<span class="sourceLineNo">164</span>    /**<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * Returns the {@link #sum} as an {@code int} after a narrowing<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * primitive conversion.<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     */<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    public int intValue() {<a name="line.168"></a>
+<span class="sourceLineNo">169</span>        return (int)sum();<a name="line.169"></a>
+<span class="sourceLineNo">170</span>    }<a name="line.170"></a>
+<span class="sourceLineNo">171</span><a name="line.171"></a>
+<span class="sourceLineNo">172</span>    /**<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * Returns the {@link #sum} as a {@code float}<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * after a widening primitive conversion.<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     */<a name="line.175"></a>
+<span class="sourceLineNo">176</span>    public float floatValue() {<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        return (float)sum();<a name="line.177"></a>
+<span class="sourceLineNo">178</span>    }<a name="line.178"></a>
+<span class="sourceLineNo">179</span><a name="line.179"></a>
+<span class="sourceLineNo">180</span>    /**<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * Returns the {@link #sum} as a {@code double} after a widening<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     * primitive conversion.<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     */<a name="line.183"></a>
+<span class="sourceLineNo">184</span>    public double doubleValue() {<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        return (double)sum();<a name="line.185"></a>
+<span class="sourceLineNo">186</span>    }<a name="line.186"></a>
+<span class="sourceLineNo">187</span><a name="line.187"></a>
+<span class="sourceLineNo">188</span>    private void writeObject(java.io.ObjectOutputStream s)<a name="line.188"></a>
+<span class="sourceLineNo">189</span>        throws java.io.IOException {<a name="line.189"></a>
+<span class="sourceLineNo">190</span>        s.defaultWriteObject();<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        s.writeLong(sum());<a name="line.191"></a>
+<span class="sourceLineNo">192</span>    }<a name="line.192"></a>
+<span class="sourceLineNo">193</span><a name="line.193"></a>
+<span class="sourceLineNo">194</span>    private void readObject(ObjectInputStream s)<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        throws IOException, ClassNotFoundException {<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        s.defaultReadObject();<a name="line.196"></a>
+<span class="sourceLineNo">197</span>        busy = 0;<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        cells = null;<a name="line.198"></a>
+<span class="sourceLineNo">199</span>        base = s.readLong();<a name="line.199"></a>
+<span class="sourceLineNo">200</span>    }<a name="line.200"></a>
+<span class="sourceLineNo">201</span><a name="line.201"></a>
+<span class="sourceLineNo">202</span>}<a name="line.202"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to ElasticSearch and Shay Banon under one<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * or more contributor license agreements.  See the NOTICE file<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * distributed with this work for additional information<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * regarding copyright ownership. ElasticSearch licenses this<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * file to you under the Apache License, Version 2.0 (the<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * "License"); you may not use this file except in compliance<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * with the License.  You may obtain a copy of the License at<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *    http://www.apache.org/licenses/LICENSE-2.0<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * Unless required by applicable law or agreed to in writing,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * software distributed under the License is distributed on an<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * KIND, either express or implied.  See the License for the<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * specific language governing permissions and limitations<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * under the License.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> */<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>package org.elasticsearch.threadpool.client;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>import com.google.common.collect.ImmutableMap;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import com.google.common.collect.Maps;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import com.google.common.util.concurrent.MoreExecutors;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.elasticsearch.ElasticSearchIllegalArgumentException;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.elasticsearch.common.Nullable;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.elasticsearch.common.io.FileSystemUtils;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.elasticsearch.common.logging.ESLogger;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.elasticsearch.common.logging.ESLoggerFactory;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.elasticsearch.common.settings.ImmutableSettings;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.elasticsearch.common.settings.Settings;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.elasticsearch.common.unit.TimeValue;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.elasticsearch.common.util.concurrent.*;<a name="line.34"></a>
+<span class="sourceLineNo">035</span><a name="line.35"></a>
+<span class="sourceLineNo">036</span>import java.util.ArrayList;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import java.util.List;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import java.util.Map;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import java.util.concurrent.*;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>import org.elasticsearch.threadpool.ThreadPool;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>import org.elasticsearch.threadpool.ThreadPoolInfo;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>import org.elasticsearch.threadpool.ThreadPoolInfoElement;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>import org.elasticsearch.threadpool.ThreadPoolStats;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>import org.elasticsearch.threadpool.ThreadPoolStatsElement;<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>import static org.elasticsearch.common.unit.TimeValue.timeValueMinutes;<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>/**<a name="line.49"></a>
+<span class="sourceLineNo">050</span> *<a name="line.50"></a>
+<span class="sourceLineNo">051</span> */<a name="line.51"></a>
+<span class="sourceLineNo">052</span>public class ClientThreadPool implements ThreadPool {<a name="line.52"></a>
+<span class="sourceLineNo">053</span><a name="line.53"></a>
+<span class="sourceLineNo">054</span>    private static ESLogger logger = ESLoggerFactory.getLogger(ClientThreadPool.class.getName());<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>    private final Settings settings;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>    public static class Names {<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        public static final String SAME = "same";<a name="line.59"></a>
+<span class="sourceLineNo">060</span>        public static final String GENERIC = "generic";<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    }<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>    private final ImmutableMap&lt;String, ExecutorHolder&gt; executors;<a name="line.63"></a>
+<span class="sourceLineNo">064</span><a name="line.64"></a>
+<span class="sourceLineNo">065</span>    private final ScheduledThreadPoolExecutor scheduler;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>    private final EstimatedTimeThread estimatedTimeThread;<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>    public ClientThreadPool() {<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        this(ImmutableSettings.Builder.EMPTY_SETTINGS);<a name="line.70"></a>
+<span class="sourceLineNo">071</span>    }<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>    public ClientThreadPool(Settings settings) {<a name="line.73"></a>
+<span class="sourceLineNo">074</span>        this.settings = settings;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        <a name="line.75"></a>
+<span class="sourceLineNo">076</span>        Map&lt;String, Settings&gt; groupSettings = settings.getGroups("threadpool");<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>        Map&lt;String, ExecutorHolder&gt; executors = Maps.newHashMap();<a name="line.78"></a>
+<span class="sourceLineNo">079</span>        executors.put(Names.GENERIC, build(Names.GENERIC, "cached", groupSettings.get(Names.GENERIC), settingsBuilder().put("keep_alive", "30s").build()));<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        executors.put(Names.SAME, new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new ClientThreadPoolInfoElement(Names.SAME, "same")));<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        this.executors = ImmutableMap.copyOf(executors);<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        this.scheduler = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(1, ClientEsExecutors.daemonThreadFactory(settings, "scheduler"));<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        this.scheduler.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);<a name="line.83"></a>
+<span class="sourceLineNo">084</span>        this.scheduler.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>        //TimeValue estimatedTimeInterval = componentSettings.getAsTime("estimated_time_interval", TimeValue.timeValueMillis(200));<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        TimeValue estimatedTimeInterval = TimeValue.timeValueMillis(200);<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        this.estimatedTimeThread = new EstimatedTimeThread(ClientEsExecutors.threadName(settings, "[timer]"), estimatedTimeInterval.millis());<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        this.estimatedTimeThread.start();<a name="line.89"></a>
+<span class="sourceLineNo">090</span>    }<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    public long estimatedTimeInMillis() {<a name="line.92"></a>
+<span class="sourceLineNo">093</span>        return estimatedTimeThread.estimatedTimeInMillis();<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    }<a name="line.94"></a>
+<span class="sourceLineNo">095</span><a name="line.95"></a>
+<span class="sourceLineNo">096</span>    public ThreadPoolInfo info() {<a name="line.96"></a>
+<span class="sourceLineNo">097</span>        List&lt;ThreadPoolInfoElement&gt; infos = new ArrayList();<a name="line.97"></a>
+<span class="sourceLineNo">098</span>        for (ExecutorHolder holder : executors.values()) {<a name="line.98"></a>
+<span class="sourceLineNo">099</span>            String name = holder.info.name();<a name="line.99"></a>
+<span class="sourceLineNo">100</span>            // no need to have info on "same" thread pool<a name="line.100"></a>
+<span class="sourceLineNo">101</span>            if ("same".equals(name)) {<a name="line.101"></a>
+<span class="sourceLineNo">102</span>                continue;<a name="line.102"></a>
+<span class="sourceLineNo">103</span>            }<a name="line.103"></a>
+<span class="sourceLineNo">104</span>            infos.add(holder.info);<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        }<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        return new ClientThreadPoolInfo(infos);<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    }<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>    public ThreadPoolStats stats() {<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        List&lt;ThreadPoolStatsElement&gt; stats = new ArrayList();<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        for (ExecutorHolder holder : executors.values()) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>            String name = holder.info.name();<a name="line.112"></a>
+<span class="sourceLineNo">113</span>            // no need to have info on "same" thread pool<a name="line.113"></a>
+<span class="sourceLineNo">114</span>            if ("same".equals(name)) {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>                continue;<a name="line.115"></a>
+<span class="sourceLineNo">116</span>            }<a name="line.116"></a>
+<span class="sourceLineNo">117</span>            int threads = -1;<a name="line.117"></a>
+<span class="sourceLineNo">118</span>            int queue = -1;<a name="line.118"></a>
+<span class="sourceLineNo">119</span>            int active = -1;<a name="line.119"></a>
+<span class="sourceLineNo">120</span>            long rejected = -1;<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            if (holder.executor instanceof ThreadPoolExecutor) {<a name="line.121"></a>
+<span class="sourceLineNo">122</span>                ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) holder.executor;<a name="line.122"></a>
+<span class="sourceLineNo">123</span>                threads = threadPoolExecutor.getPoolSize();<a name="line.123"></a>
+<span class="sourceLineNo">124</span>                queue = threadPoolExecutor.getQueue().size();<a name="line.124"></a>
+<span class="sourceLineNo">125</span>                active = threadPoolExecutor.getActiveCount();<a name="line.125"></a>
+<span class="sourceLineNo">126</span>                RejectedExecutionHandler rejectedExecutionHandler = threadPoolExecutor.getRejectedExecutionHandler();<a name="line.126"></a>
+<span class="sourceLineNo">127</span>                if (rejectedExecutionHandler instanceof XRejectedExecutionHandler) {<a name="line.127"></a>
+<span class="sourceLineNo">128</span>                    rejected = ((XRejectedExecutionHandler) rejectedExecutionHandler).rejected();<a name="line.128"></a>
+<span class="sourceLineNo">129</span>                }<a name="line.129"></a>
+<span class="sourceLineNo">130</span>            }<a name="line.130"></a>
+<span class="sourceLineNo">131</span>            stats.add(new ClientThreadPoolStatsElement(name, threads, queue, active, rejected));<a name="line.131"></a>
+<span class="sourceLineNo">132</span>        }<a name="line.132"></a>
+<span class="sourceLineNo">133</span>        return new ClientThreadPoolStats(stats);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    }<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>    public Executor generic() {<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        return executor(Names.GENERIC);<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    }<a name="line.138"></a>
+<span class="sourceLineNo">139</span><a name="line.139"></a>
+<span class="sourceLineNo">140</span>    public Executor executor(String name) {<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        Executor executor = executors.get(name).executor;<a name="line.141"></a>
+<span class="sourceLineNo">142</span>        if (executor == null) {<a name="line.142"></a>
+<span class="sourceLineNo">143</span>            throw new ElasticSearchIllegalArgumentException("No executor found for [" + name + "]");<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        }<a name="line.144"></a>
+<span class="sourceLineNo">145</span>        return executor;<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    }<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>    public ScheduledExecutorService scheduler() {<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        return this.scheduler;<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    }<a name="line.150"></a>
+<span class="sourceLineNo">151</span><a name="line.151"></a>
+<span class="sourceLineNo">152</span>    public ScheduledFuture&lt;?&gt; scheduleWithFixedDelay(Runnable command, TimeValue interval) {<a name="line.152"></a>
+<span class="sourceLineNo">153</span>        return scheduler.scheduleWithFixedDelay(new LoggingRunnable(command), interval.millis(), interval.millis(), TimeUnit.MILLISECONDS);<a name="line.153"></a>
+<span class="sourceLineNo">154</span>    }<a name="line.154"></a>
+<span class="sourceLineNo">155</span><a name="line.155"></a>
+<span class="sourceLineNo">156</span>    public ScheduledFuture&lt;?&gt; schedule(TimeValue delay, String name, Runnable command) {<a name="line.156"></a>
+<span class="sourceLineNo">157</span>        if (!Names.SAME.equals(name)) {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>            command = new ThreadedRunnable(command, executor(name));<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        }<a name="line.159"></a>
+<span class="sourceLineNo">160</span>        return scheduler.schedule(command, delay.millis(), TimeUnit.MILLISECONDS);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>    }<a name="line.161"></a>
+<span class="sourceLineNo">162</span><a name="line.162"></a>
+<span class="sourceLineNo">163</span>    public void shutdown() {<a name="line.163"></a>
+<span class="sourceLineNo">164</span>        estimatedTimeThread.running = false;<a name="line.164"></a>
+<span class="sourceLineNo">165</span>        estimatedTimeThread.interrupt();<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        scheduler.shutdown();<a name="line.166"></a>
+<span class="sourceLineNo">167</span>        for (ExecutorHolder executor : executors.values()) {<a name="line.167"></a>
+<span class="sourceLineNo">168</span>            if (executor.executor instanceof ThreadPoolExecutor) {<a name="line.168"></a>
+<span class="sourceLineNo">169</span>                ((ThreadPoolExecutor) executor.executor).shutdown();<a name="line.169"></a>
+<span class="sourceLineNo">170</span>            }<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        }<a name="line.171"></a>
+<span class="sourceLineNo">172</span>    }<a name="line.172"></a>
+<span class="sourceLineNo">173</span><a name="line.173"></a>
+<span class="sourceLineNo">174</span>    public void shutdownNow() {<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        estimatedTimeThread.running = false;<a name="line.175"></a>
+<span class="sourceLineNo">176</span>        estimatedTimeThread.interrupt();<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        scheduler.shutdownNow();<a name="line.177"></a>
+<span class="sourceLineNo">178</span>        for (ExecutorHolder executor : executors.values()) {<a name="line.178"></a>
+<span class="sourceLineNo">179</span>            if (executor.executor instanceof ThreadPoolExecutor) {<a name="line.179"></a>
+<span class="sourceLineNo">180</span>                ((ThreadPoolExecutor) executor.executor).shutdownNow();<a name="line.180"></a>
+<span class="sourceLineNo">181</span>            }<a name="line.181"></a>
+<span class="sourceLineNo">182</span>        }<a name="line.182"></a>
+<span class="sourceLineNo">183</span>    }<a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        boolean result = scheduler.awaitTermination(timeout, unit);<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        for (ExecutorHolder executor : executors.values()) {<a name="line.187"></a>
+<span class="sourceLineNo">188</span>            if (executor.executor instanceof ThreadPoolExecutor) {<a name="line.188"></a>
+<span class="sourceLineNo">189</span>                result &amp;= ((ThreadPoolExecutor) executor.executor).awaitTermination(timeout, unit);<a name="line.189"></a>
+<span class="sourceLineNo">190</span>            }<a name="line.190"></a>
+<span class="sourceLineNo">191</span>        }<a name="line.191"></a>
+<span class="sourceLineNo">192</span>        return result;<a name="line.192"></a>
+<span class="sourceLineNo">193</span>    }<a name="line.193"></a>
+<span class="sourceLineNo">194</span><a name="line.194"></a>
+<span class="sourceLineNo">195</span>    private ExecutorHolder build(String name, String defaultType, @Nullable Settings settings, Settings defaultSettings) {<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        if (settings == null) {<a name="line.196"></a>
+<span class="sourceLineNo">197</span>            settings = ImmutableSettings.Builder.EMPTY_SETTINGS;<a name="line.197"></a>
+<span class="sourceLineNo">198</span>        }<a name="line.198"></a>
+<span class="sourceLineNo">199</span>        String type = settings.get("type", defaultType);<a name="line.199"></a>
+<span class="sourceLineNo">200</span>        ThreadFactory threadFactory = ClientEsExecutors.daemonThreadFactory(this.settings, name);<a name="line.200"></a>
+<span class="sourceLineNo">201</span>        if ("same".equals(type)) {<a name="line.201"></a>
+<span class="sourceLineNo">202</span>            logger.debug("creating thread_pool [{}], type [{}]", name, type);<a name="line.202"></a>
+<span class="sourceLineNo">203</span>            return new ExecutorHolder(MoreExecutors.sameThreadExecutor(), new ClientThreadPoolInfoElement(name, type));<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        } else if ("cached".equals(type)) {<a name="line.204"></a>
+<span class="sourceLineNo">205</span>            TimeValue keepAlive = settings.getAsTime("keep_alive", defaultSettings.getAsTime("keep_alive", timeValueMinutes(5)));<a name="line.205"></a>
+<span class="sourceLineNo">206</span>            logger.debug("creating thread_pool [{}], type [{}], keep_alive [{}]", name, type, keepAlive);<a name="line.206"></a>
+<span class="sourceLineNo">207</span>            Executor executor = new ThreadPoolExecutor(0, Integer.MAX_VALUE,<a name="line.207"></a>
+<span class="sourceLineNo">208</span>                    keepAlive.millis(), TimeUnit.MILLISECONDS,<a name="line.208"></a>
+<span class="sourceLineNo">209</span>                    new SynchronousQueue&lt;Runnable&gt;(),<a name="line.209"></a>
+<span class="sourceLineNo">210</span>                    threadFactory);<a name="line.210"></a>
+<span class="sourceLineNo">211</span>            return new ExecutorHolder(executor, new ClientThreadPoolInfoElement(name, type, -1, -1, keepAlive, null));<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        }<a name="line.212"></a>
+<span class="sourceLineNo">213</span>        throw new ElasticSearchIllegalArgumentException("No type found [" + type + "], for [" + name + "]");<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    }<a name="line.214"></a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span>    class LoggingRunnable implements Runnable {<a name="line.216"></a>
+<span class="sourceLineNo">217</span><a name="line.217"></a>
+<span class="sourceLineNo">218</span>        private final Runnable runnable;<a name="line.218"></a>
+<span class="sourceLineNo">219</span><a name="line.219"></a>
+<span class="sourceLineNo">220</span>        LoggingRunnable(Runnable runnable) {<a name="line.220"></a>
+<span class="sourceLineNo">221</span>            this.runnable = runnable;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>        }<a name="line.222"></a>
+<span class="sourceLineNo">223</span><a name="line.223"></a>
+<span class="sourceLineNo">224</span>        @Override<a name="line.224"></a>
+<span class="sourceLineNo">225</span>        public void run() {<a name="line.225"></a>
+<span class="sourceLineNo">226</span>            try {<a name="line.226"></a>
+<span class="sourceLineNo">227</span>                runnable.run();<a name="line.227"></a>
+<span class="sourceLineNo">228</span>            } catch (Exception e) {<a name="line.228"></a>
+<span class="sourceLineNo">229</span>                logger.warn("failed to run {}", e, runnable.toString());<a name="line.229"></a>
+<span class="sourceLineNo">230</span>            }<a name="line.230"></a>
+<span class="sourceLineNo">231</span>        }<a name="line.231"></a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span>        @Override<a name="line.233"></a>
+<span class="sourceLineNo">234</span>        public int hashCode() {<a name="line.234"></a>
+<span class="sourceLineNo">235</span>            return runnable.hashCode();<a name="line.235"></a>
+<span class="sourceLineNo">236</span>        }<a name="line.236"></a>
+<span class="sourceLineNo">237</span><a name="line.237"></a>
+<span class="sourceLineNo">238</span>        @Override<a name="line.238"></a>
+<span class="sourceLineNo">239</span>        public boolean equals(Object obj) {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>            return runnable.equals(obj);<a name="line.240"></a>
+<span class="sourceLineNo">241</span>        }<a name="line.241"></a>
+<span class="sourceLineNo">242</span><a name="line.242"></a>
+<span class="sourceLineNo">243</span>        @Override<a name="line.243"></a>
+<span class="sourceLineNo">244</span>        public String toString() {<a name="line.244"></a>
+<span class="sourceLineNo">245</span>            return "[threaded] " + runnable.toString();<a name="line.245"></a>
+<span class="sourceLineNo">246</span>        }<a name="line.246"></a>
+<span class="sourceLineNo">247</span>    }<a name="line.247"></a>
+<span class="sourceLineNo">248</span><a name="line.248"></a>
+<span class="sourceLineNo">249</span>    class ThreadedRunnable implements Runnable {<a name="line.249"></a>
+<span class="sourceLineNo">250</span><a name="line.250"></a>
+<span class="sourceLineNo">251</span>        private final Runnable runnable;<a name="line.251"></a>
+<span class="sourceLineNo">252</span><a name="line.252"></a>
+<span class="sourceLineNo">253</span>        private final Executor executor;<a name="line.253"></a>
+<span class="sourceLineNo">254</span><a name="line.254"></a>
+<span class="sourceLineNo">255</span>        ThreadedRunnable(Runnable runnable, Executor executor) {<a name="line.255"></a>
+<span class="sourceLineNo">256</span>            this.runnable = runnable;<a name="line.256"></a>
+<span class="sourceLineNo">257</span>            this.executor = executor;<a name="line.257"></a>
+<span class="sourceLineNo">258</span>        }<a name="line.258"></a>
+<span class="sourceLineNo">259</span><a name="line.259"></a>
+<span class="sourceLineNo">260</span>        @Override<a name="line.260"></a>
+<span class="sourceLineNo">261</span>        public void run() {<a name="line.261"></a>
+<span class="sourceLineNo">262</span>            executor.execute(runnable);<a name="line.262"></a>
+<span class="sourceLineNo">263</span>        }<a name="line.263"></a>
+<span class="sourceLineNo">264</span><a name="line.264"></a>
+<span class="sourceLineNo">265</span>        @Override<a name="line.265"></a>
+<span class="sourceLineNo">266</span>        public int hashCode() {<a name="line.266"></a>
+<span class="sourceLineNo">267</span>            return runnable.hashCode();<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        }<a name="line.268"></a>
+<span class="sourceLineNo">269</span><a name="line.269"></a>
+<span class="sourceLineNo">270</span>        @Override<a name="line.270"></a>
+<span class="sourceLineNo">271</span>        public boolean equals(Object obj) {<a name="line.271"></a>
+<span class="sourceLineNo">272</span>            return runnable.equals(obj);<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        }<a name="line.273"></a>
+<span class="sourceLineNo">274</span><a name="line.274"></a>
+<span class="sourceLineNo">275</span>        @Override<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        public String toString() {<a name="line.276"></a>
+<span class="sourceLineNo">277</span>            return "[threaded] " + runnable.toString();<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        }<a name="line.278"></a>
+<span class="sourceLineNo">279</span>    }<a name="line.279"></a>
+<span class="sourceLineNo">280</span><a name="line.280"></a>
+<span class="sourceLineNo">281</span>    static class EstimatedTimeThread extends Thread {<a name="line.281"></a>
+<span class="sourceLineNo">282</span><a name="line.282"></a>
+<span class="sourceLineNo">283</span>        final long interval;<a name="line.283"></a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span>        volatile boolean running = true;<a name="line.285"></a>
+<span class="sourceLineNo">286</span><a name="line.286"></a>
+<span class="sourceLineNo">287</span>        volatile long estimatedTimeInMillis;<a name="line.287"></a>
+<span class="sourceLineNo">288</span><a name="line.288"></a>
+<span class="sourceLineNo">289</span>        EstimatedTimeThread(String name, long interval) {<a name="line.289"></a>
+<span class="sourceLineNo">290</span>            super(name);<a name="line.290"></a>
+<span class="sourceLineNo">291</span>            this.interval = interval;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>            setDaemon(true);<a name="line.292"></a>
+<span class="sourceLineNo">293</span>        }<a name="line.293"></a>
+<span class="sourceLineNo">294</span><a name="line.294"></a>
+<span class="sourceLineNo">295</span>        public long estimatedTimeInMillis() {<a name="line.295"></a>
+<span class="sourceLineNo">296</span>            return this.estimatedTimeInMillis;<a name="line.296"></a>
+<span class="sourceLineNo">297</span>        }<a name="line.297"></a>
+<span class="sourceLineNo">298</span><a name="line.298"></a>
+<span class="sourceLineNo">299</span>        @Override<a name="line.299"></a>
+<span class="sourceLineNo">300</span>        public void run() {<a name="line.300"></a>
+<span class="sourceLineNo">301</span>            while (running) {<a name="line.301"></a>
+<span class="sourceLineNo">302</span>                estimatedTimeInMillis = System.currentTimeMillis();<a name="line.302"></a>
+<span class="sourceLineNo">303</span>                try {<a name="line.303"></a>
+<span class="sourceLineNo">304</span>                    Thread.sleep(interval);<a name="line.304"></a>
+<span class="sourceLineNo">305</span>                } catch (InterruptedException e) {<a name="line.305"></a>
+<span class="sourceLineNo">306</span>                    running = false;<a name="line.306"></a>
+<span class="sourceLineNo">307</span>                    return;<a name="line.307"></a>
+<span class="sourceLineNo">308</span>                }<a name="line.308"></a>
+<span class="sourceLineNo">309</span>                try {<a name="line.309"></a>
+<span class="sourceLineNo">310</span>                    FileSystemUtils.checkMkdirsStall(estimatedTimeInMillis);<a name="line.310"></a>
+<span class="sourceLineNo">311</span>                } catch (Exception e) {<a name="line.311"></a>
+<span class="sourceLineNo">312</span>                    // ignore<a name="line.312"></a>
+<span class="sourceLineNo">313</span>                }<a name="line.313"></a>
+<span class="sourceLineNo">314</span>            }<a name="line.314"></a>
+<span class="sourceLineNo">315</span>        }<a name="line.315"></a>
+<span class="sourceLineNo">316</span>    }<a name="line.316"></a>
+<span class="sourceLineNo">317</span><a name="line.317"></a>
+<span class="sourceLineNo">318</span>    static class ExecutorHolder {<a name="line.318"></a>
+<span class="sourceLineNo">319</span>        public final Executor executor;<a name="line.319"></a>
+<span class="sourceLineNo">320</span>        public final ThreadPoolInfoElement info;<a name="line.320"></a>
+<span class="sourceLineNo">321</span><a name="line.321"></a>
+<span class="sourceLineNo">322</span>        ExecutorHolder(Executor executor, ThreadPoolInfoElement info) {<a name="line.322"></a>
+<span class="sourceLineNo">323</span>            this.executor = executor;<a name="line.323"></a>
+<span class="sourceLineNo">324</span>            this.info = info;<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        }<a name="line.325"></a>
+<span class="sourceLineNo">326</span>    }<a name="line.326"></a>
+<span class="sourceLineNo">327</span><a name="line.327"></a>
+<span class="sourceLineNo">328</span>}<a name="line.328"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

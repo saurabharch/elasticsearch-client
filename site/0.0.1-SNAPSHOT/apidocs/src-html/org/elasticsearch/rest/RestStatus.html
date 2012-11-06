@@ -1,0 +1,565 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to ElasticSearch and Shay Banon under one<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * or more contributor license agreements.  See the NOTICE file<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * distributed with this work for additional information<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * regarding copyright ownership. ElasticSearch licenses this<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * file to you under the Apache License, Version 2.0 (the<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * "License"); you may not use this file except in compliance<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * with the License.  You may obtain a copy of the License at<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *    http://www.apache.org/licenses/LICENSE-2.0<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * Unless required by applicable law or agreed to in writing,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * software distributed under the License is distributed on an<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * KIND, either express or implied.  See the License for the<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * specific language governing permissions and limitations<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * under the License.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> */<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>package org.elasticsearch.rest;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.elasticsearch.common.io.stream.StreamInput;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.elasticsearch.common.io.stream.StreamOutput;<a name="line.23"></a>
+<span class="sourceLineNo">024</span><a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.io.IOException;<a name="line.25"></a>
+<span class="sourceLineNo">026</span><a name="line.26"></a>
+<span class="sourceLineNo">027</span>public enum RestStatus {<a name="line.27"></a>
+<span class="sourceLineNo">028</span>    /**<a name="line.28"></a>
+<span class="sourceLineNo">029</span>     * The client SHOULD continue with its request. This interim response is used to inform the client that the<a name="line.29"></a>
+<span class="sourceLineNo">030</span>     * initial part of the request has been received and has not yet been rejected by the server. The client<a name="line.30"></a>
+<span class="sourceLineNo">031</span>     * SHOULD continue by sending the remainder of the request or, if the request has already been completed,<a name="line.31"></a>
+<span class="sourceLineNo">032</span>     * ignore this response. The server MUST send a final response after the request has been completed.<a name="line.32"></a>
+<span class="sourceLineNo">033</span>     */<a name="line.33"></a>
+<span class="sourceLineNo">034</span>    CONTINUE(100),<a name="line.34"></a>
+<span class="sourceLineNo">035</span>    /**<a name="line.35"></a>
+<span class="sourceLineNo">036</span>     * The server understands and is willing to comply with the client's request, via the Upgrade message header field<a name="line.36"></a>
+<span class="sourceLineNo">037</span>     * (section 14.42), for a change in the application protocol being used on this connection. The server will<a name="line.37"></a>
+<span class="sourceLineNo">038</span>     * switch protocols to those defined by the response's Upgrade header field immediately after the empty line<a name="line.38"></a>
+<span class="sourceLineNo">039</span>     * which terminates the 101 response.<a name="line.39"></a>
+<span class="sourceLineNo">040</span>     */<a name="line.40"></a>
+<span class="sourceLineNo">041</span>    SWITCHING_PROTOCOLS(101),<a name="line.41"></a>
+<span class="sourceLineNo">042</span>    /**<a name="line.42"></a>
+<span class="sourceLineNo">043</span>     * The request has succeeded. The information returned with the response is dependent on the method<a name="line.43"></a>
+<span class="sourceLineNo">044</span>     * used in the request, for example:<a name="line.44"></a>
+<span class="sourceLineNo">045</span>     * &lt;ul&gt;<a name="line.45"></a>
+<span class="sourceLineNo">046</span>     * &lt;li&gt;GET: an entity corresponding to the requested resource is sent in the response;&lt;/li&gt;<a name="line.46"></a>
+<span class="sourceLineNo">047</span>     * &lt;li&gt;HEAD: the entity-header fields corresponding to the requested resource are sent in the response without any message-body;&lt;/li&gt;<a name="line.47"></a>
+<span class="sourceLineNo">048</span>     * &lt;li&gt;POST: an entity describing or containing the result of the action;&lt;/li&gt;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     * &lt;li&gt;TRACE: an entity containing the request message as received by the end server.&lt;/li&gt;<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * &lt;/ul&gt;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     */<a name="line.51"></a>
+<span class="sourceLineNo">052</span>    OK(200),<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    /**<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     * The request has been fulfilled and resulted in a new resource being created. The newly created resource can<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     * be referenced by the URI(s) returned in the entity of the response, with the most specific URI for the<a name="line.55"></a>
+<span class="sourceLineNo">056</span>     * resource given by a Location header field. The response SHOULD include an entity containing a list of resource<a name="line.56"></a>
+<span class="sourceLineNo">057</span>     * characteristics and location(s) from which the user or user agent can choose the one most appropriate. The<a name="line.57"></a>
+<span class="sourceLineNo">058</span>     * entity format is specified by the media type given in the Content-Type header field. The origin server MUST<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     * create the resource before returning the 201 status code. If the action cannot be carried out immediately, the<a name="line.59"></a>
+<span class="sourceLineNo">060</span>     * server SHOULD respond with 202 (Accepted) response instead.<a name="line.60"></a>
+<span class="sourceLineNo">061</span>     * &lt;p/&gt;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>     * &lt;p&gt;A 201 response MAY contain an ETag response header field indicating the current value of the entity tag<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * for the requested variant just created, see section 14.19.<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     */<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    CREATED(201),<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    /**<a name="line.66"></a>
+<span class="sourceLineNo">067</span>     * The request has been accepted for processing, but the processing has not been completed.  The request might<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * or might not eventually be acted upon, as it might be disallowed when processing actually takes place. There<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * is no facility for re-sending a status code from an asynchronous operation such as this.<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * &lt;p/&gt;<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * &lt;p&gt;The 202 response is intentionally non-committal. Its purpose is to allow a server to accept a request for<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * some other process (perhaps a batch-oriented process that is only run once per day) without requiring that<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * the user agent's connection to the server persist until the process is completed. The entity returned with<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     * this response SHOULD include an indication of the request's current status and either a pointer to a status<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * monitor or some estimate of when the user can expect the request to be fulfilled.<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    ACCEPTED(202),<a name="line.77"></a>
+<span class="sourceLineNo">078</span>    /**<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * The returned meta information in the entity-header is not the definitive set as available from the origin<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * server, but is gathered from a local or a third-party copy. The set presented MAY be a subset or super set<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * of the original version. For example, including local annotation information about the resource might<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * result in a super set of the meta information known by the origin server. Use of this response code<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * is not required and is only appropriate when the response would otherwise be 200 (OK).<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     */<a name="line.84"></a>
+<span class="sourceLineNo">085</span>    NON_AUTHORITATIVE_INFORMATION(203),<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    /**<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * The server has fulfilled the request but does not need to return an entity-body, and might want to return<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * updated meta information. The response MAY include new or updated meta information in the form of<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * entity-headers, which if present SHOULD be associated with the requested variant.<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * &lt;p/&gt;<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * &lt;p&gt;If the client is a user agent, it SHOULD NOT change its document view from that which caused the request<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     * to be sent. This response is primarily intended to allow input for actions to take place without causing a<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * change to the user agent's active document view, although any new or updated meta information SHOULD be<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     * applied to the document currently in the user agent's active view.<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * &lt;p/&gt;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     * &lt;p&gt;The 204 response MUST NOT include a message-body, and thus is always terminated by the first empty<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * line after the header fields.<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     */<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    NO_CONTENT(204),<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    /**<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * The server has fulfilled the request and the user agent SHOULD reset the document view which caused the<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * request to be sent. This response is primarily intended to allow input for actions to take place via user<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * input, followed by a clearing of the form in which the input is given so that the user can easily initiate<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * another input action. The response MUST NOT include an entity.<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     */<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    RESET_CONTENT(205),<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    /**<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * The server has fulfilled the partial GET request for the resource. The request MUST have included a Range<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     * header field (section 14.35) indicating the desired range, and MAY have included an If-Range header<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * field (section 14.27) to make the request conditional.<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * &lt;p/&gt;<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * &lt;p&gt;The response MUST include the following header fields:<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * &lt;ul&gt;<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     * &lt;li&gt;Either a Content-Range header field (section 14.16) indicating the range included with this response,<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * or a multipart/byteranges Content-Type including Content-Range fields for each part. If a Content-Length<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     * header field is present in the response, its value MUST match the actual number of OCTETs transmitted in<a name="line.116"></a>
+<span class="sourceLineNo">117</span>     * the message-body.&lt;/li&gt;<a name="line.117"></a>
+<span class="sourceLineNo">118</span>     * &lt;li&gt;Date&lt;/li&gt;<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * &lt;li&gt;ETag and/or Content-Location, if the header would have been sent in a 200 response to the same request&lt;/li&gt;<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * &lt;li&gt;Expires, Cache-Control, and/or Vary, if the field-value might differ from that sent in any previous<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * response for the same variant&lt;/li&gt;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * &lt;/ul&gt;<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * &lt;p/&gt;<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * &lt;p&gt;If the 206 response is the result of an If-Range request that used a strong cache validator<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * (see section 13.3.3), the response SHOULD NOT include other entity-headers. If the response is the result<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * of an If-Range request that used a weak validator, the response MUST NOT include other entity-headers;<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * this prevents inconsistencies between cached entity-bodies and updated headers. Otherwise, the response MUST<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * include all of the entity-headers that would have been returned with a 200 (OK) response to the same request.<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * &lt;p/&gt;<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * &lt;p&gt;A cache MUST NOT combine a 206 response with other previously cached content if the ETag or Last-Modified<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     * headers do not match exactly, see 13.5.4.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>     * &lt;p/&gt;<a name="line.132"></a>
+<span class="sourceLineNo">133</span>     * &lt;p&gt;A cache that does not support the Range and Content-Range headers MUST NOT cache 206 (Partial) responses.<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     */<a name="line.134"></a>
+<span class="sourceLineNo">135</span>    PARTIAL_CONTENT(206),<a name="line.135"></a>
+<span class="sourceLineNo">136</span>    /**<a name="line.136"></a>
+<span class="sourceLineNo">137</span>     * The 207 (Multi-Status) status code provides status for multiple independent operations (see Section 13 for<a name="line.137"></a>
+<span class="sourceLineNo">138</span>     * more information).<a name="line.138"></a>
+<span class="sourceLineNo">139</span>     * &lt;p/&gt;<a name="line.139"></a>
+<span class="sourceLineNo">140</span>     * &lt;p&gt;A Multi-Status response conveys information about multiple resources in situations where multiple status<a name="line.140"></a>
+<span class="sourceLineNo">141</span>     * codes might be appropriate. The default Multi-Status response body is a text/xml or application/xml HTTP<a name="line.141"></a>
+<span class="sourceLineNo">142</span>     * entity with a 'multistatus' root element. Further elements contain 200, 300, 400, and 500 series status codes<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * generated during the method invocation. 100 series status codes SHOULD NOT be recorded in a 'response'<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * XML element.<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     * &lt;p/&gt;<a name="line.145"></a>
+<span class="sourceLineNo">146</span>     * &lt;p&gt;Although '207' is used as the overall response status code, the recipient needs to consult the contents<a name="line.146"></a>
+<span class="sourceLineNo">147</span>     * of the multistatus response body for further information about the success or failure of the method execution.<a name="line.147"></a>
+<span class="sourceLineNo">148</span>     * The response MAY be used in success, partial success and also in failure situations.<a name="line.148"></a>
+<span class="sourceLineNo">149</span>     * &lt;p/&gt;<a name="line.149"></a>
+<span class="sourceLineNo">150</span>     * &lt;p&gt;The 'multistatus' root element holds zero or more 'response' elements in any order, each with<a name="line.150"></a>
+<span class="sourceLineNo">151</span>     * information about an individual resource. Each 'response' element MUST have an 'href' element<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     * to identify the resource.<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     */<a name="line.153"></a>
+<span class="sourceLineNo">154</span>    MULTI_STATUS(207),<a name="line.154"></a>
+<span class="sourceLineNo">155</span>    /**<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * The requested resource corresponds to any one of a set of representations, each with its own specific<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * location, and agent-driven negotiation information (section 12) is being provided so that the user (or user<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * agent) can select a preferred representation and redirect its request to that location.<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * &lt;p/&gt;<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     * &lt;p&gt;Unless it was a HEAD request, the response SHOULD include an entity containing a list of resource<a name="line.160"></a>
+<span class="sourceLineNo">161</span>     * characteristics and location(s) from which the user or user agent can choose the one most appropriate.<a name="line.161"></a>
+<span class="sourceLineNo">162</span>     * The entity format is specified by the media type given in the Content-Type header field. Depending upon the<a name="line.162"></a>
+<span class="sourceLineNo">163</span>     * format and the capabilities of the user agent, selection of the most appropriate choice MAY be performed<a name="line.163"></a>
+<span class="sourceLineNo">164</span>     * automatically. However, this specification does not define any standard for such automatic selection.<a name="line.164"></a>
+<span class="sourceLineNo">165</span>     * &lt;p/&gt;<a name="line.165"></a>
+<span class="sourceLineNo">166</span>     * &lt;p&gt;If the server has a preferred choice of representation, it SHOULD include the specific URI for that<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * representation in the Location field; user agents MAY use the Location field value for automatic redirection.<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * This response is cacheable unless indicated otherwise.<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     */<a name="line.169"></a>
+<span class="sourceLineNo">170</span>    MULTIPLE_CHOICES(300),<a name="line.170"></a>
+<span class="sourceLineNo">171</span>    /**<a name="line.171"></a>
+<span class="sourceLineNo">172</span>     * The requested resource has been assigned a new permanent URI and any future references to this resource<a name="line.172"></a>
+<span class="sourceLineNo">173</span>     * SHOULD use one of the returned URIs.  Clients with link editing capabilities ought to automatically re-link<a name="line.173"></a>
+<span class="sourceLineNo">174</span>     * references to the Request-URI to one or more of the new references returned by the server, where possible.<a name="line.174"></a>
+<span class="sourceLineNo">175</span>     * This response is cacheable unless indicated otherwise.<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * &lt;p/&gt;<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * &lt;p&gt;The new permanent URI SHOULD be given by the Location field in the response. Unless the request method<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     * was HEAD, the entity of the response SHOULD contain a short hypertext note with a hyperlink to the new URI(s).<a name="line.178"></a>
+<span class="sourceLineNo">179</span>     * &lt;p/&gt;<a name="line.179"></a>
+<span class="sourceLineNo">180</span>     * &lt;p&gt;If the 301 status code is received in response to a request other than GET or HEAD, the user agent<a name="line.180"></a>
+<span class="sourceLineNo">181</span>     * MUST NOT automatically redirect the request unless it can be confirmed by the user, since this might change<a name="line.181"></a>
+<span class="sourceLineNo">182</span>     * the conditions under which the request was issued.<a name="line.182"></a>
+<span class="sourceLineNo">183</span>     */<a name="line.183"></a>
+<span class="sourceLineNo">184</span>    MOVED_PERMANENTLY(301),<a name="line.184"></a>
+<span class="sourceLineNo">185</span>    /**<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     * The requested resource resides temporarily under a different URI. Since the redirection might be altered on<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * occasion, the client SHOULD continue to use the Request-URI for future requests.  This response is only<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * cacheable if indicated by a Cache-Control or Expires header field.<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * &lt;p/&gt;<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     * &lt;p&gt;The temporary URI SHOULD be given by the Location field in the response. Unless the request method was<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * HEAD, the entity of the response SHOULD contain a short hypertext note with a hyperlink to the new URI(s).<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * &lt;p/&gt;<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     * &lt;p&gt;If the 302 status code is received in response to a request other than GET or HEAD, the user agent<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * MUST NOT automatically redirect the request unless it can be confirmed by the user, since this might change<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * the conditions under which the request was issued.<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     */<a name="line.196"></a>
+<span class="sourceLineNo">197</span>    FOUND(302),<a name="line.197"></a>
+<span class="sourceLineNo">198</span>    /**<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * The response to the request can be found under a different URI and SHOULD be retrieved using a GET method on<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     * that resource. This method exists primarily to allow the output of a POST-activated script to redirect the<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * user agent to a selected resource. The new URI is not a substitute reference for the originally requested<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * resource. The 303 response MUST NOT be cached, but the response to the second (redirected) request might be<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * cacheable.<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * &lt;p/&gt;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * &lt;p&gt;The different URI SHOULD be given by the Location field in the response. Unless the request method was<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * HEAD, the entity of the response SHOULD contain a short hypertext note with a hyperlink to the new URI(s).<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     */<a name="line.207"></a>
+<span class="sourceLineNo">208</span>    SEE_OTHER(303),<a name="line.208"></a>
+<span class="sourceLineNo">209</span>    /**<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * If the client has performed a conditional GET request and access is allowed, but the document has not been<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     * modified, the server SHOULD respond with this status code. The 304 response MUST NOT contain a message-body,<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * and thus is always terminated by the first empty line after the header fields.<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * &lt;p/&gt;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     * &lt;p&gt;The response MUST include the following header fields:<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * &lt;ul&gt;<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * &lt;li&gt;Date, unless its omission is required by section 14.18.1<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * If a clockless origin server obeys these rules, and proxies and clients add their own Date to any<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * response received without one (as already specified by [RFC 2068], section 14.19), caches will operate<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * correctly.<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * &lt;/li&gt;<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     * &lt;li&gt;ETag and/or Content-Location, if the header would have been sent in a 200 response to the same request&lt;/li&gt;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     * &lt;li&gt;Expires, Cache-Control, and/or Vary, if the field-value might differ from that sent in any previous<a name="line.222"></a>
+<span class="sourceLineNo">223</span>     * response for the same variant&lt;/li&gt;<a name="line.223"></a>
+<span class="sourceLineNo">224</span>     * &lt;/ul&gt;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>     * &lt;p/&gt;<a name="line.225"></a>
+<span class="sourceLineNo">226</span>     * &lt;p&gt;If the conditional GET used a strong cache validator (see section 13.3.3), the response SHOULD NOT include<a name="line.226"></a>
+<span class="sourceLineNo">227</span>     * other entity-headers. Otherwise (i.e., the conditional GET used a weak validator), the response MUST NOT<a name="line.227"></a>
+<span class="sourceLineNo">228</span>     * include other entity-headers; this prevents inconsistencies between cached entity-bodies and updated headers.<a name="line.228"></a>
+<span class="sourceLineNo">229</span>     * &lt;p/&gt;<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     * &lt;p&gt;If a 304 response indicates an entity not currently cached, then the cache MUST disregard the response<a name="line.230"></a>
+<span class="sourceLineNo">231</span>     * and repeat the request without the conditional.<a name="line.231"></a>
+<span class="sourceLineNo">232</span>     * &lt;p/&gt;<a name="line.232"></a>
+<span class="sourceLineNo">233</span>     * &lt;p&gt;If a cache uses a received 304 response to update a cache entry, the cache MUST update the entry to<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * reflect any new field values given in the response.<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     */<a name="line.235"></a>
+<span class="sourceLineNo">236</span>    NOT_MODIFIED(304),<a name="line.236"></a>
+<span class="sourceLineNo">237</span>    /**<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     * The requested resource MUST be accessed through the proxy given by the Location field. The Location field<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     * gives the URI of the proxy. The recipient is expected to repeat this single request via the proxy.<a name="line.239"></a>
+<span class="sourceLineNo">240</span>     * 305 responses MUST only be generated by origin servers.<a name="line.240"></a>
+<span class="sourceLineNo">241</span>     */<a name="line.241"></a>
+<span class="sourceLineNo">242</span>    USE_PROXY(305),<a name="line.242"></a>
+<span class="sourceLineNo">243</span>    /**<a name="line.243"></a>
+<span class="sourceLineNo">244</span>     * The requested resource resides temporarily under a different URI. Since the redirection MAY be altered on<a name="line.244"></a>
+<span class="sourceLineNo">245</span>     * occasion, the client SHOULD continue to use the Request-URI for future requests.  This response is only<a name="line.245"></a>
+<span class="sourceLineNo">246</span>     * cacheable if indicated by a Cache-Control or Expires header field.<a name="line.246"></a>
+<span class="sourceLineNo">247</span>     * &lt;p/&gt;<a name="line.247"></a>
+<span class="sourceLineNo">248</span>     * &lt;p&gt;The temporary URI SHOULD be given by the Location field in the response. Unless the request method was<a name="line.248"></a>
+<span class="sourceLineNo">249</span>     * HEAD, the entity of the response SHOULD contain a short hypertext note with a hyperlink to the new URI(s) ,<a name="line.249"></a>
+<span class="sourceLineNo">250</span>     * since many pre-HTTP/1.1 user agents do not understand the 307 status. Therefore, the note SHOULD contain<a name="line.250"></a>
+<span class="sourceLineNo">251</span>     * the information necessary for a user to repeat the original request on the new URI.<a name="line.251"></a>
+<span class="sourceLineNo">252</span>     * &lt;p/&gt;<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     * &lt;p&gt;If the 307 status code is received in response to a request other than GET or HEAD, the user agent MUST NOT<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     * automatically redirect the request unless it can be confirmed by the user, since this might change the<a name="line.254"></a>
+<span class="sourceLineNo">255</span>     * conditions under which the request was issued.<a name="line.255"></a>
+<span class="sourceLineNo">256</span>     */<a name="line.256"></a>
+<span class="sourceLineNo">257</span>    TEMPORARY_REDIRECT(307),<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    /**<a name="line.258"></a>
+<span class="sourceLineNo">259</span>     * The request could not be understood by the server due to malformed syntax. The client SHOULD NOT repeat the<a name="line.259"></a>
+<span class="sourceLineNo">260</span>     * request without modifications.<a name="line.260"></a>
+<span class="sourceLineNo">261</span>     */<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    BAD_REQUEST(400),<a name="line.262"></a>
+<span class="sourceLineNo">263</span>    /**<a name="line.263"></a>
+<span class="sourceLineNo">264</span>     * The request requires user authentication. The response MUST include a WWW-Authenticate header field<a name="line.264"></a>
+<span class="sourceLineNo">265</span>     * (section 14.47) containing a challenge applicable to the requested resource. The client MAY repeat the request<a name="line.265"></a>
+<span class="sourceLineNo">266</span>     * with a suitable Authorization header field (section 14.8). If the request already included Authorization<a name="line.266"></a>
+<span class="sourceLineNo">267</span>     * credentials, then the 401 response indicates that authorization has been refused for those credentials.<a name="line.267"></a>
+<span class="sourceLineNo">268</span>     * If the 401 response contains the same challenge as the prior response, and the user agent has already attempted<a name="line.268"></a>
+<span class="sourceLineNo">269</span>     * authentication at least once, then the user SHOULD be presented the entity that was given in the response,<a name="line.269"></a>
+<span class="sourceLineNo">270</span>     * since that entity might include relevant diagnostic information. HTTP access authentication is explained in<a name="line.270"></a>
+<span class="sourceLineNo">271</span>     * "HTTP Authentication: Basic and Digest Access Authentication" [43].<a name="line.271"></a>
+<span class="sourceLineNo">272</span>     */<a name="line.272"></a>
+<span class="sourceLineNo">273</span>    UNAUTHORIZED(401),<a name="line.273"></a>
+<span class="sourceLineNo">274</span>    /**<a name="line.274"></a>
+<span class="sourceLineNo">275</span>     * This code is reserved for future use.<a name="line.275"></a>
+<span class="sourceLineNo">276</span>     */<a name="line.276"></a>
+<span class="sourceLineNo">277</span>    PAYMENT_REQUIRED(402),<a name="line.277"></a>
+<span class="sourceLineNo">278</span>    /**<a name="line.278"></a>
+<span class="sourceLineNo">279</span>     * The server understood the request, but is refusing to fulfill it. Authorization will not help and the request<a name="line.279"></a>
+<span class="sourceLineNo">280</span>     * SHOULD NOT be repeated. If the request method was not HEAD and the server wishes to make public why the<a name="line.280"></a>
+<span class="sourceLineNo">281</span>     * request has not been fulfilled, it SHOULD describe the reason for the refusal in the entity.  If the server<a name="line.281"></a>
+<span class="sourceLineNo">282</span>     * does not wish to make this information available to the client, the status code 404 (Not Found) can be used<a name="line.282"></a>
+<span class="sourceLineNo">283</span>     * instead.<a name="line.283"></a>
+<span class="sourceLineNo">284</span>     */<a name="line.284"></a>
+<span class="sourceLineNo">285</span>    FORBIDDEN(403),<a name="line.285"></a>
+<span class="sourceLineNo">286</span>    /**<a name="line.286"></a>
+<span class="sourceLineNo">287</span>     * The server has not found anything matching the Request-URI. No indication is given of whether the condition<a name="line.287"></a>
+<span class="sourceLineNo">288</span>     * is temporary or permanent. The 410 (Gone) status code SHOULD be used if the server knows, through some<a name="line.288"></a>
+<span class="sourceLineNo">289</span>     * internally configurable mechanism, that an old resource is permanently unavailable and has no forwarding<a name="line.289"></a>
+<span class="sourceLineNo">290</span>     * address. This status code is commonly used when the server does not wish to reveal exactly why the request<a name="line.290"></a>
+<span class="sourceLineNo">291</span>     * has been refused, or when no other response is applicable.<a name="line.291"></a>
+<span class="sourceLineNo">292</span>     */<a name="line.292"></a>
+<span class="sourceLineNo">293</span>    NOT_FOUND(404),<a name="line.293"></a>
+<span class="sourceLineNo">294</span>    /**<a name="line.294"></a>
+<span class="sourceLineNo">295</span>     * The method specified in the Request-Line is not allowed for the resource identified by the Request-URI.<a name="line.295"></a>
+<span class="sourceLineNo">296</span>     * The response MUST include an Allow header containing a list of valid methods for the requested resource.<a name="line.296"></a>
+<span class="sourceLineNo">297</span>     */<a name="line.297"></a>
+<span class="sourceLineNo">298</span>    METHOD_NOT_ALLOWED(405),<a name="line.298"></a>
+<span class="sourceLineNo">299</span>    /**<a name="line.299"></a>
+<span class="sourceLineNo">300</span>     * The resource identified by the request is only capable of generating response entities which have content<a name="line.300"></a>
+<span class="sourceLineNo">301</span>     * characteristics not acceptable according to the accept headers sent in the request.<a name="line.301"></a>
+<span class="sourceLineNo">302</span>     * &lt;p/&gt;<a name="line.302"></a>
+<span class="sourceLineNo">303</span>     * &lt;p&gt;Unless it was a HEAD request, the response SHOULD include an entity containing a list of available entity<a name="line.303"></a>
+<span class="sourceLineNo">304</span>     * characteristics and location(s) from which the user or user agent can choose the one most appropriate.<a name="line.304"></a>
+<span class="sourceLineNo">305</span>     * The entity format is specified by the media type given in the Content-Type header field. Depending upon the<a name="line.305"></a>
+<span class="sourceLineNo">306</span>     * format and the capabilities of the user agent, selection of the most appropriate choice MAY be performed<a name="line.306"></a>
+<span class="sourceLineNo">307</span>     * automatically. However, this specification does not define any standard for such automatic selection.<a name="line.307"></a>
+<span class="sourceLineNo">308</span>     * &lt;p/&gt;<a name="line.308"></a>
+<span class="sourceLineNo">309</span>     * &lt;p&gt;Note: HTTP/1.1 servers are allowed to return responses which are not acceptable according to the accept<a name="line.309"></a>
+<span class="sourceLineNo">310</span>     * headers sent in the request. In some cases, this may even be preferable to sending a 406 response. User<a name="line.310"></a>
+<span class="sourceLineNo">311</span>     * agents are encouraged to inspect the headers of an incoming response to determine if it is acceptable.<a name="line.311"></a>
+<span class="sourceLineNo">312</span>     * &lt;p/&gt;<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * &lt;p&gt;If the response could be unacceptable, a user agent SHOULD temporarily stop receipt of more data and query<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * the user for a decision on further actions.<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     */<a name="line.315"></a>
+<span class="sourceLineNo">316</span>    NOT_ACCEPTABLE(406),<a name="line.316"></a>
+<span class="sourceLineNo">317</span>    /**<a name="line.317"></a>
+<span class="sourceLineNo">318</span>     * This code is similar to 401 (Unauthorized), but indicates that the client must first authenticate itself with<a name="line.318"></a>
+<span class="sourceLineNo">319</span>     * the proxy. The proxy MUST return a Proxy-Authenticate header field (section 14.33) containing a challenge<a name="line.319"></a>
+<span class="sourceLineNo">320</span>     * applicable to the proxy for the requested resource. The client MAY repeat the request with a suitable<a name="line.320"></a>
+<span class="sourceLineNo">321</span>     * Proxy-Authorization header field (section 14.34). HTTP access authentication is explained in<a name="line.321"></a>
+<span class="sourceLineNo">322</span>     * "HTTP Authentication: Basic and Digest Access Authentication" [43].<a name="line.322"></a>
+<span class="sourceLineNo">323</span>     */<a name="line.323"></a>
+<span class="sourceLineNo">324</span>    PROXY_AUTHENTICATION(407),<a name="line.324"></a>
+<span class="sourceLineNo">325</span>    /**<a name="line.325"></a>
+<span class="sourceLineNo">326</span>     * The client did not produce a request within the time that the server was prepared to wait. The client MAY<a name="line.326"></a>
+<span class="sourceLineNo">327</span>     * repeat the request without modifications at any later time.<a name="line.327"></a>
+<span class="sourceLineNo">328</span>     */<a name="line.328"></a>
+<span class="sourceLineNo">329</span>    REQUEST_TIMEOUT(408),<a name="line.329"></a>
+<span class="sourceLineNo">330</span>    /**<a name="line.330"></a>
+<span class="sourceLineNo">331</span>     * The request could not be completed due to a conflict with the current state of the resource. This code is<a name="line.331"></a>
+<span class="sourceLineNo">332</span>     * only allowed in situations where it is expected that the user might be able to resolve the conflict and<a name="line.332"></a>
+<span class="sourceLineNo">333</span>     * resubmit the request. The response body SHOULD include enough information for the user to recognize the<a name="line.333"></a>
+<span class="sourceLineNo">334</span>     * source of the conflict. Ideally, the response entity would include enough information for the user or user<a name="line.334"></a>
+<span class="sourceLineNo">335</span>     * agent to fix the problem; however, that might not be possible and is not required.<a name="line.335"></a>
+<span class="sourceLineNo">336</span>     * &lt;p/&gt;<a name="line.336"></a>
+<span class="sourceLineNo">337</span>     * &lt;p&gt;Conflicts are most likely to occur in response to a PUT request. For example, if versioning were being<a name="line.337"></a>
+<span class="sourceLineNo">338</span>     * used and the entity being PUT included changes to a resource which conflict with those made by an earlier<a name="line.338"></a>
+<span class="sourceLineNo">339</span>     * (third-party) request, the server might use the 409 response to indicate that it can't complete the request.<a name="line.339"></a>
+<span class="sourceLineNo">340</span>     * In this case, the response entity would likely contain a list of the differences between the two versions in<a name="line.340"></a>
+<span class="sourceLineNo">341</span>     * a format defined by the response Content-Type.<a name="line.341"></a>
+<span class="sourceLineNo">342</span>     */<a name="line.342"></a>
+<span class="sourceLineNo">343</span>    CONFLICT(409),<a name="line.343"></a>
+<span class="sourceLineNo">344</span>    /**<a name="line.344"></a>
+<span class="sourceLineNo">345</span>     * The requested resource is no longer available at the server and no forwarding address is known. This condition<a name="line.345"></a>
+<span class="sourceLineNo">346</span>     * is expected to be considered permanent. Clients with link editing capabilities SHOULD delete references to<a name="line.346"></a>
+<span class="sourceLineNo">347</span>     * the Request-URI after user approval. If the server does not know, or has no facility to determine, whether or<a name="line.347"></a>
+<span class="sourceLineNo">348</span>     * not the condition is permanent, the status code 404 (Not Found) SHOULD be used instead. This response is<a name="line.348"></a>
+<span class="sourceLineNo">349</span>     * cacheable unless indicated otherwise.<a name="line.349"></a>
+<span class="sourceLineNo">350</span>     * &lt;p/&gt;<a name="line.350"></a>
+<span class="sourceLineNo">351</span>     * &lt;p&gt;The 410 response is primarily intended to assist the task of web maintenance by notifying the recipient<a name="line.351"></a>
+<span class="sourceLineNo">352</span>     * that the resource is intentionally unavailable and that the server owners desire that remote links to that<a name="line.352"></a>
+<span class="sourceLineNo">353</span>     * resource be removed. Such an event is common for limited-time, promotional services and for resources belonging<a name="line.353"></a>
+<span class="sourceLineNo">354</span>     * to individuals no longer working at the server's site. It is not necessary to mark all permanently unavailable<a name="line.354"></a>
+<span class="sourceLineNo">355</span>     * resources as "gone" or to keep the mark for any length of time -- that is left to the discretion of the server<a name="line.355"></a>
+<span class="sourceLineNo">356</span>     * owner.<a name="line.356"></a>
+<span class="sourceLineNo">357</span>     */<a name="line.357"></a>
+<span class="sourceLineNo">358</span>    GONE(410),<a name="line.358"></a>
+<span class="sourceLineNo">359</span>    /**<a name="line.359"></a>
+<span class="sourceLineNo">360</span>     * The server refuses to accept the request without a defined Content-Length. The client MAY repeat the request<a name="line.360"></a>
+<span class="sourceLineNo">361</span>     * if it adds a valid Content-Length header field containing the length of the message-body in the request message.<a name="line.361"></a>
+<span class="sourceLineNo">362</span>     */<a name="line.362"></a>
+<span class="sourceLineNo">363</span>    LENGTH_REQUIRED(411),<a name="line.363"></a>
+<span class="sourceLineNo">364</span>    /**<a name="line.364"></a>
+<span class="sourceLineNo">365</span>     * The precondition given in one or more of the request-header fields evaluated to false when it was tested on<a name="line.365"></a>
+<span class="sourceLineNo">366</span>     * the server. This response code allows the client to place preconditions on the current resource metainformation<a name="line.366"></a>
+<span class="sourceLineNo">367</span>     * (header field data) and thus prevent the requested method from being applied to a resource other than the one<a name="line.367"></a>
+<span class="sourceLineNo">368</span>     * intended.<a name="line.368"></a>
+<span class="sourceLineNo">369</span>     */<a name="line.369"></a>
+<span class="sourceLineNo">370</span>    PRECONDITION_FAILED(412),<a name="line.370"></a>
+<span class="sourceLineNo">371</span>    /**<a name="line.371"></a>
+<span class="sourceLineNo">372</span>     * The server is refusing to process a request because the request entity is larger than the server is willing<a name="line.372"></a>
+<span class="sourceLineNo">373</span>     * or able to process. The server MAY close the connection to prevent the client from continuing the request.<a name="line.373"></a>
+<span class="sourceLineNo">374</span>     * &lt;p/&gt;<a name="line.374"></a>
+<span class="sourceLineNo">375</span>     * &lt;p&gt;If the condition is temporary, the server SHOULD include a Retry-After header field to indicate that it<a name="line.375"></a>
+<span class="sourceLineNo">376</span>     * is temporary and after what time the client MAY try again.<a name="line.376"></a>
+<span class="sourceLineNo">377</span>     */<a name="line.377"></a>
+<span class="sourceLineNo">378</span>    REQUEST_ENTITY_TOO_LARGE(413),<a name="line.378"></a>
+<span class="sourceLineNo">379</span>    /**<a name="line.379"></a>
+<span class="sourceLineNo">380</span>     * The server is refusing to service the request because the Request-URI is longer than the server is willing<a name="line.380"></a>
+<span class="sourceLineNo">381</span>     * to interpret. This rare condition is only likely to occur when a client has improperly converted a POST<a name="line.381"></a>
+<span class="sourceLineNo">382</span>     * request to a GET request with long query information, when the client has descended into a URI "black hole"<a name="line.382"></a>
+<span class="sourceLineNo">383</span>     * of redirection (e.g., a redirected URI prefix that points to a suffix of itself), or when the server is<a name="line.383"></a>
+<span class="sourceLineNo">384</span>     * under attack by a client attempting to exploit security holes present in some servers using fixed-length<a name="line.384"></a>
+<span class="sourceLineNo">385</span>     * buffers for reading or manipulating the Request-URI.<a name="line.385"></a>
+<span class="sourceLineNo">386</span>     */<a name="line.386"></a>
+<span class="sourceLineNo">387</span>    REQUEST_URI_TOO_LONG(414),<a name="line.387"></a>
+<span class="sourceLineNo">388</span>    /**<a name="line.388"></a>
+<span class="sourceLineNo">389</span>     * The server is refusing to service the request because the entity of the request is in a format not supported<a name="line.389"></a>
+<span class="sourceLineNo">390</span>     * by the requested resource for the requested method.<a name="line.390"></a>
+<span class="sourceLineNo">391</span>     */<a name="line.391"></a>
+<span class="sourceLineNo">392</span>    UNSUPPORTED_MEDIA_TYPE(415),<a name="line.392"></a>
+<span class="sourceLineNo">393</span>    /**<a name="line.393"></a>
+<span class="sourceLineNo">394</span>     * A server SHOULD return a response with this status code if a request included a Range request-header field<a name="line.394"></a>
+<span class="sourceLineNo">395</span>     * (section 14.35), and none of the range-specifier values in this field overlap the current extent of the<a name="line.395"></a>
+<span class="sourceLineNo">396</span>     * selected resource, and the request did not include an If-Range request-header field. (For byte-ranges, this<a name="line.396"></a>
+<span class="sourceLineNo">397</span>     * means that the first-byte-pos of all of the byte-range-spec values were greater than the current length of<a name="line.397"></a>
+<span class="sourceLineNo">398</span>     * the selected resource.)<a name="line.398"></a>
+<span class="sourceLineNo">399</span>     * &lt;p/&gt;<a name="line.399"></a>
+<span class="sourceLineNo">400</span>     * &lt;p&gt;When this status code is returned for a byte-range request, the response SHOULD include a Content-Range<a name="line.400"></a>
+<span class="sourceLineNo">401</span>     * entity-header field specifying the current length of the selected resource (see section 14.16). This<a name="line.401"></a>
+<span class="sourceLineNo">402</span>     * response MUST NOT use the multipart/byteranges content-type.<a name="line.402"></a>
+<span class="sourceLineNo">403</span>     */<a name="line.403"></a>
+<span class="sourceLineNo">404</span>    REQUESTED_RANGE_NOT_SATISFIED(416),<a name="line.404"></a>
+<span class="sourceLineNo">405</span>    /**<a name="line.405"></a>
+<span class="sourceLineNo">406</span>     * The expectation given in an Expect request-header field (see section 14.20) could not be met by this server,<a name="line.406"></a>
+<span class="sourceLineNo">407</span>     * or, if the server is a proxy, the server has unambiguous evidence that the request could not be met by the<a name="line.407"></a>
+<span class="sourceLineNo">408</span>     * next-hop server.<a name="line.408"></a>
+<span class="sourceLineNo">409</span>     */<a name="line.409"></a>
+<span class="sourceLineNo">410</span>    EXPECTATION_FAILED(417),<a name="line.410"></a>
+<span class="sourceLineNo">411</span>    /**<a name="line.411"></a>
+<span class="sourceLineNo">412</span>     * The 422 (Unprocessable Entity) status code means the server understands the content type of the request<a name="line.412"></a>
+<span class="sourceLineNo">413</span>     * entity (hence a 415(Unsupported Media Type) status code is inappropriate), and the syntax of the request<a name="line.413"></a>
+<span class="sourceLineNo">414</span>     * entity is correct (thus a 400 (Bad Request) status code is inappropriate) but was unable to process the<a name="line.414"></a>
+<span class="sourceLineNo">415</span>     * contained instructions. For example, this error condition may occur if an XML request body contains<a name="line.415"></a>
+<span class="sourceLineNo">416</span>     * well-formed (i.e., syntactically correct), but semantically erroneous, XML instructions.<a name="line.416"></a>
+<span class="sourceLineNo">417</span>     */<a name="line.417"></a>
+<span class="sourceLineNo">418</span>    UNPROCESSABLE_ENTITY(422),<a name="line.418"></a>
+<span class="sourceLineNo">419</span>    /**<a name="line.419"></a>
+<span class="sourceLineNo">420</span>     * The 423 (Locked) status code means the source or destination resource of a method is locked. This response<a name="line.420"></a>
+<span class="sourceLineNo">421</span>     * SHOULD contain an appropriate precondition or postcondition code, such as 'lock-token-submitted' or<a name="line.421"></a>
+<span class="sourceLineNo">422</span>     * 'no-conflicting-lock'.<a name="line.422"></a>
+<span class="sourceLineNo">423</span>     */<a name="line.423"></a>
+<span class="sourceLineNo">424</span>    LOCKED(423),<a name="line.424"></a>
+<span class="sourceLineNo">425</span>    /**<a name="line.425"></a>
+<span class="sourceLineNo">426</span>     * The 424 (Failed Dependency) status code means that the method could not be performed on the resource because<a name="line.426"></a>
+<span class="sourceLineNo">427</span>     * the requested action depended on another action and that action failed. For example, if a command in a<a name="line.427"></a>
+<span class="sourceLineNo">428</span>     * PROPPATCH method fails, then, at minimum, the rest of the commands will also fail with 424 (Failed Dependency).<a name="line.428"></a>
+<span class="sourceLineNo">429</span>     */<a name="line.429"></a>
+<span class="sourceLineNo">430</span>    FAILED_DEPENDENCY(424),<a name="line.430"></a>
+<span class="sourceLineNo">431</span>    /**<a name="line.431"></a>
+<span class="sourceLineNo">432</span>     * The server encountered an unexpected condition which prevented it from fulfilling the request.<a name="line.432"></a>
+<span class="sourceLineNo">433</span>     */<a name="line.433"></a>
+<span class="sourceLineNo">434</span>    INTERNAL_SERVER_ERROR(500),<a name="line.434"></a>
+<span class="sourceLineNo">435</span>    /**<a name="line.435"></a>
+<span class="sourceLineNo">436</span>     * The server does not support the functionality required to fulfill the request. This is the appropriate<a name="line.436"></a>
+<span class="sourceLineNo">437</span>     * response when the server does not recognize the request method and is not capable of supporting it for any<a name="line.437"></a>
+<span class="sourceLineNo">438</span>     * resource.<a name="line.438"></a>
+<span class="sourceLineNo">439</span>     */<a name="line.439"></a>
+<span class="sourceLineNo">440</span>    NOT_IMPLEMENTED(501),<a name="line.440"></a>
+<span class="sourceLineNo">441</span>    /**<a name="line.441"></a>
+<span class="sourceLineNo">442</span>     * The server, while acting as a gateway or proxy, received an invalid response from the upstream server it<a name="line.442"></a>
+<span class="sourceLineNo">443</span>     * accessed in attempting to fulfill the request.<a name="line.443"></a>
+<span class="sourceLineNo">444</span>     */<a name="line.444"></a>
+<span class="sourceLineNo">445</span>    BAD_GATEWAY(502),<a name="line.445"></a>
+<span class="sourceLineNo">446</span>    /**<a name="line.446"></a>
+<span class="sourceLineNo">447</span>     * The server is currently unable to handle the request due to a temporary overloading or maintenance of the<a name="line.447"></a>
+<span class="sourceLineNo">448</span>     * server. The implication is that this is a temporary condition which will be alleviated after some delay.<a name="line.448"></a>
+<span class="sourceLineNo">449</span>     * If known, the length of the delay MAY be indicated in a Retry-After header. If no Retry-After is given,<a name="line.449"></a>
+<span class="sourceLineNo">450</span>     * the client SHOULD handle the response as it would for a 500 response.<a name="line.450"></a>
+<span class="sourceLineNo">451</span>     */<a name="line.451"></a>
+<span class="sourceLineNo">452</span>    SERVICE_UNAVAILABLE(503),<a name="line.452"></a>
+<span class="sourceLineNo">453</span>    /**<a name="line.453"></a>
+<span class="sourceLineNo">454</span>     * The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server<a name="line.454"></a>
+<span class="sourceLineNo">455</span>     * specified by the URI (e.g. HTTP, FTP, LDAP) or some other auxiliary server (e.g. DNS) it needed to access<a name="line.455"></a>
+<span class="sourceLineNo">456</span>     * in attempting to complete the request.<a name="line.456"></a>
+<span class="sourceLineNo">457</span>     */<a name="line.457"></a>
+<span class="sourceLineNo">458</span>    GATEWAY_TIMEOUT(504),<a name="line.458"></a>
+<span class="sourceLineNo">459</span>    /**<a name="line.459"></a>
+<span class="sourceLineNo">460</span>     * The server does not support, or refuses to support, the HTTP protocol version that was used in the request<a name="line.460"></a>
+<span class="sourceLineNo">461</span>     * message. The server is indicating that it is unable or unwilling to complete the request using the same major<a name="line.461"></a>
+<span class="sourceLineNo">462</span>     * version as the client, as described in section 3.1, other than with this error message. The response SHOULD<a name="line.462"></a>
+<span class="sourceLineNo">463</span>     * contain an entity describing why that version is not supported and what other protocols are supported by<a name="line.463"></a>
+<span class="sourceLineNo">464</span>     * that server.<a name="line.464"></a>
+<span class="sourceLineNo">465</span>     */<a name="line.465"></a>
+<span class="sourceLineNo">466</span>    HTTP_VERSION_NOT_SUPPORTED(505),<a name="line.466"></a>
+<span class="sourceLineNo">467</span>    /**<a name="line.467"></a>
+<span class="sourceLineNo">468</span>     * The 507 (Insufficient Storage) status code means the method could not be performed on the resource because<a name="line.468"></a>
+<span class="sourceLineNo">469</span>     * the server is unable to store the representation needed to successfully complete the request. This condition<a name="line.469"></a>
+<span class="sourceLineNo">470</span>     * is considered to be temporary. If the request that received this status code was the result of a user action,<a name="line.470"></a>
+<span class="sourceLineNo">471</span>     * the request MUST NOT be repeated until it is requested by a separate user action.<a name="line.471"></a>
+<span class="sourceLineNo">472</span>     */<a name="line.472"></a>
+<span class="sourceLineNo">473</span>    INSUFFICIENT_STORAGE(506);<a name="line.473"></a>
+<span class="sourceLineNo">474</span><a name="line.474"></a>
+<span class="sourceLineNo">475</span><a name="line.475"></a>
+<span class="sourceLineNo">476</span>    private int status;<a name="line.476"></a>
+<span class="sourceLineNo">477</span><a name="line.477"></a>
+<span class="sourceLineNo">478</span>    RestStatus(int status) {<a name="line.478"></a>
+<span class="sourceLineNo">479</span>        this.status = (short) status;<a name="line.479"></a>
+<span class="sourceLineNo">480</span>    }<a name="line.480"></a>
+<span class="sourceLineNo">481</span><a name="line.481"></a>
+<span class="sourceLineNo">482</span>    public int getStatus() {<a name="line.482"></a>
+<span class="sourceLineNo">483</span>        return status;<a name="line.483"></a>
+<span class="sourceLineNo">484</span>    }<a name="line.484"></a>
+<span class="sourceLineNo">485</span><a name="line.485"></a>
+<span class="sourceLineNo">486</span>    public static RestStatus readFrom(StreamInput in) throws IOException {<a name="line.486"></a>
+<span class="sourceLineNo">487</span>        return RestStatus.valueOf(in.readUTF());<a name="line.487"></a>
+<span class="sourceLineNo">488</span>    }<a name="line.488"></a>
+<span class="sourceLineNo">489</span><a name="line.489"></a>
+<span class="sourceLineNo">490</span>    public static void writeTo(StreamOutput out, RestStatus status) throws IOException {<a name="line.490"></a>
+<span class="sourceLineNo">491</span>        out.writeUTF(status.name());<a name="line.491"></a>
+<span class="sourceLineNo">492</span>    }<a name="line.492"></a>
+<span class="sourceLineNo">493</span>}<a name="line.493"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

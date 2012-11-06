@@ -1,0 +1,16 @@
+com.ning.http.client
+com.ning.http.client.async
+com.ning.http.client.generators
+com.ning.http.client.oauth
+com.ning.http.client.providers.netty
+com.ning.http.client.providers.netty.websocket
+com.ning.http.client.resumable
+com.ning.http.client.websocket
+com.ning.http.util
+org.elasticsearch.client.http
+org.elasticsearch.test.unit.common.unit
+org.elasticsearch.test.unit.common.xcontent.builder
+org.elasticsearch.test.unit.common.xcontent.smile
+org.elasticsearch.test.unit.common.xcontent.support
+org.elasticsearch.test.unit.discovery.tao.ping.multicast
+org.elasticsearch.test.unit.discovery.tao.ping.unicast

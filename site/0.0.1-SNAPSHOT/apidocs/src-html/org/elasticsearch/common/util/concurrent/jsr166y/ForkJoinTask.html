@@ -1,0 +1,1640 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Written by Doug Lea with assistance from members of JCP JSR-166<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Expert Group and released to the public domain, as explained at<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * http://creativecommons.org/publicdomain/zero/1.0/<a name="line.4"></a>
+<span class="sourceLineNo">005</span> */<a name="line.5"></a>
+<span class="sourceLineNo">006</span><a name="line.6"></a>
+<span class="sourceLineNo">007</span>package org.elasticsearch.common.util.concurrent.jsr166y;<a name="line.7"></a>
+<span class="sourceLineNo">008</span><a name="line.8"></a>
+<span class="sourceLineNo">009</span>import java.io.Serializable;<a name="line.9"></a>
+<span class="sourceLineNo">010</span>import java.util.Collection;<a name="line.10"></a>
+<span class="sourceLineNo">011</span>import java.util.List;<a name="line.11"></a>
+<span class="sourceLineNo">012</span>import java.util.RandomAccess;<a name="line.12"></a>
+<span class="sourceLineNo">013</span>import java.lang.ref.WeakReference;<a name="line.13"></a>
+<span class="sourceLineNo">014</span>import java.lang.ref.ReferenceQueue;<a name="line.14"></a>
+<span class="sourceLineNo">015</span>import java.util.concurrent.Callable;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import java.util.concurrent.CancellationException;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import java.util.concurrent.ExecutionException;<a name="line.17"></a>
+<span class="sourceLineNo">018</span>import java.util.concurrent.Future;<a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.util.concurrent.RejectedExecutionException;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.util.concurrent.RunnableFuture;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.util.concurrent.TimeUnit;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.concurrent.TimeoutException;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.concurrent.locks.ReentrantLock;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.lang.reflect.Constructor;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>/**<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * Abstract base class for tasks that run within a {@link ForkJoinPool}.<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * A {@code ForkJoinTask} is a thread-like entity that is much<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * lighter weight than a normal thread.  Huge numbers of tasks and<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * subtasks may be hosted by a small number of actual threads in a<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * ForkJoinPool, at the price of some usage limitations.<a name="line.31"></a>
+<span class="sourceLineNo">032</span> *<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * &lt;p&gt;A "main" {@code ForkJoinTask} begins execution when submitted<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * to a {@link ForkJoinPool}.  Once started, it will usually in turn<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * start other subtasks.  As indicated by the name of this class,<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * many programs using {@code ForkJoinTask} employ only methods<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * {@link #fork} and {@link #join}, or derivatives such as {@link<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * #invokeAll(ForkJoinTask...) invokeAll}.  However, this class also<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * provides a number of other methods that can come into play in<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * advanced usages, as well as extension mechanics that allow<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * support of new forms of fork/join processing.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> *<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * &lt;p&gt;A {@code ForkJoinTask} is a lightweight form of {@link Future}.<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * The efficiency of {@code ForkJoinTask}s stems from a set of<a name="line.44"></a>
+<span class="sourceLineNo">045</span> * restrictions (that are only partially statically enforceable)<a name="line.45"></a>
+<span class="sourceLineNo">046</span> * reflecting their main use as computational tasks calculating pure<a name="line.46"></a>
+<span class="sourceLineNo">047</span> * functions or operating on purely isolated objects.  The primary<a name="line.47"></a>
+<span class="sourceLineNo">048</span> * coordination mechanisms are {@link #fork}, that arranges<a name="line.48"></a>
+<span class="sourceLineNo">049</span> * asynchronous execution, and {@link #join}, that doesn't proceed<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * until the task's result has been computed.  Computations should<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * ideally avoid {@code synchronized} methods or blocks, and should<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * minimize other blocking synchronization apart from joining other<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * tasks or using synchronizers such as Phasers that are advertised to<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * cooperate with fork/join scheduling. Subdividable tasks should also<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * not perform blocking IO, and should ideally access variables that<a name="line.55"></a>
+<span class="sourceLineNo">056</span> * are completely independent of those accessed by other running<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * tasks. These guidelines are loosely enforced by not permitting<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * checked exceptions such as {@code IOExceptions} to be<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * thrown. However, computations may still encounter unchecked<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * exceptions, that are rethrown to callers attempting to join<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * them. These exceptions may additionally include {@link<a name="line.61"></a>
+<span class="sourceLineNo">062</span> * RejectedExecutionException} stemming from internal resource<a name="line.62"></a>
+<span class="sourceLineNo">063</span> * exhaustion, such as failure to allocate internal task<a name="line.63"></a>
+<span class="sourceLineNo">064</span> * queues. Rethrown exceptions behave in the same way as regular<a name="line.64"></a>
+<span class="sourceLineNo">065</span> * exceptions, but, when possible, contain stack traces (as displayed<a name="line.65"></a>
+<span class="sourceLineNo">066</span> * for example using {@code ex.printStackTrace()}) of both the thread<a name="line.66"></a>
+<span class="sourceLineNo">067</span> * that initiated the computation as well as the thread actually<a name="line.67"></a>
+<span class="sourceLineNo">068</span> * encountering the exception; minimally only the latter.<a name="line.68"></a>
+<span class="sourceLineNo">069</span> *<a name="line.69"></a>
+<span class="sourceLineNo">070</span> * &lt;p&gt;It is possible to define and use ForkJoinTasks that may block,<a name="line.70"></a>
+<span class="sourceLineNo">071</span> * but doing do requires three further considerations: (1) Completion<a name="line.71"></a>
+<span class="sourceLineNo">072</span> * of few if any &lt;em&gt;other&lt;/em&gt; tasks should be dependent on a task<a name="line.72"></a>
+<span class="sourceLineNo">073</span> * that blocks on external synchronization or IO. Event-style async<a name="line.73"></a>
+<span class="sourceLineNo">074</span> * tasks that are never joined (for example, those subclassing {@link<a name="line.74"></a>
+<span class="sourceLineNo">075</span> * CountedCompleter}) often fall into this category.  (2) To minimize<a name="line.75"></a>
+<span class="sourceLineNo">076</span> * resource impact, tasks should be small; ideally performing only the<a name="line.76"></a>
+<span class="sourceLineNo">077</span> * (possibly) blocking action. (3) Unless the {@link<a name="line.77"></a>
+<span class="sourceLineNo">078</span> * ForkJoinPool.ManagedBlocker} API is used, or the number of possibly<a name="line.78"></a>
+<span class="sourceLineNo">079</span> * blocked tasks is known to be less than the pool's {@link<a name="line.79"></a>
+<span class="sourceLineNo">080</span> * ForkJoinPool#getParallelism} level, the pool cannot guarantee that<a name="line.80"></a>
+<span class="sourceLineNo">081</span> * enough threads will be available to ensure progress or good<a name="line.81"></a>
+<span class="sourceLineNo">082</span> * performance.<a name="line.82"></a>
+<span class="sourceLineNo">083</span> *<a name="line.83"></a>
+<span class="sourceLineNo">084</span> * &lt;p&gt;The primary method for awaiting completion and extracting<a name="line.84"></a>
+<span class="sourceLineNo">085</span> * results of a task is {@link #join}, but there are several variants:<a name="line.85"></a>
+<span class="sourceLineNo">086</span> * The {@link Future#get} methods support interruptible and/or timed<a name="line.86"></a>
+<span class="sourceLineNo">087</span> * waits for completion and report results using {@code Future}<a name="line.87"></a>
+<span class="sourceLineNo">088</span> * conventions. Method {@link #invoke} is semantically<a name="line.88"></a>
+<span class="sourceLineNo">089</span> * equivalent to {@code fork(); join()} but always attempts to begin<a name="line.89"></a>
+<span class="sourceLineNo">090</span> * execution in the current thread. The "&lt;em&gt;quiet&lt;/em&gt;" forms of<a name="line.90"></a>
+<span class="sourceLineNo">091</span> * these methods do not extract results or report exceptions. These<a name="line.91"></a>
+<span class="sourceLineNo">092</span> * may be useful when a set of tasks are being executed, and you need<a name="line.92"></a>
+<span class="sourceLineNo">093</span> * to delay processing of results or exceptions until all complete.<a name="line.93"></a>
+<span class="sourceLineNo">094</span> * Method {@code invokeAll} (available in multiple versions)<a name="line.94"></a>
+<span class="sourceLineNo">095</span> * performs the most common form of parallel invocation: forking a set<a name="line.95"></a>
+<span class="sourceLineNo">096</span> * of tasks and joining them all.<a name="line.96"></a>
+<span class="sourceLineNo">097</span> *<a name="line.97"></a>
+<span class="sourceLineNo">098</span> * &lt;p&gt;In the most typical usages, a fork-join pair act like a call<a name="line.98"></a>
+<span class="sourceLineNo">099</span> * (fork) and return (join) from a parallel recursive function. As is<a name="line.99"></a>
+<span class="sourceLineNo">100</span> * the case with other forms of recursive calls, returns (joins)<a name="line.100"></a>
+<span class="sourceLineNo">101</span> * should be performed innermost-first. For example, {@code a.fork();<a name="line.101"></a>
+<span class="sourceLineNo">102</span> * b.fork(); b.join(); a.join();} is likely to be substantially more<a name="line.102"></a>
+<span class="sourceLineNo">103</span> * efficient than joining {@code a} before {@code b}.<a name="line.103"></a>
+<span class="sourceLineNo">104</span> *<a name="line.104"></a>
+<span class="sourceLineNo">105</span> * &lt;p&gt;The execution status of tasks may be queried at several levels<a name="line.105"></a>
+<span class="sourceLineNo">106</span> * of detail: {@link #isDone} is true if a task completed in any way<a name="line.106"></a>
+<span class="sourceLineNo">107</span> * (including the case where a task was cancelled without executing);<a name="line.107"></a>
+<span class="sourceLineNo">108</span> * {@link #isCompletedNormally} is true if a task completed without<a name="line.108"></a>
+<span class="sourceLineNo">109</span> * cancellation or encountering an exception; {@link #isCancelled} is<a name="line.109"></a>
+<span class="sourceLineNo">110</span> * true if the task was cancelled (in which case {@link #getException}<a name="line.110"></a>
+<span class="sourceLineNo">111</span> * returns a {@link java.util.concurrent.CancellationException}); and<a name="line.111"></a>
+<span class="sourceLineNo">112</span> * {@link #isCompletedAbnormally} is true if a task was either<a name="line.112"></a>
+<span class="sourceLineNo">113</span> * cancelled or encountered an exception, in which case {@link<a name="line.113"></a>
+<span class="sourceLineNo">114</span> * #getException} will return either the encountered exception or<a name="line.114"></a>
+<span class="sourceLineNo">115</span> * {@link java.util.concurrent.CancellationException}.<a name="line.115"></a>
+<span class="sourceLineNo">116</span> *<a name="line.116"></a>
+<span class="sourceLineNo">117</span> * &lt;p&gt;The ForkJoinTask class is not usually directly subclassed.<a name="line.117"></a>
+<span class="sourceLineNo">118</span> * Instead, you subclass one of the abstract classes that support a<a name="line.118"></a>
+<span class="sourceLineNo">119</span> * particular style of fork/join processing, typically {@link<a name="line.119"></a>
+<span class="sourceLineNo">120</span> * RecursiveAction} for most computations that do not return results,<a name="line.120"></a>
+<span class="sourceLineNo">121</span> * {@link RecursiveTask} for those that do, and {@link<a name="line.121"></a>
+<span class="sourceLineNo">122</span> * CountedCompleter} for those in which completed actions trigger<a name="line.122"></a>
+<span class="sourceLineNo">123</span> * other actions.  Normally, a concrete ForkJoinTask subclass declares<a name="line.123"></a>
+<span class="sourceLineNo">124</span> * fields comprising its parameters, established in a constructor, and<a name="line.124"></a>
+<span class="sourceLineNo">125</span> * then defines a {@code compute} method that somehow uses the control<a name="line.125"></a>
+<span class="sourceLineNo">126</span> * methods supplied by this base class. While these methods have<a name="line.126"></a>
+<span class="sourceLineNo">127</span> * {@code public} access (to allow instances of different task<a name="line.127"></a>
+<span class="sourceLineNo">128</span> * subclasses to call each other's methods), some of them may only be<a name="line.128"></a>
+<span class="sourceLineNo">129</span> * called from within other ForkJoinTasks (as may be determined using<a name="line.129"></a>
+<span class="sourceLineNo">130</span> * method {@link #inForkJoinPool}).  Attempts to invoke them in other<a name="line.130"></a>
+<span class="sourceLineNo">131</span> * contexts result in exceptions or errors, possibly including {@code<a name="line.131"></a>
+<span class="sourceLineNo">132</span> * ClassCastException}.<a name="line.132"></a>
+<span class="sourceLineNo">133</span> *<a name="line.133"></a>
+<span class="sourceLineNo">134</span> * &lt;p&gt;Method {@link #join} and its variants are appropriate for use<a name="line.134"></a>
+<span class="sourceLineNo">135</span> * only when completion dependencies are acyclic; that is, the<a name="line.135"></a>
+<span class="sourceLineNo">136</span> * parallel computation can be described as a directed acyclic graph<a name="line.136"></a>
+<span class="sourceLineNo">137</span> * (DAG). Otherwise, executions may encounter a form of deadlock as<a name="line.137"></a>
+<span class="sourceLineNo">138</span> * tasks cyclically wait for each other.  However, this framework<a name="line.138"></a>
+<span class="sourceLineNo">139</span> * supports other methods and techniques (for example the use of<a name="line.139"></a>
+<span class="sourceLineNo">140</span> * {@link Phaser}, {@link #helpQuiesce}, and {@link #complete}) that<a name="line.140"></a>
+<span class="sourceLineNo">141</span> * may be of use in constructing custom subclasses for problems that<a name="line.141"></a>
+<span class="sourceLineNo">142</span> * are not statically structured as DAGs. To support such usages a<a name="line.142"></a>
+<span class="sourceLineNo">143</span> * ForkJoinTask may be atomically &lt;em&gt;tagged&lt;/em&gt; with a {@code short}<a name="line.143"></a>
+<span class="sourceLineNo">144</span> * value using {@link #setForkJoinTaskTag} or {@link<a name="line.144"></a>
+<span class="sourceLineNo">145</span> * #compareAndSetForkJoinTaskTag} and checked using {@link<a name="line.145"></a>
+<span class="sourceLineNo">146</span> * #getForkJoinTaskTag}. The ForkJoinTask implementation does not use<a name="line.146"></a>
+<span class="sourceLineNo">147</span> * these {@code protected} methods or tags for any purpose, but they<a name="line.147"></a>
+<span class="sourceLineNo">148</span> * may be of use in the construction of specialized subclasses.  For<a name="line.148"></a>
+<span class="sourceLineNo">149</span> * example, parallel graph traversals can use the supplied methods to<a name="line.149"></a>
+<span class="sourceLineNo">150</span> * avoid revisiting nodes/tasks that have already been processed.<a name="line.150"></a>
+<span class="sourceLineNo">151</span> * (Method names for tagging are bulky in part to encourage definition<a name="line.151"></a>
+<span class="sourceLineNo">152</span> * of methods that reflect their usage patterns.)<a name="line.152"></a>
+<span class="sourceLineNo">153</span> *<a name="line.153"></a>
+<span class="sourceLineNo">154</span> * &lt;p&gt;Most base support methods are {@code final}, to prevent<a name="line.154"></a>
+<span class="sourceLineNo">155</span> * overriding of implementations that are intrinsically tied to the<a name="line.155"></a>
+<span class="sourceLineNo">156</span> * underlying lightweight task scheduling framework.  Developers<a name="line.156"></a>
+<span class="sourceLineNo">157</span> * creating new basic styles of fork/join processing should minimally<a name="line.157"></a>
+<span class="sourceLineNo">158</span> * implement {@code protected} methods {@link #exec}, {@link<a name="line.158"></a>
+<span class="sourceLineNo">159</span> * #setRawResult}, and {@link #getRawResult}, while also introducing<a name="line.159"></a>
+<span class="sourceLineNo">160</span> * an abstract computational method that can be implemented in its<a name="line.160"></a>
+<span class="sourceLineNo">161</span> * subclasses, possibly relying on other {@code protected} methods<a name="line.161"></a>
+<span class="sourceLineNo">162</span> * provided by this class.<a name="line.162"></a>
+<span class="sourceLineNo">163</span> *<a name="line.163"></a>
+<span class="sourceLineNo">164</span> * &lt;p&gt;ForkJoinTasks should perform relatively small amounts of<a name="line.164"></a>
+<span class="sourceLineNo">165</span> * computation. Large tasks should be split into smaller subtasks,<a name="line.165"></a>
+<span class="sourceLineNo">166</span> * usually via recursive decomposition. As a very rough rule of thumb,<a name="line.166"></a>
+<span class="sourceLineNo">167</span> * a task should perform more than 100 and less than 10000 basic<a name="line.167"></a>
+<span class="sourceLineNo">168</span> * computational steps, and should avoid indefinite looping. If tasks<a name="line.168"></a>
+<span class="sourceLineNo">169</span> * are too big, then parallelism cannot improve throughput. If too<a name="line.169"></a>
+<span class="sourceLineNo">170</span> * small, then memory and internal task maintenance overhead may<a name="line.170"></a>
+<span class="sourceLineNo">171</span> * overwhelm processing.<a name="line.171"></a>
+<span class="sourceLineNo">172</span> *<a name="line.172"></a>
+<span class="sourceLineNo">173</span> * &lt;p&gt;This class provides {@code adapt} methods for {@link Runnable}<a name="line.173"></a>
+<span class="sourceLineNo">174</span> * and {@link Callable}, that may be of use when mixing execution of<a name="line.174"></a>
+<span class="sourceLineNo">175</span> * {@code ForkJoinTasks} with other kinds of tasks. When all tasks are<a name="line.175"></a>
+<span class="sourceLineNo">176</span> * of this form, consider using a pool constructed in &lt;em&gt;asyncMode&lt;/em&gt;.<a name="line.176"></a>
+<span class="sourceLineNo">177</span> *<a name="line.177"></a>
+<span class="sourceLineNo">178</span> * &lt;p&gt;ForkJoinTasks are {@code Serializable}, which enables them to be<a name="line.178"></a>
+<span class="sourceLineNo">179</span> * used in extensions such as remote execution frameworks. It is<a name="line.179"></a>
+<span class="sourceLineNo">180</span> * sensible to serialize tasks only before or after, but not during,<a name="line.180"></a>
+<span class="sourceLineNo">181</span> * execution. Serialization is not relied on during execution itself.<a name="line.181"></a>
+<span class="sourceLineNo">182</span> *<a name="line.182"></a>
+<span class="sourceLineNo">183</span> * @since 1.7<a name="line.183"></a>
+<span class="sourceLineNo">184</span> * @author Doug Lea<a name="line.184"></a>
+<span class="sourceLineNo">185</span> */<a name="line.185"></a>
+<span class="sourceLineNo">186</span>public abstract class ForkJoinTask&lt;V&gt; implements Future&lt;V&gt;, Serializable {<a name="line.186"></a>
+<span class="sourceLineNo">187</span><a name="line.187"></a>
+<span class="sourceLineNo">188</span>    /*<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * See the internal documentation of class ForkJoinPool for a<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     * general implementation overview.  ForkJoinTasks are mainly<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * responsible for maintaining their "status" field amidst relays<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * to methods in ForkJoinWorkerThread and ForkJoinPool.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     *<a name="line.193"></a>
+<span class="sourceLineNo">194</span>     * The methods of this class are more-or-less layered into<a name="line.194"></a>
+<span class="sourceLineNo">195</span>     * (1) basic status maintenance<a name="line.195"></a>
+<span class="sourceLineNo">196</span>     * (2) execution and awaiting completion<a name="line.196"></a>
+<span class="sourceLineNo">197</span>     * (3) user-level methods that additionally report results.<a name="line.197"></a>
+<span class="sourceLineNo">198</span>     * This is sometimes hard to see because this file orders exported<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * methods in a way that flows well in javadocs.<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     */<a name="line.200"></a>
+<span class="sourceLineNo">201</span><a name="line.201"></a>
+<span class="sourceLineNo">202</span>    /*<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * The status field holds run control status bits packed into a<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     * single int to minimize footprint and to ensure atomicity (via<a name="line.204"></a>
+<span class="sourceLineNo">205</span>     * CAS).  Status is initially zero, and takes on nonnegative<a name="line.205"></a>
+<span class="sourceLineNo">206</span>     * values until completed, upon which status (anded with<a name="line.206"></a>
+<span class="sourceLineNo">207</span>     * DONE_MASK) holds value NORMAL, CANCELLED, or EXCEPTIONAL. Tasks<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * undergoing blocking waits by other threads have the SIGNAL bit<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * set.  Completion of a stolen task with SIGNAL set awakens any<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     * waiters via notifyAll. Even though suboptimal for some<a name="line.210"></a>
+<span class="sourceLineNo">211</span>     * purposes, we use basic builtin wait/notify to take advantage of<a name="line.211"></a>
+<span class="sourceLineNo">212</span>     * "monitor inflation" in JVMs that we would otherwise need to<a name="line.212"></a>
+<span class="sourceLineNo">213</span>     * emulate to avoid adding further per-task bookkeeping overhead.<a name="line.213"></a>
+<span class="sourceLineNo">214</span>     * We want these monitors to be "fat", i.e., not use biasing or<a name="line.214"></a>
+<span class="sourceLineNo">215</span>     * thin-lock techniques, so use some odd coding idioms that tend<a name="line.215"></a>
+<span class="sourceLineNo">216</span>     * to avoid them, mainly by arranging that every synchronized<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * block performs a wait, notifyAll or both.<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     *<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * These control bits occupy only (some of) the upper half (16<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * bits) of status field. The lower bits are used for user-defined<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     * tags.<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     */<a name="line.222"></a>
+<span class="sourceLineNo">223</span><a name="line.223"></a>
+<span class="sourceLineNo">224</span>    /** The run status of this task */<a name="line.224"></a>
+<span class="sourceLineNo">225</span>    volatile int status; // accessed directly by pool and workers<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    static final int DONE_MASK   = 0xf0000000;  // mask out non-completion bits<a name="line.226"></a>
+<span class="sourceLineNo">227</span>    static final int NORMAL      = 0xf0000000;  // must be negative<a name="line.227"></a>
+<span class="sourceLineNo">228</span>    static final int CANCELLED   = 0xc0000000;  // must be &lt; NORMAL<a name="line.228"></a>
+<span class="sourceLineNo">229</span>    static final int EXCEPTIONAL = 0x80000000;  // must be &lt; CANCELLED<a name="line.229"></a>
+<span class="sourceLineNo">230</span>    static final int SIGNAL      = 0x00010000;  // must be &gt;= 1 &lt;&lt; 16<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    static final int SMASK       = 0x0000ffff;  // short bits for tags<a name="line.231"></a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span>    /**<a name="line.233"></a>
+<span class="sourceLineNo">234</span>     * Marks completion and wakes up threads waiting to join this<a name="line.234"></a>
+<span class="sourceLineNo">235</span>     * task.<a name="line.235"></a>
+<span class="sourceLineNo">236</span>     *<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * @param completion one of NORMAL, CANCELLED, EXCEPTIONAL<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     * @return completion status on exit<a name="line.238"></a>
+<span class="sourceLineNo">239</span>     */<a name="line.239"></a>
+<span class="sourceLineNo">240</span>    private int setCompletion(int completion) {<a name="line.240"></a>
+<span class="sourceLineNo">241</span>        for (int s;;) {<a name="line.241"></a>
+<span class="sourceLineNo">242</span>            if ((s = status) &lt; 0)<a name="line.242"></a>
+<span class="sourceLineNo">243</span>                return s;<a name="line.243"></a>
+<span class="sourceLineNo">244</span>            if (U.compareAndSwapInt(this, STATUS, s, s | completion)) {<a name="line.244"></a>
+<span class="sourceLineNo">245</span>                if ((s &gt;&gt;&gt; 16) != 0)<a name="line.245"></a>
+<span class="sourceLineNo">246</span>                    synchronized (this) { notifyAll(); }<a name="line.246"></a>
+<span class="sourceLineNo">247</span>                return completion;<a name="line.247"></a>
+<span class="sourceLineNo">248</span>            }<a name="line.248"></a>
+<span class="sourceLineNo">249</span>        }<a name="line.249"></a>
+<span class="sourceLineNo">250</span>    }<a name="line.250"></a>
+<span class="sourceLineNo">251</span><a name="line.251"></a>
+<span class="sourceLineNo">252</span>    /**<a name="line.252"></a>
+<span class="sourceLineNo">253</span>     * Primary execution method for stolen tasks. Unless done, calls<a name="line.253"></a>
+<span class="sourceLineNo">254</span>     * exec and records status if completed, but doesn't wait for<a name="line.254"></a>
+<span class="sourceLineNo">255</span>     * completion otherwise.<a name="line.255"></a>
+<span class="sourceLineNo">256</span>     *<a name="line.256"></a>
+<span class="sourceLineNo">257</span>     * @return status on exit from this method<a name="line.257"></a>
+<span class="sourceLineNo">258</span>     */<a name="line.258"></a>
+<span class="sourceLineNo">259</span>    final int doExec() {<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        int s; boolean completed;<a name="line.260"></a>
+<span class="sourceLineNo">261</span>        if ((s = status) &gt;= 0) {<a name="line.261"></a>
+<span class="sourceLineNo">262</span>            try {<a name="line.262"></a>
+<span class="sourceLineNo">263</span>                completed = exec();<a name="line.263"></a>
+<span class="sourceLineNo">264</span>            } catch (Throwable rex) {<a name="line.264"></a>
+<span class="sourceLineNo">265</span>                return setExceptionalCompletion(rex);<a name="line.265"></a>
+<span class="sourceLineNo">266</span>            }<a name="line.266"></a>
+<span class="sourceLineNo">267</span>            if (completed)<a name="line.267"></a>
+<span class="sourceLineNo">268</span>                s = setCompletion(NORMAL);<a name="line.268"></a>
+<span class="sourceLineNo">269</span>        }<a name="line.269"></a>
+<span class="sourceLineNo">270</span>        return s;<a name="line.270"></a>
+<span class="sourceLineNo">271</span>    }<a name="line.271"></a>
+<span class="sourceLineNo">272</span><a name="line.272"></a>
+<span class="sourceLineNo">273</span>    /**<a name="line.273"></a>
+<span class="sourceLineNo">274</span>     * Tries to set SIGNAL status unless already completed. Used by<a name="line.274"></a>
+<span class="sourceLineNo">275</span>     * ForkJoinPool. Other variants are directly incorporated into<a name="line.275"></a>
+<span class="sourceLineNo">276</span>     * externalAwaitDone etc.<a name="line.276"></a>
+<span class="sourceLineNo">277</span>     *<a name="line.277"></a>
+<span class="sourceLineNo">278</span>     * @return true if successful<a name="line.278"></a>
+<span class="sourceLineNo">279</span>     */<a name="line.279"></a>
+<span class="sourceLineNo">280</span>    final boolean trySetSignal() {<a name="line.280"></a>
+<span class="sourceLineNo">281</span>        int s = status;<a name="line.281"></a>
+<span class="sourceLineNo">282</span>        return s &gt;= 0 &amp;&amp; U.compareAndSwapInt(this, STATUS, s, s | SIGNAL);<a name="line.282"></a>
+<span class="sourceLineNo">283</span>    }<a name="line.283"></a>
+<span class="sourceLineNo">284</span><a name="line.284"></a>
+<span class="sourceLineNo">285</span>    /**<a name="line.285"></a>
+<span class="sourceLineNo">286</span>     * Blocks a non-worker-thread until completion.<a name="line.286"></a>
+<span class="sourceLineNo">287</span>     * @return status upon completion<a name="line.287"></a>
+<span class="sourceLineNo">288</span>     */<a name="line.288"></a>
+<span class="sourceLineNo">289</span>    private int externalAwaitDone() {<a name="line.289"></a>
+<span class="sourceLineNo">290</span>        boolean interrupted = false;<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        int s;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>        while ((s = status) &gt;= 0) {<a name="line.292"></a>
+<span class="sourceLineNo">293</span>            if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {<a name="line.293"></a>
+<span class="sourceLineNo">294</span>                synchronized (this) {<a name="line.294"></a>
+<span class="sourceLineNo">295</span>                    if (status &gt;= 0) {<a name="line.295"></a>
+<span class="sourceLineNo">296</span>                        try {<a name="line.296"></a>
+<span class="sourceLineNo">297</span>                            wait();<a name="line.297"></a>
+<span class="sourceLineNo">298</span>                        } catch (InterruptedException ie) {<a name="line.298"></a>
+<span class="sourceLineNo">299</span>                            interrupted = true;<a name="line.299"></a>
+<span class="sourceLineNo">300</span>                        }<a name="line.300"></a>
+<span class="sourceLineNo">301</span>                    }<a name="line.301"></a>
+<span class="sourceLineNo">302</span>                    else<a name="line.302"></a>
+<span class="sourceLineNo">303</span>                        notifyAll();<a name="line.303"></a>
+<span class="sourceLineNo">304</span>                }<a name="line.304"></a>
+<span class="sourceLineNo">305</span>            }<a name="line.305"></a>
+<span class="sourceLineNo">306</span>        }<a name="line.306"></a>
+<span class="sourceLineNo">307</span>        if (interrupted)<a name="line.307"></a>
+<span class="sourceLineNo">308</span>            Thread.currentThread().interrupt();<a name="line.308"></a>
+<span class="sourceLineNo">309</span>        return s;<a name="line.309"></a>
+<span class="sourceLineNo">310</span>    }<a name="line.310"></a>
+<span class="sourceLineNo">311</span><a name="line.311"></a>
+<span class="sourceLineNo">312</span>    /**<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * Blocks a non-worker-thread until completion or interruption.<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     */<a name="line.314"></a>
+<span class="sourceLineNo">315</span>    private int externalInterruptibleAwaitDone() throws InterruptedException {<a name="line.315"></a>
+<span class="sourceLineNo">316</span>        int s;<a name="line.316"></a>
+<span class="sourceLineNo">317</span>        if (Thread.interrupted())<a name="line.317"></a>
+<span class="sourceLineNo">318</span>            throw new InterruptedException();<a name="line.318"></a>
+<span class="sourceLineNo">319</span>        while ((s = status) &gt;= 0) {<a name="line.319"></a>
+<span class="sourceLineNo">320</span>            if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {<a name="line.320"></a>
+<span class="sourceLineNo">321</span>                synchronized (this) {<a name="line.321"></a>
+<span class="sourceLineNo">322</span>                    if (status &gt;= 0)<a name="line.322"></a>
+<span class="sourceLineNo">323</span>                        wait();<a name="line.323"></a>
+<span class="sourceLineNo">324</span>                    else<a name="line.324"></a>
+<span class="sourceLineNo">325</span>                        notifyAll();<a name="line.325"></a>
+<span class="sourceLineNo">326</span>                }<a name="line.326"></a>
+<span class="sourceLineNo">327</span>            }<a name="line.327"></a>
+<span class="sourceLineNo">328</span>        }<a name="line.328"></a>
+<span class="sourceLineNo">329</span>        return s;<a name="line.329"></a>
+<span class="sourceLineNo">330</span>    }<a name="line.330"></a>
+<span class="sourceLineNo">331</span><a name="line.331"></a>
+<span class="sourceLineNo">332</span>    /**<a name="line.332"></a>
+<span class="sourceLineNo">333</span>     * Implementation for join, get, quietlyJoin. Directly handles<a name="line.333"></a>
+<span class="sourceLineNo">334</span>     * only cases of already-completed, external wait, and<a name="line.334"></a>
+<span class="sourceLineNo">335</span>     * unfork+exec.  Others are relayed to ForkJoinPool.awaitJoin.<a name="line.335"></a>
+<span class="sourceLineNo">336</span>     *<a name="line.336"></a>
+<span class="sourceLineNo">337</span>     * @return status upon completion<a name="line.337"></a>
+<span class="sourceLineNo">338</span>     */<a name="line.338"></a>
+<span class="sourceLineNo">339</span>    private int doJoin() {<a name="line.339"></a>
+<span class="sourceLineNo">340</span>        int s; Thread t; ForkJoinWorkerThread wt; ForkJoinPool.WorkQueue w;<a name="line.340"></a>
+<span class="sourceLineNo">341</span>        if ((s = status) &gt;= 0) {<a name="line.341"></a>
+<span class="sourceLineNo">342</span>            if (((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)) {<a name="line.342"></a>
+<span class="sourceLineNo">343</span>                if (!(w = (wt = (ForkJoinWorkerThread)t).workQueue).<a name="line.343"></a>
+<span class="sourceLineNo">344</span>                    tryUnpush(this) || (s = doExec()) &gt;= 0)<a name="line.344"></a>
+<span class="sourceLineNo">345</span>                    s = wt.pool.awaitJoin(w, this);<a name="line.345"></a>
+<span class="sourceLineNo">346</span>            }<a name="line.346"></a>
+<span class="sourceLineNo">347</span>            else<a name="line.347"></a>
+<span class="sourceLineNo">348</span>                s = externalAwaitDone();<a name="line.348"></a>
+<span class="sourceLineNo">349</span>        }<a name="line.349"></a>
+<span class="sourceLineNo">350</span>        return s;<a name="line.350"></a>
+<span class="sourceLineNo">351</span>    }<a name="line.351"></a>
+<span class="sourceLineNo">352</span><a name="line.352"></a>
+<span class="sourceLineNo">353</span>    /**<a name="line.353"></a>
+<span class="sourceLineNo">354</span>     * Implementation for invoke, quietlyInvoke.<a name="line.354"></a>
+<span class="sourceLineNo">355</span>     *<a name="line.355"></a>
+<span class="sourceLineNo">356</span>     * @return status upon completion<a name="line.356"></a>
+<span class="sourceLineNo">357</span>     */<a name="line.357"></a>
+<span class="sourceLineNo">358</span>    private int doInvoke() {<a name="line.358"></a>
+<span class="sourceLineNo">359</span>        int s; Thread t; ForkJoinWorkerThread wt;<a name="line.359"></a>
+<span class="sourceLineNo">360</span>        if ((s = doExec()) &gt;= 0) {<a name="line.360"></a>
+<span class="sourceLineNo">361</span>            if ((t = Thread.currentThread()) instanceof ForkJoinWorkerThread)<a name="line.361"></a>
+<span class="sourceLineNo">362</span>                s = (wt = (ForkJoinWorkerThread)t).pool.awaitJoin(wt.workQueue,<a name="line.362"></a>
+<span class="sourceLineNo">363</span>                                                                  this);<a name="line.363"></a>
+<span class="sourceLineNo">364</span>            else<a name="line.364"></a>
+<span class="sourceLineNo">365</span>                s = externalAwaitDone();<a name="line.365"></a>
+<span class="sourceLineNo">366</span>        }<a name="line.366"></a>
+<span class="sourceLineNo">367</span>        return s;<a name="line.367"></a>
+<span class="sourceLineNo">368</span>    }<a name="line.368"></a>
+<span class="sourceLineNo">369</span><a name="line.369"></a>
+<span class="sourceLineNo">370</span>    // Exception table support<a name="line.370"></a>
+<span class="sourceLineNo">371</span><a name="line.371"></a>
+<span class="sourceLineNo">372</span>    /**<a name="line.372"></a>
+<span class="sourceLineNo">373</span>     * Table of exceptions thrown by tasks, to enable reporting by<a name="line.373"></a>
+<span class="sourceLineNo">374</span>     * callers. Because exceptions are rare, we don't directly keep<a name="line.374"></a>
+<span class="sourceLineNo">375</span>     * them with task objects, but instead use a weak ref table.  Note<a name="line.375"></a>
+<span class="sourceLineNo">376</span>     * that cancellation exceptions don't appear in the table, but are<a name="line.376"></a>
+<span class="sourceLineNo">377</span>     * instead recorded as status values.<a name="line.377"></a>
+<span class="sourceLineNo">378</span>     *<a name="line.378"></a>
+<span class="sourceLineNo">379</span>     * Note: These statics are initialized below in static block.<a name="line.379"></a>
+<span class="sourceLineNo">380</span>     */<a name="line.380"></a>
+<span class="sourceLineNo">381</span>    private static final ExceptionNode[] exceptionTable;<a name="line.381"></a>
+<span class="sourceLineNo">382</span>    private static final ReentrantLock exceptionTableLock;<a name="line.382"></a>
+<span class="sourceLineNo">383</span>    private static final ReferenceQueue&lt;Object&gt; exceptionTableRefQueue;<a name="line.383"></a>
+<span class="sourceLineNo">384</span><a name="line.384"></a>
+<span class="sourceLineNo">385</span>    /**<a name="line.385"></a>
+<span class="sourceLineNo">386</span>     * Fixed capacity for exceptionTable.<a name="line.386"></a>
+<span class="sourceLineNo">387</span>     */<a name="line.387"></a>
+<span class="sourceLineNo">388</span>    private static final int EXCEPTION_MAP_CAPACITY = 32;<a name="line.388"></a>
+<span class="sourceLineNo">389</span><a name="line.389"></a>
+<span class="sourceLineNo">390</span>    /**<a name="line.390"></a>
+<span class="sourceLineNo">391</span>     * Key-value nodes for exception table.  The chained hash table<a name="line.391"></a>
+<span class="sourceLineNo">392</span>     * uses identity comparisons, full locking, and weak references<a name="line.392"></a>
+<span class="sourceLineNo">393</span>     * for keys. The table has a fixed capacity because it only<a name="line.393"></a>
+<span class="sourceLineNo">394</span>     * maintains task exceptions long enough for joiners to access<a name="line.394"></a>
+<span class="sourceLineNo">395</span>     * them, so should never become very large for sustained<a name="line.395"></a>
+<span class="sourceLineNo">396</span>     * periods. However, since we do not know when the last joiner<a name="line.396"></a>
+<span class="sourceLineNo">397</span>     * completes, we must use weak references and expunge them. We do<a name="line.397"></a>
+<span class="sourceLineNo">398</span>     * so on each operation (hence full locking). Also, some thread in<a name="line.398"></a>
+<span class="sourceLineNo">399</span>     * any ForkJoinPool will call helpExpungeStaleExceptions when its<a name="line.399"></a>
+<span class="sourceLineNo">400</span>     * pool becomes isQuiescent.<a name="line.400"></a>
+<span class="sourceLineNo">401</span>     */<a name="line.401"></a>
+<span class="sourceLineNo">402</span>    static final class ExceptionNode extends WeakReference&lt;ForkJoinTask&lt;?&gt;&gt; {<a name="line.402"></a>
+<span class="sourceLineNo">403</span>        final Throwable ex;<a name="line.403"></a>
+<span class="sourceLineNo">404</span>        ExceptionNode next;<a name="line.404"></a>
+<span class="sourceLineNo">405</span>        final long thrower;  // use id not ref to avoid weak cycles<a name="line.405"></a>
+<span class="sourceLineNo">406</span>        ExceptionNode(ForkJoinTask&lt;?&gt; task, Throwable ex, ExceptionNode next) {<a name="line.406"></a>
+<span class="sourceLineNo">407</span>            super(task, exceptionTableRefQueue);<a name="line.407"></a>
+<span class="sourceLineNo">408</span>            this.ex = ex;<a name="line.408"></a>
+<span class="sourceLineNo">409</span>            this.next = next;<a name="line.409"></a>
+<span class="sourceLineNo">410</span>            this.thrower = Thread.currentThread().getId();<a name="line.410"></a>
+<span class="sourceLineNo">411</span>        }<a name="line.411"></a>
+<span class="sourceLineNo">412</span>    }<a name="line.412"></a>
+<span class="sourceLineNo">413</span><a name="line.413"></a>
+<span class="sourceLineNo">414</span>    /**<a name="line.414"></a>
+<span class="sourceLineNo">415</span>     * Records exception and sets status.<a name="line.415"></a>
+<span class="sourceLineNo">416</span>     *<a name="line.416"></a>
+<span class="sourceLineNo">417</span>     * @return status on exit<a name="line.417"></a>
+<span class="sourceLineNo">418</span>     */<a name="line.418"></a>
+<span class="sourceLineNo">419</span>    final int recordExceptionalCompletion(Throwable ex) {<a name="line.419"></a>
+<span class="sourceLineNo">420</span>        int s;<a name="line.420"></a>
+<span class="sourceLineNo">421</span>        if ((s = status) &gt;= 0) {<a name="line.421"></a>
+<span class="sourceLineNo">422</span>            int h = System.identityHashCode(this);<a name="line.422"></a>
+<span class="sourceLineNo">423</span>            final ReentrantLock lock = exceptionTableLock;<a name="line.423"></a>
+<span class="sourceLineNo">424</span>            lock.lock();<a name="line.424"></a>
+<span class="sourceLineNo">425</span>            try {<a name="line.425"></a>
+<span class="sourceLineNo">426</span>                expungeStaleExceptions();<a name="line.426"></a>
+<span class="sourceLineNo">427</span>                ExceptionNode[] t = exceptionTable;<a name="line.427"></a>
+<span class="sourceLineNo">428</span>                int i = h &amp; (t.length - 1);<a name="line.428"></a>
+<span class="sourceLineNo">429</span>                for (ExceptionNode e = t[i]; ; e = e.next) {<a name="line.429"></a>
+<span class="sourceLineNo">430</span>                    if (e == null) {<a name="line.430"></a>
+<span class="sourceLineNo">431</span>                        t[i] = new ExceptionNode(this, ex, t[i]);<a name="line.431"></a>
+<span class="sourceLineNo">432</span>                        break;<a name="line.432"></a>
+<span class="sourceLineNo">433</span>                    }<a name="line.433"></a>
+<span class="sourceLineNo">434</span>                    if (e.get() == this) // already present<a name="line.434"></a>
+<span class="sourceLineNo">435</span>                        break;<a name="line.435"></a>
+<span class="sourceLineNo">436</span>                }<a name="line.436"></a>
+<span class="sourceLineNo">437</span>            } finally {<a name="line.437"></a>
+<span class="sourceLineNo">438</span>                lock.unlock();<a name="line.438"></a>
+<span class="sourceLineNo">439</span>            }<a name="line.439"></a>
+<span class="sourceLineNo">440</span>            s = setCompletion(EXCEPTIONAL);<a name="line.440"></a>
+<span class="sourceLineNo">441</span>        }<a name="line.441"></a>
+<span class="sourceLineNo">442</span>        return s;<a name="line.442"></a>
+<span class="sourceLineNo">443</span>    }<a name="line.443"></a>
+<span class="sourceLineNo">444</span><a name="line.444"></a>
+<span class="sourceLineNo">445</span>    /**<a name="line.445"></a>
+<span class="sourceLineNo">446</span>     * Records exception and possibly propagates<a name="line.446"></a>
+<span class="sourceLineNo">447</span>     *<a name="line.447"></a>
+<span class="sourceLineNo">448</span>     * @return status on exit<a name="line.448"></a>
+<span class="sourceLineNo">449</span>     */<a name="line.449"></a>
+<span class="sourceLineNo">450</span>    private int setExceptionalCompletion(Throwable ex) {<a name="line.450"></a>
+<span class="sourceLineNo">451</span>        int s = recordExceptionalCompletion(ex);<a name="line.451"></a>
+<span class="sourceLineNo">452</span>        if ((s &amp; DONE_MASK) == EXCEPTIONAL)<a name="line.452"></a>
+<span class="sourceLineNo">453</span>            internalPropagateException(ex);<a name="line.453"></a>
+<span class="sourceLineNo">454</span>        return s;<a name="line.454"></a>
+<span class="sourceLineNo">455</span>    }<a name="line.455"></a>
+<span class="sourceLineNo">456</span><a name="line.456"></a>
+<span class="sourceLineNo">457</span>    /**<a name="line.457"></a>
+<span class="sourceLineNo">458</span>     * Hook for exception propagation support for tasks with completers.<a name="line.458"></a>
+<span class="sourceLineNo">459</span>     */<a name="line.459"></a>
+<span class="sourceLineNo">460</span>    void internalPropagateException(Throwable ex) {<a name="line.460"></a>
+<span class="sourceLineNo">461</span>    }<a name="line.461"></a>
+<span class="sourceLineNo">462</span><a name="line.462"></a>
+<span class="sourceLineNo">463</span>    /**<a name="line.463"></a>
+<span class="sourceLineNo">464</span>     * Cancels, ignoring any exceptions thrown by cancel. Used during<a name="line.464"></a>
+<span class="sourceLineNo">465</span>     * worker and pool shutdown. Cancel is spec'ed not to throw any<a name="line.465"></a>
+<span class="sourceLineNo">466</span>     * exceptions, but if it does anyway, we have no recourse during<a name="line.466"></a>
+<span class="sourceLineNo">467</span>     * shutdown, so guard against this case.<a name="line.467"></a>
+<span class="sourceLineNo">468</span>     */<a name="line.468"></a>
+<span class="sourceLineNo">469</span>    static final void cancelIgnoringExceptions(ForkJoinTask&lt;?&gt; t) {<a name="line.469"></a>
+<span class="sourceLineNo">470</span>        if (t != null &amp;&amp; t.status &gt;= 0) {<a name="line.470"></a>
+<span class="sourceLineNo">471</span>            try {<a name="line.471"></a>
+<span class="sourceLineNo">472</span>                t.cancel(false);<a name="line.472"></a>
+<span class="sourceLineNo">473</span>            } catch (Throwable ignore) {<a name="line.473"></a>
+<span class="sourceLineNo">474</span>            }<a name="line.474"></a>
+<span class="sourceLineNo">475</span>        }<a name="line.475"></a>
+<span class="sourceLineNo">476</span>    }<a name="line.476"></a>
+<span class="sourceLineNo">477</span><a name="line.477"></a>
+<span class="sourceLineNo">478</span>    /**<a name="line.478"></a>
+<span class="sourceLineNo">479</span>     * Removes exception node and clears status<a name="line.479"></a>
+<span class="sourceLineNo">480</span>     */<a name="line.480"></a>
+<span class="sourceLineNo">481</span>    private void clearExceptionalCompletion() {<a name="line.481"></a>
+<span class="sourceLineNo">482</span>        int h = System.identityHashCode(this);<a name="line.482"></a>
+<span class="sourceLineNo">483</span>        final ReentrantLock lock = exceptionTableLock;<a name="line.483"></a>
+<span class="sourceLineNo">484</span>        lock.lock();<a name="line.484"></a>
+<span class="sourceLineNo">485</span>        try {<a name="line.485"></a>
+<span class="sourceLineNo">486</span>            ExceptionNode[] t = exceptionTable;<a name="line.486"></a>
+<span class="sourceLineNo">487</span>            int i = h &amp; (t.length - 1);<a name="line.487"></a>
+<span class="sourceLineNo">488</span>            ExceptionNode e = t[i];<a name="line.488"></a>
+<span class="sourceLineNo">489</span>            ExceptionNode pred = null;<a name="line.489"></a>
+<span class="sourceLineNo">490</span>            while (e != null) {<a name="line.490"></a>
+<span class="sourceLineNo">491</span>                ExceptionNode next = e.next;<a name="line.491"></a>
+<span class="sourceLineNo">492</span>                if (e.get() == this) {<a name="line.492"></a>
+<span class="sourceLineNo">493</span>                    if (pred == null)<a name="line.493"></a>
+<span class="sourceLineNo">494</span>                        t[i] = next;<a name="line.494"></a>
+<span class="sourceLineNo">495</span>                    else<a name="line.495"></a>
+<span class="sourceLineNo">496</span>                        pred.next = next;<a name="line.496"></a>
+<span class="sourceLineNo">497</span>                    break;<a name="line.497"></a>
+<span class="sourceLineNo">498</span>                }<a name="line.498"></a>
+<span class="sourceLineNo">499</span>                pred = e;<a name="line.499"></a>
+<span class="sourceLineNo">500</span>                e = next;<a name="line.500"></a>
+<span class="sourceLineNo">501</span>            }<a name="line.501"></a>
+<span class="sourceLineNo">502</span>            expungeStaleExceptions();<a name="line.502"></a>
+<span class="sourceLineNo">503</span>            status = 0;<a name="line.503"></a>
+<span class="sourceLineNo">504</span>        } finally {<a name="line.504"></a>
+<span class="sourceLineNo">505</span>            lock.unlock();<a name="line.505"></a>
+<span class="sourceLineNo">506</span>        }<a name="line.506"></a>
+<span class="sourceLineNo">507</span>    }<a name="line.507"></a>
+<span class="sourceLineNo">508</span><a name="line.508"></a>
+<span class="sourceLineNo">509</span>    /**<a name="line.509"></a>
+<span class="sourceLineNo">510</span>     * Returns a rethrowable exception for the given task, if<a name="line.510"></a>
+<span class="sourceLineNo">511</span>     * available. To provide accurate stack traces, if the exception<a name="line.511"></a>
+<span class="sourceLineNo">512</span>     * was not thrown by the current thread, we try to create a new<a name="line.512"></a>
+<span class="sourceLineNo">513</span>     * exception of the same type as the one thrown, but with the<a name="line.513"></a>
+<span class="sourceLineNo">514</span>     * recorded exception as its cause. If there is no such<a name="line.514"></a>
+<span class="sourceLineNo">515</span>     * constructor, we instead try to use a no-arg constructor,<a name="line.515"></a>
+<span class="sourceLineNo">516</span>     * followed by initCause, to the same effect. If none of these<a name="line.516"></a>
+<span class="sourceLineNo">517</span>     * apply, or any fail due to other exceptions, we return the<a name="line.517"></a>
+<span class="sourceLineNo">518</span>     * recorded exception, which is still correct, although it may<a name="line.518"></a>
+<span class="sourceLineNo">519</span>     * contain a misleading stack trace.<a name="line.519"></a>
+<span class="sourceLineNo">520</span>     *<a name="line.520"></a>
+<span class="sourceLineNo">521</span>     * @return the exception, or null if none<a name="line.521"></a>
+<span class="sourceLineNo">522</span>     */<a name="line.522"></a>
+<span class="sourceLineNo">523</span>    private Throwable getThrowableException() {<a name="line.523"></a>
+<span class="sourceLineNo">524</span>        if ((status &amp; DONE_MASK) != EXCEPTIONAL)<a name="line.524"></a>
+<span class="sourceLineNo">525</span>            return null;<a name="line.525"></a>
+<span class="sourceLineNo">526</span>        int h = System.identityHashCode(this);<a name="line.526"></a>
+<span class="sourceLineNo">527</span>        ExceptionNode e;<a name="line.527"></a>
+<span class="sourceLineNo">528</span>        final ReentrantLock lock = exceptionTableLock;<a name="line.528"></a>
+<span class="sourceLineNo">529</span>        lock.lock();<a name="line.529"></a>
+<span class="sourceLineNo">530</span>        try {<a name="line.530"></a>
+<span class="sourceLineNo">531</span>            expungeStaleExceptions();<a name="line.531"></a>
+<span class="sourceLineNo">532</span>            ExceptionNode[] t = exceptionTable;<a name="line.532"></a>
+<span class="sourceLineNo">533</span>            e = t[h &amp; (t.length - 1)];<a name="line.533"></a>
+<span class="sourceLineNo">534</span>            while (e != null &amp;&amp; e.get() != this)<a name="line.534"></a>
+<span class="sourceLineNo">535</span>                e = e.next;<a name="line.535"></a>
+<span class="sourceLineNo">536</span>        } finally {<a name="line.536"></a>
+<span class="sourceLineNo">537</span>            lock.unlock();<a name="line.537"></a>
+<span class="sourceLineNo">538</span>        }<a name="line.538"></a>
+<span class="sourceLineNo">539</span>        Throwable ex;<a name="line.539"></a>
+<span class="sourceLineNo">540</span>        if (e == null || (ex = e.ex) == null)<a name="line.540"></a>
+<span class="sourceLineNo">541</span>            return null;<a name="line.541"></a>
+<span class="sourceLineNo">542</span>        if (false &amp;&amp; e.thrower != Thread.currentThread().getId()) {<a name="line.542"></a>
+<span class="sourceLineNo">543</span>            Class&lt;? extends Throwable&gt; ec = ex.getClass();<a name="line.543"></a>
+<span class="sourceLineNo">544</span>            try {<a name="line.544"></a>
+<span class="sourceLineNo">545</span>                Constructor&lt;?&gt; noArgCtor = null;<a name="line.545"></a>
+<span class="sourceLineNo">546</span>                Constructor&lt;?&gt;[] cs = ec.getConstructors();// public ctors only<a name="line.546"></a>
+<span class="sourceLineNo">547</span>                for (int i = 0; i &lt; cs.length; ++i) {<a name="line.547"></a>
+<span class="sourceLineNo">548</span>                    Constructor&lt;?&gt; c = cs[i];<a name="line.548"></a>
+<span class="sourceLineNo">549</span>                    Class&lt;?&gt;[] ps = c.getParameterTypes();<a name="line.549"></a>
+<span class="sourceLineNo">550</span>                    if (ps.length == 0)<a name="line.550"></a>
+<span class="sourceLineNo">551</span>                        noArgCtor = c;<a name="line.551"></a>
+<span class="sourceLineNo">552</span>                    else if (ps.length == 1 &amp;&amp; ps[0] == Throwable.class)<a name="line.552"></a>
+<span class="sourceLineNo">553</span>                        return (Throwable)(c.newInstance(ex));<a name="line.553"></a>
+<span class="sourceLineNo">554</span>                }<a name="line.554"></a>
+<span class="sourceLineNo">555</span>                if (noArgCtor != null) {<a name="line.555"></a>
+<span class="sourceLineNo">556</span>                    Throwable wx = (Throwable)(noArgCtor.newInstance());<a name="line.556"></a>
+<span class="sourceLineNo">557</span>                    wx.initCause(ex);<a name="line.557"></a>
+<span class="sourceLineNo">558</span>                    return wx;<a name="line.558"></a>
+<span class="sourceLineNo">559</span>                }<a name="line.559"></a>
+<span class="sourceLineNo">560</span>            } catch (Exception ignore) {<a name="line.560"></a>
+<span class="sourceLineNo">561</span>            }<a name="line.561"></a>
+<span class="sourceLineNo">562</span>        }<a name="line.562"></a>
+<span class="sourceLineNo">563</span>        return ex;<a name="line.563"></a>
+<span class="sourceLineNo">564</span>    }<a name="line.564"></a>
+<span class="sourceLineNo">565</span><a name="line.565"></a>
+<span class="sourceLineNo">566</span>    /**<a name="line.566"></a>
+<span class="sourceLineNo">567</span>     * Poll stale refs and remove them. Call only while holding lock.<a name="line.567"></a>
+<span class="sourceLineNo">568</span>     */<a name="line.568"></a>
+<span class="sourceLineNo">569</span>    private static void expungeStaleExceptions() {<a name="line.569"></a>
+<span class="sourceLineNo">570</span>        for (Object x; (x = exceptionTableRefQueue.poll()) != null;) {<a name="line.570"></a>
+<span class="sourceLineNo">571</span>            if (x instanceof ExceptionNode) {<a name="line.571"></a>
+<span class="sourceLineNo">572</span>                ForkJoinTask&lt;?&gt; key = ((ExceptionNode)x).get();<a name="line.572"></a>
+<span class="sourceLineNo">573</span>                ExceptionNode[] t = exceptionTable;<a name="line.573"></a>
+<span class="sourceLineNo">574</span>                int i = System.identityHashCode(key) &amp; (t.length - 1);<a name="line.574"></a>
+<span class="sourceLineNo">575</span>                ExceptionNode e = t[i];<a name="line.575"></a>
+<span class="sourceLineNo">576</span>                ExceptionNode pred = null;<a name="line.576"></a>
+<span class="sourceLineNo">577</span>                while (e != null) {<a name="line.577"></a>
+<span class="sourceLineNo">578</span>                    ExceptionNode next = e.next;<a name="line.578"></a>
+<span class="sourceLineNo">579</span>                    if (e == x) {<a name="line.579"></a>
+<span class="sourceLineNo">580</span>                        if (pred == null)<a name="line.580"></a>
+<span class="sourceLineNo">581</span>                            t[i] = next;<a name="line.581"></a>
+<span class="sourceLineNo">582</span>                        else<a name="line.582"></a>
+<span class="sourceLineNo">583</span>                            pred.next = next;<a name="line.583"></a>
+<span class="sourceLineNo">584</span>                        break;<a name="line.584"></a>
+<span class="sourceLineNo">585</span>                    }<a name="line.585"></a>
+<span class="sourceLineNo">586</span>                    pred = e;<a name="line.586"></a>
+<span class="sourceLineNo">587</span>                    e = next;<a name="line.587"></a>
+<span class="sourceLineNo">588</span>                }<a name="line.588"></a>
+<span class="sourceLineNo">589</span>            }<a name="line.589"></a>
+<span class="sourceLineNo">590</span>        }<a name="line.590"></a>
+<span class="sourceLineNo">591</span>    }<a name="line.591"></a>
+<span class="sourceLineNo">592</span><a name="line.592"></a>
+<span class="sourceLineNo">593</span>    /**<a name="line.593"></a>
+<span class="sourceLineNo">594</span>     * If lock is available, poll stale refs and remove them.<a name="line.594"></a>
+<span class="sourceLineNo">595</span>     * Called from ForkJoinPool when pools become quiescent.<a name="line.595"></a>
+<span class="sourceLineNo">596</span>     */<a name="line.596"></a>
+<span class="sourceLineNo">597</span>    static final void helpExpungeStaleExceptions() {<a name="line.597"></a>
+<span class="sourceLineNo">598</span>        final ReentrantLock lock = exceptionTableLock;<a name="line.598"></a>
+<span class="sourceLineNo">599</span>        if (lock.tryLock()) {<a name="line.599"></a>
+<span class="sourceLineNo">600</span>            try {<a name="line.600"></a>
+<span class="sourceLineNo">601</span>                expungeStaleExceptions();<a name="line.601"></a>
+<span class="sourceLineNo">602</span>            } finally {<a name="line.602"></a>
+<span class="sourceLineNo">603</span>                lock.unlock();<a name="line.603"></a>
+<span class="sourceLineNo">604</span>            }<a name="line.604"></a>
+<span class="sourceLineNo">605</span>        }<a name="line.605"></a>
+<span class="sourceLineNo">606</span>    }<a name="line.606"></a>
+<span class="sourceLineNo">607</span><a name="line.607"></a>
+<span class="sourceLineNo">608</span>    /**<a name="line.608"></a>
+<span class="sourceLineNo">609</span>     * Throws exception, if any, associated with the given status.<a name="line.609"></a>
+<span class="sourceLineNo">610</span>     */<a name="line.610"></a>
+<span class="sourceLineNo">611</span>    private void reportException(int s) {<a name="line.611"></a>
+<span class="sourceLineNo">612</span>        Throwable ex = ((s == CANCELLED) ?  new CancellationException() :<a name="line.612"></a>
+<span class="sourceLineNo">613</span>                        (s == EXCEPTIONAL) ? getThrowableException() :<a name="line.613"></a>
+<span class="sourceLineNo">614</span>                        null);<a name="line.614"></a>
+<span class="sourceLineNo">615</span>        if (ex != null)<a name="line.615"></a>
+<span class="sourceLineNo">616</span>            U.throwException(ex);<a name="line.616"></a>
+<span class="sourceLineNo">617</span>    }<a name="line.617"></a>
+<span class="sourceLineNo">618</span><a name="line.618"></a>
+<span class="sourceLineNo">619</span>    // public methods<a name="line.619"></a>
+<span class="sourceLineNo">620</span><a name="line.620"></a>
+<span class="sourceLineNo">621</span>    /**<a name="line.621"></a>
+<span class="sourceLineNo">622</span>     * Arranges to asynchronously execute this task.  While it is not<a name="line.622"></a>
+<span class="sourceLineNo">623</span>     * necessarily enforced, it is a usage error to fork a task more<a name="line.623"></a>
+<span class="sourceLineNo">624</span>     * than once unless it has completed and been reinitialized.<a name="line.624"></a>
+<span class="sourceLineNo">625</span>     * Subsequent modifications to the state of this task or any data<a name="line.625"></a>
+<span class="sourceLineNo">626</span>     * it operates on are not necessarily consistently observable by<a name="line.626"></a>
+<span class="sourceLineNo">627</span>     * any thread other than the one executing it unless preceded by a<a name="line.627"></a>
+<span class="sourceLineNo">628</span>     * call to {@link #join} or related methods, or a call to {@link<a name="line.628"></a>
+<span class="sourceLineNo">629</span>     * #isDone} returning {@code true}.<a name="line.629"></a>
+<span class="sourceLineNo">630</span>     *<a name="line.630"></a>
+<span class="sourceLineNo">631</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.631"></a>
+<span class="sourceLineNo">632</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.632"></a>
+<span class="sourceLineNo">633</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.633"></a>
+<span class="sourceLineNo">634</span>     * result in exceptions or errors, possibly including {@code<a name="line.634"></a>
+<span class="sourceLineNo">635</span>     * ClassCastException}.<a name="line.635"></a>
+<span class="sourceLineNo">636</span>     *<a name="line.636"></a>
+<span class="sourceLineNo">637</span>     * @return {@code this}, to simplify usage<a name="line.637"></a>
+<span class="sourceLineNo">638</span>     */<a name="line.638"></a>
+<span class="sourceLineNo">639</span>    public final ForkJoinTask&lt;V&gt; fork() {<a name="line.639"></a>
+<span class="sourceLineNo">640</span>        ((ForkJoinWorkerThread)Thread.currentThread()).workQueue.push(this);<a name="line.640"></a>
+<span class="sourceLineNo">641</span>        return this;<a name="line.641"></a>
+<span class="sourceLineNo">642</span>    }<a name="line.642"></a>
+<span class="sourceLineNo">643</span><a name="line.643"></a>
+<span class="sourceLineNo">644</span>    /**<a name="line.644"></a>
+<span class="sourceLineNo">645</span>     * Returns the result of the computation when it {@link #isDone is<a name="line.645"></a>
+<span class="sourceLineNo">646</span>     * done}.  This method differs from {@link #get()} in that<a name="line.646"></a>
+<span class="sourceLineNo">647</span>     * abnormal completion results in {@code RuntimeException} or<a name="line.647"></a>
+<span class="sourceLineNo">648</span>     * {@code Error}, not {@code ExecutionException}, and that<a name="line.648"></a>
+<span class="sourceLineNo">649</span>     * interrupts of the calling thread do &lt;em&gt;not&lt;/em&gt; cause the<a name="line.649"></a>
+<span class="sourceLineNo">650</span>     * method to abruptly return by throwing {@code<a name="line.650"></a>
+<span class="sourceLineNo">651</span>     * InterruptedException}.<a name="line.651"></a>
+<span class="sourceLineNo">652</span>     *<a name="line.652"></a>
+<span class="sourceLineNo">653</span>     * @return the computed result<a name="line.653"></a>
+<span class="sourceLineNo">654</span>     */<a name="line.654"></a>
+<span class="sourceLineNo">655</span>    public final V join() {<a name="line.655"></a>
+<span class="sourceLineNo">656</span>        int s;<a name="line.656"></a>
+<span class="sourceLineNo">657</span>        if ((s = doJoin() &amp; DONE_MASK) != NORMAL)<a name="line.657"></a>
+<span class="sourceLineNo">658</span>            reportException(s);<a name="line.658"></a>
+<span class="sourceLineNo">659</span>        return getRawResult();<a name="line.659"></a>
+<span class="sourceLineNo">660</span>    }<a name="line.660"></a>
+<span class="sourceLineNo">661</span><a name="line.661"></a>
+<span class="sourceLineNo">662</span>    /**<a name="line.662"></a>
+<span class="sourceLineNo">663</span>     * Commences performing this task, awaits its completion if<a name="line.663"></a>
+<span class="sourceLineNo">664</span>     * necessary, and returns its result, or throws an (unchecked)<a name="line.664"></a>
+<span class="sourceLineNo">665</span>     * {@code RuntimeException} or {@code Error} if the underlying<a name="line.665"></a>
+<span class="sourceLineNo">666</span>     * computation did so.<a name="line.666"></a>
+<span class="sourceLineNo">667</span>     *<a name="line.667"></a>
+<span class="sourceLineNo">668</span>     * @return the computed result<a name="line.668"></a>
+<span class="sourceLineNo">669</span>     */<a name="line.669"></a>
+<span class="sourceLineNo">670</span>    public final V invoke() {<a name="line.670"></a>
+<span class="sourceLineNo">671</span>        int s;<a name="line.671"></a>
+<span class="sourceLineNo">672</span>        if ((s = doInvoke() &amp; DONE_MASK) != NORMAL)<a name="line.672"></a>
+<span class="sourceLineNo">673</span>            reportException(s);<a name="line.673"></a>
+<span class="sourceLineNo">674</span>        return getRawResult();<a name="line.674"></a>
+<span class="sourceLineNo">675</span>    }<a name="line.675"></a>
+<span class="sourceLineNo">676</span><a name="line.676"></a>
+<span class="sourceLineNo">677</span>    /**<a name="line.677"></a>
+<span class="sourceLineNo">678</span>     * Forks the given tasks, returning when {@code isDone} holds for<a name="line.678"></a>
+<span class="sourceLineNo">679</span>     * each task or an (unchecked) exception is encountered, in which<a name="line.679"></a>
+<span class="sourceLineNo">680</span>     * case the exception is rethrown. If more than one task<a name="line.680"></a>
+<span class="sourceLineNo">681</span>     * encounters an exception, then this method throws any one of<a name="line.681"></a>
+<span class="sourceLineNo">682</span>     * these exceptions. If any task encounters an exception, the<a name="line.682"></a>
+<span class="sourceLineNo">683</span>     * other may be cancelled. However, the execution status of<a name="line.683"></a>
+<span class="sourceLineNo">684</span>     * individual tasks is not guaranteed upon exceptional return. The<a name="line.684"></a>
+<span class="sourceLineNo">685</span>     * status of each task may be obtained using {@link<a name="line.685"></a>
+<span class="sourceLineNo">686</span>     * #getException()} and related methods to check if they have been<a name="line.686"></a>
+<span class="sourceLineNo">687</span>     * cancelled, completed normally or exceptionally, or left<a name="line.687"></a>
+<span class="sourceLineNo">688</span>     * unprocessed.<a name="line.688"></a>
+<span class="sourceLineNo">689</span>     *<a name="line.689"></a>
+<span class="sourceLineNo">690</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.690"></a>
+<span class="sourceLineNo">691</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.691"></a>
+<span class="sourceLineNo">692</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.692"></a>
+<span class="sourceLineNo">693</span>     * result in exceptions or errors, possibly including {@code<a name="line.693"></a>
+<span class="sourceLineNo">694</span>     * ClassCastException}.<a name="line.694"></a>
+<span class="sourceLineNo">695</span>     *<a name="line.695"></a>
+<span class="sourceLineNo">696</span>     * @param t1 the first task<a name="line.696"></a>
+<span class="sourceLineNo">697</span>     * @param t2 the second task<a name="line.697"></a>
+<span class="sourceLineNo">698</span>     * @throws NullPointerException if any task is null<a name="line.698"></a>
+<span class="sourceLineNo">699</span>     */<a name="line.699"></a>
+<span class="sourceLineNo">700</span>    public static void invokeAll(ForkJoinTask&lt;?&gt; t1, ForkJoinTask&lt;?&gt; t2) {<a name="line.700"></a>
+<span class="sourceLineNo">701</span>        int s1, s2;<a name="line.701"></a>
+<span class="sourceLineNo">702</span>        t2.fork();<a name="line.702"></a>
+<span class="sourceLineNo">703</span>        if ((s1 = t1.doInvoke() &amp; DONE_MASK) != NORMAL)<a name="line.703"></a>
+<span class="sourceLineNo">704</span>            t1.reportException(s1);<a name="line.704"></a>
+<span class="sourceLineNo">705</span>        if ((s2 = t2.doJoin() &amp; DONE_MASK) != NORMAL)<a name="line.705"></a>
+<span class="sourceLineNo">706</span>            t2.reportException(s2);<a name="line.706"></a>
+<span class="sourceLineNo">707</span>    }<a name="line.707"></a>
+<span class="sourceLineNo">708</span><a name="line.708"></a>
+<span class="sourceLineNo">709</span>    /**<a name="line.709"></a>
+<span class="sourceLineNo">710</span>     * Forks the given tasks, returning when {@code isDone} holds for<a name="line.710"></a>
+<span class="sourceLineNo">711</span>     * each task or an (unchecked) exception is encountered, in which<a name="line.711"></a>
+<span class="sourceLineNo">712</span>     * case the exception is rethrown. If more than one task<a name="line.712"></a>
+<span class="sourceLineNo">713</span>     * encounters an exception, then this method throws any one of<a name="line.713"></a>
+<span class="sourceLineNo">714</span>     * these exceptions. If any task encounters an exception, others<a name="line.714"></a>
+<span class="sourceLineNo">715</span>     * may be cancelled. However, the execution status of individual<a name="line.715"></a>
+<span class="sourceLineNo">716</span>     * tasks is not guaranteed upon exceptional return. The status of<a name="line.716"></a>
+<span class="sourceLineNo">717</span>     * each task may be obtained using {@link #getException()} and<a name="line.717"></a>
+<span class="sourceLineNo">718</span>     * related methods to check if they have been cancelled, completed<a name="line.718"></a>
+<span class="sourceLineNo">719</span>     * normally or exceptionally, or left unprocessed.<a name="line.719"></a>
+<span class="sourceLineNo">720</span>     *<a name="line.720"></a>
+<span class="sourceLineNo">721</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.721"></a>
+<span class="sourceLineNo">722</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.722"></a>
+<span class="sourceLineNo">723</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.723"></a>
+<span class="sourceLineNo">724</span>     * result in exceptions or errors, possibly including {@code<a name="line.724"></a>
+<span class="sourceLineNo">725</span>     * ClassCastException}.<a name="line.725"></a>
+<span class="sourceLineNo">726</span>     *<a name="line.726"></a>
+<span class="sourceLineNo">727</span>     * @param tasks the tasks<a name="line.727"></a>
+<span class="sourceLineNo">728</span>     * @throws NullPointerException if any task is null<a name="line.728"></a>
+<span class="sourceLineNo">729</span>     */<a name="line.729"></a>
+<span class="sourceLineNo">730</span>    public static void invokeAll(ForkJoinTask&lt;?&gt;... tasks) {<a name="line.730"></a>
+<span class="sourceLineNo">731</span>        Throwable ex = null;<a name="line.731"></a>
+<span class="sourceLineNo">732</span>        int last = tasks.length - 1;<a name="line.732"></a>
+<span class="sourceLineNo">733</span>        for (int i = last; i &gt;= 0; --i) {<a name="line.733"></a>
+<span class="sourceLineNo">734</span>            ForkJoinTask&lt;?&gt; t = tasks[i];<a name="line.734"></a>
+<span class="sourceLineNo">735</span>            if (t == null) {<a name="line.735"></a>
+<span class="sourceLineNo">736</span>                if (ex == null)<a name="line.736"></a>
+<span class="sourceLineNo">737</span>                    ex = new NullPointerException();<a name="line.737"></a>
+<span class="sourceLineNo">738</span>            }<a name="line.738"></a>
+<span class="sourceLineNo">739</span>            else if (i != 0)<a name="line.739"></a>
+<span class="sourceLineNo">740</span>                t.fork();<a name="line.740"></a>
+<span class="sourceLineNo">741</span>            else if (t.doInvoke() &lt; NORMAL &amp;&amp; ex == null)<a name="line.741"></a>
+<span class="sourceLineNo">742</span>                ex = t.getException();<a name="line.742"></a>
+<span class="sourceLineNo">743</span>        }<a name="line.743"></a>
+<span class="sourceLineNo">744</span>        for (int i = 1; i &lt;= last; ++i) {<a name="line.744"></a>
+<span class="sourceLineNo">745</span>            ForkJoinTask&lt;?&gt; t = tasks[i];<a name="line.745"></a>
+<span class="sourceLineNo">746</span>            if (t != null) {<a name="line.746"></a>
+<span class="sourceLineNo">747</span>                if (ex != null)<a name="line.747"></a>
+<span class="sourceLineNo">748</span>                    t.cancel(false);<a name="line.748"></a>
+<span class="sourceLineNo">749</span>                else if (t.doJoin() &lt; NORMAL)<a name="line.749"></a>
+<span class="sourceLineNo">750</span>                    ex = t.getException();<a name="line.750"></a>
+<span class="sourceLineNo">751</span>            }<a name="line.751"></a>
+<span class="sourceLineNo">752</span>        }<a name="line.752"></a>
+<span class="sourceLineNo">753</span>        if (ex != null)<a name="line.753"></a>
+<span class="sourceLineNo">754</span>            U.throwException(ex);<a name="line.754"></a>
+<span class="sourceLineNo">755</span>    }<a name="line.755"></a>
+<span class="sourceLineNo">756</span><a name="line.756"></a>
+<span class="sourceLineNo">757</span>    /**<a name="line.757"></a>
+<span class="sourceLineNo">758</span>     * Forks all tasks in the specified collection, returning when<a name="line.758"></a>
+<span class="sourceLineNo">759</span>     * {@code isDone} holds for each task or an (unchecked) exception<a name="line.759"></a>
+<span class="sourceLineNo">760</span>     * is encountered, in which case the exception is rethrown. If<a name="line.760"></a>
+<span class="sourceLineNo">761</span>     * more than one task encounters an exception, then this method<a name="line.761"></a>
+<span class="sourceLineNo">762</span>     * throws any one of these exceptions. If any task encounters an<a name="line.762"></a>
+<span class="sourceLineNo">763</span>     * exception, others may be cancelled. However, the execution<a name="line.763"></a>
+<span class="sourceLineNo">764</span>     * status of individual tasks is not guaranteed upon exceptional<a name="line.764"></a>
+<span class="sourceLineNo">765</span>     * return. The status of each task may be obtained using {@link<a name="line.765"></a>
+<span class="sourceLineNo">766</span>     * #getException()} and related methods to check if they have been<a name="line.766"></a>
+<span class="sourceLineNo">767</span>     * cancelled, completed normally or exceptionally, or left<a name="line.767"></a>
+<span class="sourceLineNo">768</span>     * unprocessed.<a name="line.768"></a>
+<span class="sourceLineNo">769</span>     *<a name="line.769"></a>
+<span class="sourceLineNo">770</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.770"></a>
+<span class="sourceLineNo">771</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.771"></a>
+<span class="sourceLineNo">772</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.772"></a>
+<span class="sourceLineNo">773</span>     * result in exceptions or errors, possibly including {@code<a name="line.773"></a>
+<span class="sourceLineNo">774</span>     * ClassCastException}.<a name="line.774"></a>
+<span class="sourceLineNo">775</span>     *<a name="line.775"></a>
+<span class="sourceLineNo">776</span>     * @param tasks the collection of tasks<a name="line.776"></a>
+<span class="sourceLineNo">777</span>     * @return the tasks argument, to simplify usage<a name="line.777"></a>
+<span class="sourceLineNo">778</span>     * @throws NullPointerException if tasks or any element are null<a name="line.778"></a>
+<span class="sourceLineNo">779</span>     */<a name="line.779"></a>
+<span class="sourceLineNo">780</span>    public static &lt;T extends ForkJoinTask&lt;?&gt;&gt; Collection&lt;T&gt; invokeAll(Collection&lt;T&gt; tasks) {<a name="line.780"></a>
+<span class="sourceLineNo">781</span>        if (!(tasks instanceof RandomAccess) || !(tasks instanceof List&lt;?&gt;)) {<a name="line.781"></a>
+<span class="sourceLineNo">782</span>            invokeAll(tasks.toArray(new ForkJoinTask&lt;?&gt;[tasks.size()]));<a name="line.782"></a>
+<span class="sourceLineNo">783</span>            return tasks;<a name="line.783"></a>
+<span class="sourceLineNo">784</span>        }<a name="line.784"></a>
+<span class="sourceLineNo">785</span>        @SuppressWarnings("unchecked")<a name="line.785"></a>
+<span class="sourceLineNo">786</span>        List&lt;? extends ForkJoinTask&lt;?&gt;&gt; ts =<a name="line.786"></a>
+<span class="sourceLineNo">787</span>            (List&lt;? extends ForkJoinTask&lt;?&gt;&gt;) tasks;<a name="line.787"></a>
+<span class="sourceLineNo">788</span>        Throwable ex = null;<a name="line.788"></a>
+<span class="sourceLineNo">789</span>        int last = ts.size() - 1;<a name="line.789"></a>
+<span class="sourceLineNo">790</span>        for (int i = last; i &gt;= 0; --i) {<a name="line.790"></a>
+<span class="sourceLineNo">791</span>            ForkJoinTask&lt;?&gt; t = ts.get(i);<a name="line.791"></a>
+<span class="sourceLineNo">792</span>            if (t == null) {<a name="line.792"></a>
+<span class="sourceLineNo">793</span>                if (ex == null)<a name="line.793"></a>
+<span class="sourceLineNo">794</span>                    ex = new NullPointerException();<a name="line.794"></a>
+<span class="sourceLineNo">795</span>            }<a name="line.795"></a>
+<span class="sourceLineNo">796</span>            else if (i != 0)<a name="line.796"></a>
+<span class="sourceLineNo">797</span>                t.fork();<a name="line.797"></a>
+<span class="sourceLineNo">798</span>            else if (t.doInvoke() &lt; NORMAL &amp;&amp; ex == null)<a name="line.798"></a>
+<span class="sourceLineNo">799</span>                ex = t.getException();<a name="line.799"></a>
+<span class="sourceLineNo">800</span>        }<a name="line.800"></a>
+<span class="sourceLineNo">801</span>        for (int i = 1; i &lt;= last; ++i) {<a name="line.801"></a>
+<span class="sourceLineNo">802</span>            ForkJoinTask&lt;?&gt; t = ts.get(i);<a name="line.802"></a>
+<span class="sourceLineNo">803</span>            if (t != null) {<a name="line.803"></a>
+<span class="sourceLineNo">804</span>                if (ex != null)<a name="line.804"></a>
+<span class="sourceLineNo">805</span>                    t.cancel(false);<a name="line.805"></a>
+<span class="sourceLineNo">806</span>                else if (t.doJoin() &lt; NORMAL)<a name="line.806"></a>
+<span class="sourceLineNo">807</span>                    ex = t.getException();<a name="line.807"></a>
+<span class="sourceLineNo">808</span>            }<a name="line.808"></a>
+<span class="sourceLineNo">809</span>        }<a name="line.809"></a>
+<span class="sourceLineNo">810</span>        if (ex != null)<a name="line.810"></a>
+<span class="sourceLineNo">811</span>            U.throwException(ex);<a name="line.811"></a>
+<span class="sourceLineNo">812</span>        return tasks;<a name="line.812"></a>
+<span class="sourceLineNo">813</span>    }<a name="line.813"></a>
+<span class="sourceLineNo">814</span><a name="line.814"></a>
+<span class="sourceLineNo">815</span>    /**<a name="line.815"></a>
+<span class="sourceLineNo">816</span>     * Attempts to cancel execution of this task. This attempt will<a name="line.816"></a>
+<span class="sourceLineNo">817</span>     * fail if the task has already completed or could not be<a name="line.817"></a>
+<span class="sourceLineNo">818</span>     * cancelled for some other reason. If successful, and this task<a name="line.818"></a>
+<span class="sourceLineNo">819</span>     * has not started when {@code cancel} is called, execution of<a name="line.819"></a>
+<span class="sourceLineNo">820</span>     * this task is suppressed. After this method returns<a name="line.820"></a>
+<span class="sourceLineNo">821</span>     * successfully, unless there is an intervening call to {@link<a name="line.821"></a>
+<span class="sourceLineNo">822</span>     * #reinitialize}, subsequent calls to {@link #isCancelled},<a name="line.822"></a>
+<span class="sourceLineNo">823</span>     * {@link #isDone}, and {@code cancel} will return {@code true}<a name="line.823"></a>
+<span class="sourceLineNo">824</span>     * and calls to {@link #join} and related methods will result in<a name="line.824"></a>
+<span class="sourceLineNo">825</span>     * {@code CancellationException}.<a name="line.825"></a>
+<span class="sourceLineNo">826</span>     *<a name="line.826"></a>
+<span class="sourceLineNo">827</span>     * &lt;p&gt;This method may be overridden in subclasses, but if so, must<a name="line.827"></a>
+<span class="sourceLineNo">828</span>     * still ensure that these properties hold. In particular, the<a name="line.828"></a>
+<span class="sourceLineNo">829</span>     * {@code cancel} method itself must not throw exceptions.<a name="line.829"></a>
+<span class="sourceLineNo">830</span>     *<a name="line.830"></a>
+<span class="sourceLineNo">831</span>     * &lt;p&gt;This method is designed to be invoked by &lt;em&gt;other&lt;/em&gt;<a name="line.831"></a>
+<span class="sourceLineNo">832</span>     * tasks. To terminate the current task, you can just return or<a name="line.832"></a>
+<span class="sourceLineNo">833</span>     * throw an unchecked exception from its computation method, or<a name="line.833"></a>
+<span class="sourceLineNo">834</span>     * invoke {@link #completeExceptionally}.<a name="line.834"></a>
+<span class="sourceLineNo">835</span>     *<a name="line.835"></a>
+<span class="sourceLineNo">836</span>     * @param mayInterruptIfRunning this value has no effect in the<a name="line.836"></a>
+<span class="sourceLineNo">837</span>     * default implementation because interrupts are not used to<a name="line.837"></a>
+<span class="sourceLineNo">838</span>     * control cancellation.<a name="line.838"></a>
+<span class="sourceLineNo">839</span>     *<a name="line.839"></a>
+<span class="sourceLineNo">840</span>     * @return {@code true} if this task is now cancelled<a name="line.840"></a>
+<span class="sourceLineNo">841</span>     */<a name="line.841"></a>
+<span class="sourceLineNo">842</span>    public boolean cancel(boolean mayInterruptIfRunning) {<a name="line.842"></a>
+<span class="sourceLineNo">843</span>        return (setCompletion(CANCELLED) &amp; DONE_MASK) == CANCELLED;<a name="line.843"></a>
+<span class="sourceLineNo">844</span>    }<a name="line.844"></a>
+<span class="sourceLineNo">845</span><a name="line.845"></a>
+<span class="sourceLineNo">846</span>    public final boolean isDone() {<a name="line.846"></a>
+<span class="sourceLineNo">847</span>        return status &lt; 0;<a name="line.847"></a>
+<span class="sourceLineNo">848</span>    }<a name="line.848"></a>
+<span class="sourceLineNo">849</span><a name="line.849"></a>
+<span class="sourceLineNo">850</span>    public final boolean isCancelled() {<a name="line.850"></a>
+<span class="sourceLineNo">851</span>        return (status &amp; DONE_MASK) == CANCELLED;<a name="line.851"></a>
+<span class="sourceLineNo">852</span>    }<a name="line.852"></a>
+<span class="sourceLineNo">853</span><a name="line.853"></a>
+<span class="sourceLineNo">854</span>    /**<a name="line.854"></a>
+<span class="sourceLineNo">855</span>     * Returns {@code true} if this task threw an exception or was cancelled.<a name="line.855"></a>
+<span class="sourceLineNo">856</span>     *<a name="line.856"></a>
+<span class="sourceLineNo">857</span>     * @return {@code true} if this task threw an exception or was cancelled<a name="line.857"></a>
+<span class="sourceLineNo">858</span>     */<a name="line.858"></a>
+<span class="sourceLineNo">859</span>    public final boolean isCompletedAbnormally() {<a name="line.859"></a>
+<span class="sourceLineNo">860</span>        return status &lt; NORMAL;<a name="line.860"></a>
+<span class="sourceLineNo">861</span>    }<a name="line.861"></a>
+<span class="sourceLineNo">862</span><a name="line.862"></a>
+<span class="sourceLineNo">863</span>    /**<a name="line.863"></a>
+<span class="sourceLineNo">864</span>     * Returns {@code true} if this task completed without throwing an<a name="line.864"></a>
+<span class="sourceLineNo">865</span>     * exception and was not cancelled.<a name="line.865"></a>
+<span class="sourceLineNo">866</span>     *<a name="line.866"></a>
+<span class="sourceLineNo">867</span>     * @return {@code true} if this task completed without throwing an<a name="line.867"></a>
+<span class="sourceLineNo">868</span>     * exception and was not cancelled<a name="line.868"></a>
+<span class="sourceLineNo">869</span>     */<a name="line.869"></a>
+<span class="sourceLineNo">870</span>    public final boolean isCompletedNormally() {<a name="line.870"></a>
+<span class="sourceLineNo">871</span>        return (status &amp; DONE_MASK) == NORMAL;<a name="line.871"></a>
+<span class="sourceLineNo">872</span>    }<a name="line.872"></a>
+<span class="sourceLineNo">873</span><a name="line.873"></a>
+<span class="sourceLineNo">874</span>    /**<a name="line.874"></a>
+<span class="sourceLineNo">875</span>     * Returns the exception thrown by the base computation, or a<a name="line.875"></a>
+<span class="sourceLineNo">876</span>     * {@code CancellationException} if cancelled, or {@code null} if<a name="line.876"></a>
+<span class="sourceLineNo">877</span>     * none or if the method has not yet completed.<a name="line.877"></a>
+<span class="sourceLineNo">878</span>     *<a name="line.878"></a>
+<span class="sourceLineNo">879</span>     * @return the exception, or {@code null} if none<a name="line.879"></a>
+<span class="sourceLineNo">880</span>     */<a name="line.880"></a>
+<span class="sourceLineNo">881</span>    public final Throwable getException() {<a name="line.881"></a>
+<span class="sourceLineNo">882</span>        int s = status &amp; DONE_MASK;<a name="line.882"></a>
+<span class="sourceLineNo">883</span>        return ((s &gt;= NORMAL)    ? null :<a name="line.883"></a>
+<span class="sourceLineNo">884</span>                (s == CANCELLED) ? new CancellationException() :<a name="line.884"></a>
+<span class="sourceLineNo">885</span>                getThrowableException());<a name="line.885"></a>
+<span class="sourceLineNo">886</span>    }<a name="line.886"></a>
+<span class="sourceLineNo">887</span><a name="line.887"></a>
+<span class="sourceLineNo">888</span>    /**<a name="line.888"></a>
+<span class="sourceLineNo">889</span>     * Completes this task abnormally, and if not already aborted or<a name="line.889"></a>
+<span class="sourceLineNo">890</span>     * cancelled, causes it to throw the given exception upon<a name="line.890"></a>
+<span class="sourceLineNo">891</span>     * {@code join} and related operations. This method may be used<a name="line.891"></a>
+<span class="sourceLineNo">892</span>     * to induce exceptions in asynchronous tasks, or to force<a name="line.892"></a>
+<span class="sourceLineNo">893</span>     * completion of tasks that would not otherwise complete.  Its use<a name="line.893"></a>
+<span class="sourceLineNo">894</span>     * in other situations is discouraged.  This method is<a name="line.894"></a>
+<span class="sourceLineNo">895</span>     * overridable, but overridden versions must invoke {@code super}<a name="line.895"></a>
+<span class="sourceLineNo">896</span>     * implementation to maintain guarantees.<a name="line.896"></a>
+<span class="sourceLineNo">897</span>     *<a name="line.897"></a>
+<span class="sourceLineNo">898</span>     * @param ex the exception to throw. If this exception is not a<a name="line.898"></a>
+<span class="sourceLineNo">899</span>     * {@code RuntimeException} or {@code Error}, the actual exception<a name="line.899"></a>
+<span class="sourceLineNo">900</span>     * thrown will be a {@code RuntimeException} with cause {@code ex}.<a name="line.900"></a>
+<span class="sourceLineNo">901</span>     */<a name="line.901"></a>
+<span class="sourceLineNo">902</span>    public void completeExceptionally(Throwable ex) {<a name="line.902"></a>
+<span class="sourceLineNo">903</span>        setExceptionalCompletion((ex instanceof RuntimeException) ||<a name="line.903"></a>
+<span class="sourceLineNo">904</span>                                 (ex instanceof Error) ? ex :<a name="line.904"></a>
+<span class="sourceLineNo">905</span>                                 new RuntimeException(ex));<a name="line.905"></a>
+<span class="sourceLineNo">906</span>    }<a name="line.906"></a>
+<span class="sourceLineNo">907</span><a name="line.907"></a>
+<span class="sourceLineNo">908</span>    /**<a name="line.908"></a>
+<span class="sourceLineNo">909</span>     * Completes this task, and if not already aborted or cancelled,<a name="line.909"></a>
+<span class="sourceLineNo">910</span>     * returning the given value as the result of subsequent<a name="line.910"></a>
+<span class="sourceLineNo">911</span>     * invocations of {@code join} and related operations. This method<a name="line.911"></a>
+<span class="sourceLineNo">912</span>     * may be used to provide results for asynchronous tasks, or to<a name="line.912"></a>
+<span class="sourceLineNo">913</span>     * provide alternative handling for tasks that would not otherwise<a name="line.913"></a>
+<span class="sourceLineNo">914</span>     * complete normally. Its use in other situations is<a name="line.914"></a>
+<span class="sourceLineNo">915</span>     * discouraged. This method is overridable, but overridden<a name="line.915"></a>
+<span class="sourceLineNo">916</span>     * versions must invoke {@code super} implementation to maintain<a name="line.916"></a>
+<span class="sourceLineNo">917</span>     * guarantees.<a name="line.917"></a>
+<span class="sourceLineNo">918</span>     *<a name="line.918"></a>
+<span class="sourceLineNo">919</span>     * @param value the result value for this task<a name="line.919"></a>
+<span class="sourceLineNo">920</span>     */<a name="line.920"></a>
+<span class="sourceLineNo">921</span>    public void complete(V value) {<a name="line.921"></a>
+<span class="sourceLineNo">922</span>        try {<a name="line.922"></a>
+<span class="sourceLineNo">923</span>            setRawResult(value);<a name="line.923"></a>
+<span class="sourceLineNo">924</span>        } catch (Throwable rex) {<a name="line.924"></a>
+<span class="sourceLineNo">925</span>            setExceptionalCompletion(rex);<a name="line.925"></a>
+<span class="sourceLineNo">926</span>            return;<a name="line.926"></a>
+<span class="sourceLineNo">927</span>        }<a name="line.927"></a>
+<span class="sourceLineNo">928</span>        setCompletion(NORMAL);<a name="line.928"></a>
+<span class="sourceLineNo">929</span>    }<a name="line.929"></a>
+<span class="sourceLineNo">930</span><a name="line.930"></a>
+<span class="sourceLineNo">931</span>    /**<a name="line.931"></a>
+<span class="sourceLineNo">932</span>     * Completes this task normally without setting a value. The most<a name="line.932"></a>
+<span class="sourceLineNo">933</span>     * recent value established by {@link #setRawResult} (or {@code<a name="line.933"></a>
+<span class="sourceLineNo">934</span>     * null} by default) will be returned as the result of subsequent<a name="line.934"></a>
+<span class="sourceLineNo">935</span>     * invocations of {@code join} and related operations.<a name="line.935"></a>
+<span class="sourceLineNo">936</span>     *<a name="line.936"></a>
+<span class="sourceLineNo">937</span>     * @since 1.8<a name="line.937"></a>
+<span class="sourceLineNo">938</span>     */<a name="line.938"></a>
+<span class="sourceLineNo">939</span>    public final void quietlyComplete() {<a name="line.939"></a>
+<span class="sourceLineNo">940</span>        setCompletion(NORMAL);<a name="line.940"></a>
+<span class="sourceLineNo">941</span>    }<a name="line.941"></a>
+<span class="sourceLineNo">942</span><a name="line.942"></a>
+<span class="sourceLineNo">943</span>    /**<a name="line.943"></a>
+<span class="sourceLineNo">944</span>     * Waits if necessary for the computation to complete, and then<a name="line.944"></a>
+<span class="sourceLineNo">945</span>     * retrieves its result.<a name="line.945"></a>
+<span class="sourceLineNo">946</span>     *<a name="line.946"></a>
+<span class="sourceLineNo">947</span>     * @return the computed result<a name="line.947"></a>
+<span class="sourceLineNo">948</span>     * @throws CancellationException if the computation was cancelled<a name="line.948"></a>
+<span class="sourceLineNo">949</span>     * @throws ExecutionException if the computation threw an<a name="line.949"></a>
+<span class="sourceLineNo">950</span>     * exception<a name="line.950"></a>
+<span class="sourceLineNo">951</span>     * @throws InterruptedException if the current thread is not a<a name="line.951"></a>
+<span class="sourceLineNo">952</span>     * member of a ForkJoinPool and was interrupted while waiting<a name="line.952"></a>
+<span class="sourceLineNo">953</span>     */<a name="line.953"></a>
+<span class="sourceLineNo">954</span>    public final V get() throws InterruptedException, ExecutionException {<a name="line.954"></a>
+<span class="sourceLineNo">955</span>        int s = (Thread.currentThread() instanceof ForkJoinWorkerThread) ?<a name="line.955"></a>
+<span class="sourceLineNo">956</span>            doJoin() : externalInterruptibleAwaitDone();<a name="line.956"></a>
+<span class="sourceLineNo">957</span>        Throwable ex;<a name="line.957"></a>
+<span class="sourceLineNo">958</span>        if ((s &amp;= DONE_MASK) == CANCELLED)<a name="line.958"></a>
+<span class="sourceLineNo">959</span>            throw new CancellationException();<a name="line.959"></a>
+<span class="sourceLineNo">960</span>        if (s == EXCEPTIONAL &amp;&amp; (ex = getThrowableException()) != null)<a name="line.960"></a>
+<span class="sourceLineNo">961</span>            throw new ExecutionException(ex);<a name="line.961"></a>
+<span class="sourceLineNo">962</span>        return getRawResult();<a name="line.962"></a>
+<span class="sourceLineNo">963</span>    }<a name="line.963"></a>
+<span class="sourceLineNo">964</span><a name="line.964"></a>
+<span class="sourceLineNo">965</span>    /**<a name="line.965"></a>
+<span class="sourceLineNo">966</span>     * Waits if necessary for at most the given time for the computation<a name="line.966"></a>
+<span class="sourceLineNo">967</span>     * to complete, and then retrieves its result, if available.<a name="line.967"></a>
+<span class="sourceLineNo">968</span>     *<a name="line.968"></a>
+<span class="sourceLineNo">969</span>     * @param timeout the maximum time to wait<a name="line.969"></a>
+<span class="sourceLineNo">970</span>     * @param unit the time unit of the timeout argument<a name="line.970"></a>
+<span class="sourceLineNo">971</span>     * @return the computed result<a name="line.971"></a>
+<span class="sourceLineNo">972</span>     * @throws CancellationException if the computation was cancelled<a name="line.972"></a>
+<span class="sourceLineNo">973</span>     * @throws ExecutionException if the computation threw an<a name="line.973"></a>
+<span class="sourceLineNo">974</span>     * exception<a name="line.974"></a>
+<span class="sourceLineNo">975</span>     * @throws InterruptedException if the current thread is not a<a name="line.975"></a>
+<span class="sourceLineNo">976</span>     * member of a ForkJoinPool and was interrupted while waiting<a name="line.976"></a>
+<span class="sourceLineNo">977</span>     * @throws TimeoutException if the wait timed out<a name="line.977"></a>
+<span class="sourceLineNo">978</span>     */<a name="line.978"></a>
+<span class="sourceLineNo">979</span>    public final V get(long timeout, TimeUnit unit)<a name="line.979"></a>
+<span class="sourceLineNo">980</span>        throws InterruptedException, ExecutionException, TimeoutException {<a name="line.980"></a>
+<span class="sourceLineNo">981</span>        if (Thread.interrupted())<a name="line.981"></a>
+<span class="sourceLineNo">982</span>            throw new InterruptedException();<a name="line.982"></a>
+<span class="sourceLineNo">983</span>        // Messy in part because we measure in nanosecs, but wait in millisecs<a name="line.983"></a>
+<span class="sourceLineNo">984</span>        int s; long ns, ms;<a name="line.984"></a>
+<span class="sourceLineNo">985</span>        if ((s = status) &gt;= 0 &amp;&amp; (ns = unit.toNanos(timeout)) &gt; 0L) {<a name="line.985"></a>
+<span class="sourceLineNo">986</span>            long deadline = System.nanoTime() + ns;<a name="line.986"></a>
+<span class="sourceLineNo">987</span>            ForkJoinPool p = null;<a name="line.987"></a>
+<span class="sourceLineNo">988</span>            ForkJoinPool.WorkQueue w = null;<a name="line.988"></a>
+<span class="sourceLineNo">989</span>            Thread t = Thread.currentThread();<a name="line.989"></a>
+<span class="sourceLineNo">990</span>            if (t instanceof ForkJoinWorkerThread) {<a name="line.990"></a>
+<span class="sourceLineNo">991</span>                ForkJoinWorkerThread wt = (ForkJoinWorkerThread)t;<a name="line.991"></a>
+<span class="sourceLineNo">992</span>                p = wt.pool;<a name="line.992"></a>
+<span class="sourceLineNo">993</span>                w = wt.workQueue;<a name="line.993"></a>
+<span class="sourceLineNo">994</span>                s = p.helpJoinOnce(w, this); // no retries on failure<a name="line.994"></a>
+<span class="sourceLineNo">995</span>            }<a name="line.995"></a>
+<span class="sourceLineNo">996</span>            boolean canBlock = false;<a name="line.996"></a>
+<span class="sourceLineNo">997</span>            boolean interrupted = false;<a name="line.997"></a>
+<span class="sourceLineNo">998</span>            try {<a name="line.998"></a>
+<span class="sourceLineNo">999</span>                while ((s = status) &gt;= 0) {<a name="line.999"></a>
+<span class="sourceLineNo">1000</span>                    if (w != null &amp;&amp; w.runState &lt; 0)<a name="line.1000"></a>
+<span class="sourceLineNo">1001</span>                        cancelIgnoringExceptions(this);<a name="line.1001"></a>
+<span class="sourceLineNo">1002</span>                    else if (!canBlock) {<a name="line.1002"></a>
+<span class="sourceLineNo">1003</span>                        if (p == null || p.tryCompensate(this, null))<a name="line.1003"></a>
+<span class="sourceLineNo">1004</span>                            canBlock = true;<a name="line.1004"></a>
+<span class="sourceLineNo">1005</span>                    }<a name="line.1005"></a>
+<span class="sourceLineNo">1006</span>                    else {<a name="line.1006"></a>
+<span class="sourceLineNo">1007</span>                        if ((ms = TimeUnit.NANOSECONDS.toMillis(ns)) &gt; 0L &amp;&amp;<a name="line.1007"></a>
+<span class="sourceLineNo">1008</span>                            U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {<a name="line.1008"></a>
+<span class="sourceLineNo">1009</span>                            synchronized (this) {<a name="line.1009"></a>
+<span class="sourceLineNo">1010</span>                                if (status &gt;= 0) {<a name="line.1010"></a>
+<span class="sourceLineNo">1011</span>                                    try {<a name="line.1011"></a>
+<span class="sourceLineNo">1012</span>                                        wait(ms);<a name="line.1012"></a>
+<span class="sourceLineNo">1013</span>                                    } catch (InterruptedException ie) {<a name="line.1013"></a>
+<span class="sourceLineNo">1014</span>                                        if (p == null)<a name="line.1014"></a>
+<span class="sourceLineNo">1015</span>                                            interrupted = true;<a name="line.1015"></a>
+<span class="sourceLineNo">1016</span>                                    }<a name="line.1016"></a>
+<span class="sourceLineNo">1017</span>                                }<a name="line.1017"></a>
+<span class="sourceLineNo">1018</span>                                else<a name="line.1018"></a>
+<span class="sourceLineNo">1019</span>                                    notifyAll();<a name="line.1019"></a>
+<span class="sourceLineNo">1020</span>                            }<a name="line.1020"></a>
+<span class="sourceLineNo">1021</span>                        }<a name="line.1021"></a>
+<span class="sourceLineNo">1022</span>                        if ((s = status) &lt; 0 || interrupted ||<a name="line.1022"></a>
+<span class="sourceLineNo">1023</span>                            (ns = deadline - System.nanoTime()) &lt;= 0L)<a name="line.1023"></a>
+<span class="sourceLineNo">1024</span>                            break;<a name="line.1024"></a>
+<span class="sourceLineNo">1025</span>                    }<a name="line.1025"></a>
+<span class="sourceLineNo">1026</span>                }<a name="line.1026"></a>
+<span class="sourceLineNo">1027</span>            } finally {<a name="line.1027"></a>
+<span class="sourceLineNo">1028</span>                if (p != null &amp;&amp; canBlock)<a name="line.1028"></a>
+<span class="sourceLineNo">1029</span>                    p.incrementActiveCount();<a name="line.1029"></a>
+<span class="sourceLineNo">1030</span>            }<a name="line.1030"></a>
+<span class="sourceLineNo">1031</span>            if (interrupted)<a name="line.1031"></a>
+<span class="sourceLineNo">1032</span>                throw new InterruptedException();<a name="line.1032"></a>
+<span class="sourceLineNo">1033</span>        }<a name="line.1033"></a>
+<span class="sourceLineNo">1034</span>        if ((s &amp;= DONE_MASK) != NORMAL) {<a name="line.1034"></a>
+<span class="sourceLineNo">1035</span>            Throwable ex;<a name="line.1035"></a>
+<span class="sourceLineNo">1036</span>            if (s == CANCELLED)<a name="line.1036"></a>
+<span class="sourceLineNo">1037</span>                throw new CancellationException();<a name="line.1037"></a>
+<span class="sourceLineNo">1038</span>            if (s != EXCEPTIONAL)<a name="line.1038"></a>
+<span class="sourceLineNo">1039</span>                throw new TimeoutException();<a name="line.1039"></a>
+<span class="sourceLineNo">1040</span>            if ((ex = getThrowableException()) != null)<a name="line.1040"></a>
+<span class="sourceLineNo">1041</span>                throw new ExecutionException(ex);<a name="line.1041"></a>
+<span class="sourceLineNo">1042</span>        }<a name="line.1042"></a>
+<span class="sourceLineNo">1043</span>        return getRawResult();<a name="line.1043"></a>
+<span class="sourceLineNo">1044</span>    }<a name="line.1044"></a>
+<span class="sourceLineNo">1045</span><a name="line.1045"></a>
+<span class="sourceLineNo">1046</span>    /**<a name="line.1046"></a>
+<span class="sourceLineNo">1047</span>     * Joins this task, without returning its result or throwing its<a name="line.1047"></a>
+<span class="sourceLineNo">1048</span>     * exception. This method may be useful when processing<a name="line.1048"></a>
+<span class="sourceLineNo">1049</span>     * collections of tasks when some have been cancelled or otherwise<a name="line.1049"></a>
+<span class="sourceLineNo">1050</span>     * known to have aborted.<a name="line.1050"></a>
+<span class="sourceLineNo">1051</span>     */<a name="line.1051"></a>
+<span class="sourceLineNo">1052</span>    public final void quietlyJoin() {<a name="line.1052"></a>
+<span class="sourceLineNo">1053</span>        doJoin();<a name="line.1053"></a>
+<span class="sourceLineNo">1054</span>    }<a name="line.1054"></a>
+<span class="sourceLineNo">1055</span><a name="line.1055"></a>
+<span class="sourceLineNo">1056</span>    /**<a name="line.1056"></a>
+<span class="sourceLineNo">1057</span>     * Commences performing this task and awaits its completion if<a name="line.1057"></a>
+<span class="sourceLineNo">1058</span>     * necessary, without returning its result or throwing its<a name="line.1058"></a>
+<span class="sourceLineNo">1059</span>     * exception.<a name="line.1059"></a>
+<span class="sourceLineNo">1060</span>     */<a name="line.1060"></a>
+<span class="sourceLineNo">1061</span>    public final void quietlyInvoke() {<a name="line.1061"></a>
+<span class="sourceLineNo">1062</span>        doInvoke();<a name="line.1062"></a>
+<span class="sourceLineNo">1063</span>    }<a name="line.1063"></a>
+<span class="sourceLineNo">1064</span><a name="line.1064"></a>
+<span class="sourceLineNo">1065</span>    /**<a name="line.1065"></a>
+<span class="sourceLineNo">1066</span>     * Possibly executes tasks until the pool hosting the current task<a name="line.1066"></a>
+<span class="sourceLineNo">1067</span>     * {@link ForkJoinPool#isQuiescent is quiescent}. This method may<a name="line.1067"></a>
+<span class="sourceLineNo">1068</span>     * be of use in designs in which many tasks are forked, but none<a name="line.1068"></a>
+<span class="sourceLineNo">1069</span>     * are explicitly joined, instead executing them until all are<a name="line.1069"></a>
+<span class="sourceLineNo">1070</span>     * processed.<a name="line.1070"></a>
+<span class="sourceLineNo">1071</span>     *<a name="line.1071"></a>
+<span class="sourceLineNo">1072</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1072"></a>
+<span class="sourceLineNo">1073</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1073"></a>
+<span class="sourceLineNo">1074</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1074"></a>
+<span class="sourceLineNo">1075</span>     * result in exceptions or errors, possibly including {@code<a name="line.1075"></a>
+<span class="sourceLineNo">1076</span>     * ClassCastException}.<a name="line.1076"></a>
+<span class="sourceLineNo">1077</span>     */<a name="line.1077"></a>
+<span class="sourceLineNo">1078</span>    public static void helpQuiesce() {<a name="line.1078"></a>
+<span class="sourceLineNo">1079</span>        ForkJoinWorkerThread wt =<a name="line.1079"></a>
+<span class="sourceLineNo">1080</span>            (ForkJoinWorkerThread)Thread.currentThread();<a name="line.1080"></a>
+<span class="sourceLineNo">1081</span>        wt.pool.helpQuiescePool(wt.workQueue);<a name="line.1081"></a>
+<span class="sourceLineNo">1082</span>    }<a name="line.1082"></a>
+<span class="sourceLineNo">1083</span><a name="line.1083"></a>
+<span class="sourceLineNo">1084</span>    /**<a name="line.1084"></a>
+<span class="sourceLineNo">1085</span>     * Resets the internal bookkeeping state of this task, allowing a<a name="line.1085"></a>
+<span class="sourceLineNo">1086</span>     * subsequent {@code fork}. This method allows repeated reuse of<a name="line.1086"></a>
+<span class="sourceLineNo">1087</span>     * this task, but only if reuse occurs when this task has either<a name="line.1087"></a>
+<span class="sourceLineNo">1088</span>     * never been forked, or has been forked, then completed and all<a name="line.1088"></a>
+<span class="sourceLineNo">1089</span>     * outstanding joins of this task have also completed. Effects<a name="line.1089"></a>
+<span class="sourceLineNo">1090</span>     * under any other usage conditions are not guaranteed.<a name="line.1090"></a>
+<span class="sourceLineNo">1091</span>     * This method may be useful when executing<a name="line.1091"></a>
+<span class="sourceLineNo">1092</span>     * pre-constructed trees of subtasks in loops.<a name="line.1092"></a>
+<span class="sourceLineNo">1093</span>     *<a name="line.1093"></a>
+<span class="sourceLineNo">1094</span>     * &lt;p&gt;Upon completion of this method, {@code isDone()} reports<a name="line.1094"></a>
+<span class="sourceLineNo">1095</span>     * {@code false}, and {@code getException()} reports {@code<a name="line.1095"></a>
+<span class="sourceLineNo">1096</span>     * null}. However, the value returned by {@code getRawResult} is<a name="line.1096"></a>
+<span class="sourceLineNo">1097</span>     * unaffected. To clear this value, you can invoke {@code<a name="line.1097"></a>
+<span class="sourceLineNo">1098</span>     * setRawResult(null)}.<a name="line.1098"></a>
+<span class="sourceLineNo">1099</span>     */<a name="line.1099"></a>
+<span class="sourceLineNo">1100</span>    public void reinitialize() {<a name="line.1100"></a>
+<span class="sourceLineNo">1101</span>        if ((status &amp; DONE_MASK) == EXCEPTIONAL)<a name="line.1101"></a>
+<span class="sourceLineNo">1102</span>            clearExceptionalCompletion();<a name="line.1102"></a>
+<span class="sourceLineNo">1103</span>        else<a name="line.1103"></a>
+<span class="sourceLineNo">1104</span>            status = 0;<a name="line.1104"></a>
+<span class="sourceLineNo">1105</span>    }<a name="line.1105"></a>
+<span class="sourceLineNo">1106</span><a name="line.1106"></a>
+<span class="sourceLineNo">1107</span>    /**<a name="line.1107"></a>
+<span class="sourceLineNo">1108</span>     * Returns the pool hosting the current task execution, or null<a name="line.1108"></a>
+<span class="sourceLineNo">1109</span>     * if this task is executing outside of any ForkJoinPool.<a name="line.1109"></a>
+<span class="sourceLineNo">1110</span>     *<a name="line.1110"></a>
+<span class="sourceLineNo">1111</span>     * @see #inForkJoinPool<a name="line.1111"></a>
+<span class="sourceLineNo">1112</span>     * @return the pool, or {@code null} if none<a name="line.1112"></a>
+<span class="sourceLineNo">1113</span>     */<a name="line.1113"></a>
+<span class="sourceLineNo">1114</span>    public static ForkJoinPool getPool() {<a name="line.1114"></a>
+<span class="sourceLineNo">1115</span>        Thread t = Thread.currentThread();<a name="line.1115"></a>
+<span class="sourceLineNo">1116</span>        return (t instanceof ForkJoinWorkerThread) ?<a name="line.1116"></a>
+<span class="sourceLineNo">1117</span>            ((ForkJoinWorkerThread) t).pool : null;<a name="line.1117"></a>
+<span class="sourceLineNo">1118</span>    }<a name="line.1118"></a>
+<span class="sourceLineNo">1119</span><a name="line.1119"></a>
+<span class="sourceLineNo">1120</span>    /**<a name="line.1120"></a>
+<span class="sourceLineNo">1121</span>     * Returns {@code true} if the current thread is a {@link<a name="line.1121"></a>
+<span class="sourceLineNo">1122</span>     * ForkJoinWorkerThread} executing as a ForkJoinPool computation.<a name="line.1122"></a>
+<span class="sourceLineNo">1123</span>     *<a name="line.1123"></a>
+<span class="sourceLineNo">1124</span>     * @return {@code true} if the current thread is a {@link<a name="line.1124"></a>
+<span class="sourceLineNo">1125</span>     * ForkJoinWorkerThread} executing as a ForkJoinPool computation,<a name="line.1125"></a>
+<span class="sourceLineNo">1126</span>     * or {@code false} otherwise<a name="line.1126"></a>
+<span class="sourceLineNo">1127</span>     */<a name="line.1127"></a>
+<span class="sourceLineNo">1128</span>    public static boolean inForkJoinPool() {<a name="line.1128"></a>
+<span class="sourceLineNo">1129</span>        return Thread.currentThread() instanceof ForkJoinWorkerThread;<a name="line.1129"></a>
+<span class="sourceLineNo">1130</span>    }<a name="line.1130"></a>
+<span class="sourceLineNo">1131</span><a name="line.1131"></a>
+<span class="sourceLineNo">1132</span>    /**<a name="line.1132"></a>
+<span class="sourceLineNo">1133</span>     * Tries to unschedule this task for execution. This method will<a name="line.1133"></a>
+<span class="sourceLineNo">1134</span>     * typically succeed if this task is the most recently forked task<a name="line.1134"></a>
+<span class="sourceLineNo">1135</span>     * by the current thread, and has not commenced executing in<a name="line.1135"></a>
+<span class="sourceLineNo">1136</span>     * another thread.  This method may be useful when arranging<a name="line.1136"></a>
+<span class="sourceLineNo">1137</span>     * alternative local processing of tasks that could have been, but<a name="line.1137"></a>
+<span class="sourceLineNo">1138</span>     * were not, stolen.<a name="line.1138"></a>
+<span class="sourceLineNo">1139</span>     *<a name="line.1139"></a>
+<span class="sourceLineNo">1140</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1140"></a>
+<span class="sourceLineNo">1141</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1141"></a>
+<span class="sourceLineNo">1142</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1142"></a>
+<span class="sourceLineNo">1143</span>     * result in exceptions or errors, possibly including {@code<a name="line.1143"></a>
+<span class="sourceLineNo">1144</span>     * ClassCastException}.<a name="line.1144"></a>
+<span class="sourceLineNo">1145</span>     *<a name="line.1145"></a>
+<span class="sourceLineNo">1146</span>     * @return {@code true} if unforked<a name="line.1146"></a>
+<span class="sourceLineNo">1147</span>     */<a name="line.1147"></a>
+<span class="sourceLineNo">1148</span>    public boolean tryUnfork() {<a name="line.1148"></a>
+<span class="sourceLineNo">1149</span>        return ((ForkJoinWorkerThread)Thread.currentThread())<a name="line.1149"></a>
+<span class="sourceLineNo">1150</span>            .workQueue.tryUnpush(this);<a name="line.1150"></a>
+<span class="sourceLineNo">1151</span>    }<a name="line.1151"></a>
+<span class="sourceLineNo">1152</span><a name="line.1152"></a>
+<span class="sourceLineNo">1153</span>    /**<a name="line.1153"></a>
+<span class="sourceLineNo">1154</span>     * Returns an estimate of the number of tasks that have been<a name="line.1154"></a>
+<span class="sourceLineNo">1155</span>     * forked by the current worker thread but not yet executed. This<a name="line.1155"></a>
+<span class="sourceLineNo">1156</span>     * value may be useful for heuristic decisions about whether to<a name="line.1156"></a>
+<span class="sourceLineNo">1157</span>     * fork other tasks.<a name="line.1157"></a>
+<span class="sourceLineNo">1158</span>     *<a name="line.1158"></a>
+<span class="sourceLineNo">1159</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1159"></a>
+<span class="sourceLineNo">1160</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1160"></a>
+<span class="sourceLineNo">1161</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1161"></a>
+<span class="sourceLineNo">1162</span>     * result in exceptions or errors, possibly including {@code<a name="line.1162"></a>
+<span class="sourceLineNo">1163</span>     * ClassCastException}.<a name="line.1163"></a>
+<span class="sourceLineNo">1164</span>     *<a name="line.1164"></a>
+<span class="sourceLineNo">1165</span>     * @return the number of tasks<a name="line.1165"></a>
+<span class="sourceLineNo">1166</span>     */<a name="line.1166"></a>
+<span class="sourceLineNo">1167</span>    public static int getQueuedTaskCount() {<a name="line.1167"></a>
+<span class="sourceLineNo">1168</span>        return ((ForkJoinWorkerThread) Thread.currentThread())<a name="line.1168"></a>
+<span class="sourceLineNo">1169</span>            .workQueue.queueSize();<a name="line.1169"></a>
+<span class="sourceLineNo">1170</span>    }<a name="line.1170"></a>
+<span class="sourceLineNo">1171</span><a name="line.1171"></a>
+<span class="sourceLineNo">1172</span>    /**<a name="line.1172"></a>
+<span class="sourceLineNo">1173</span>     * Returns an estimate of how many more locally queued tasks are<a name="line.1173"></a>
+<span class="sourceLineNo">1174</span>     * held by the current worker thread than there are other worker<a name="line.1174"></a>
+<span class="sourceLineNo">1175</span>     * threads that might steal them.  This value may be useful for<a name="line.1175"></a>
+<span class="sourceLineNo">1176</span>     * heuristic decisions about whether to fork other tasks. In many<a name="line.1176"></a>
+<span class="sourceLineNo">1177</span>     * usages of ForkJoinTasks, at steady state, each worker should<a name="line.1177"></a>
+<span class="sourceLineNo">1178</span>     * aim to maintain a small constant surplus (for example, 3) of<a name="line.1178"></a>
+<span class="sourceLineNo">1179</span>     * tasks, and to process computations locally if this threshold is<a name="line.1179"></a>
+<span class="sourceLineNo">1180</span>     * exceeded.<a name="line.1180"></a>
+<span class="sourceLineNo">1181</span>     *<a name="line.1181"></a>
+<span class="sourceLineNo">1182</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1182"></a>
+<span class="sourceLineNo">1183</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1183"></a>
+<span class="sourceLineNo">1184</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1184"></a>
+<span class="sourceLineNo">1185</span>     * result in exceptions or errors, possibly including {@code<a name="line.1185"></a>
+<span class="sourceLineNo">1186</span>     * ClassCastException}.<a name="line.1186"></a>
+<span class="sourceLineNo">1187</span>     *<a name="line.1187"></a>
+<span class="sourceLineNo">1188</span>     * @return the surplus number of tasks, which may be negative<a name="line.1188"></a>
+<span class="sourceLineNo">1189</span>     */<a name="line.1189"></a>
+<span class="sourceLineNo">1190</span>    public static int getSurplusQueuedTaskCount() {<a name="line.1190"></a>
+<span class="sourceLineNo">1191</span>        /*<a name="line.1191"></a>
+<span class="sourceLineNo">1192</span>         * The aim of this method is to return a cheap heuristic guide<a name="line.1192"></a>
+<span class="sourceLineNo">1193</span>         * for task partitioning when programmers, frameworks, tools,<a name="line.1193"></a>
+<span class="sourceLineNo">1194</span>         * or languages have little or no idea about task granularity.<a name="line.1194"></a>
+<span class="sourceLineNo">1195</span>         * In essence by offering this method, we ask users only about<a name="line.1195"></a>
+<span class="sourceLineNo">1196</span>         * tradeoffs in overhead vs expected throughput and its<a name="line.1196"></a>
+<span class="sourceLineNo">1197</span>         * variance, rather than how finely to partition tasks.<a name="line.1197"></a>
+<span class="sourceLineNo">1198</span>         *<a name="line.1198"></a>
+<span class="sourceLineNo">1199</span>         * In a steady state strict (tree-structured) computation,<a name="line.1199"></a>
+<span class="sourceLineNo">1200</span>         * each thread makes available for stealing enough tasks for<a name="line.1200"></a>
+<span class="sourceLineNo">1201</span>         * other threads to remain active. Inductively, if all threads<a name="line.1201"></a>
+<span class="sourceLineNo">1202</span>         * play by the same rules, each thread should make available<a name="line.1202"></a>
+<span class="sourceLineNo">1203</span>         * only a constant number of tasks.<a name="line.1203"></a>
+<span class="sourceLineNo">1204</span>         *<a name="line.1204"></a>
+<span class="sourceLineNo">1205</span>         * The minimum useful constant is just 1. But using a value of<a name="line.1205"></a>
+<span class="sourceLineNo">1206</span>         * 1 would require immediate replenishment upon each steal to<a name="line.1206"></a>
+<span class="sourceLineNo">1207</span>         * maintain enough tasks, which is infeasible.  Further,<a name="line.1207"></a>
+<span class="sourceLineNo">1208</span>         * partitionings/granularities of offered tasks should<a name="line.1208"></a>
+<span class="sourceLineNo">1209</span>         * minimize steal rates, which in general means that threads<a name="line.1209"></a>
+<span class="sourceLineNo">1210</span>         * nearer the top of computation tree should generate more<a name="line.1210"></a>
+<span class="sourceLineNo">1211</span>         * than those nearer the bottom. In perfect steady state, each<a name="line.1211"></a>
+<span class="sourceLineNo">1212</span>         * thread is at approximately the same level of computation<a name="line.1212"></a>
+<span class="sourceLineNo">1213</span>         * tree. However, producing extra tasks amortizes the<a name="line.1213"></a>
+<span class="sourceLineNo">1214</span>         * uncertainty of progress and diffusion assumptions.<a name="line.1214"></a>
+<span class="sourceLineNo">1215</span>         *<a name="line.1215"></a>
+<span class="sourceLineNo">1216</span>         * So, users will want to use values larger, but not much<a name="line.1216"></a>
+<span class="sourceLineNo">1217</span>         * larger than 1 to both smooth over transient shortages and<a name="line.1217"></a>
+<span class="sourceLineNo">1218</span>         * hedge against uneven progress; as traded off against the<a name="line.1218"></a>
+<span class="sourceLineNo">1219</span>         * cost of extra task overhead. We leave the user to pick a<a name="line.1219"></a>
+<span class="sourceLineNo">1220</span>         * threshold value to compare with the results of this call to<a name="line.1220"></a>
+<span class="sourceLineNo">1221</span>         * guide decisions, but recommend values such as 3.<a name="line.1221"></a>
+<span class="sourceLineNo">1222</span>         *<a name="line.1222"></a>
+<span class="sourceLineNo">1223</span>         * When all threads are active, it is on average OK to<a name="line.1223"></a>
+<span class="sourceLineNo">1224</span>         * estimate surplus strictly locally. In steady-state, if one<a name="line.1224"></a>
+<span class="sourceLineNo">1225</span>         * thread is maintaining say 2 surplus tasks, then so are<a name="line.1225"></a>
+<span class="sourceLineNo">1226</span>         * others. So we can just use estimated queue length.<a name="line.1226"></a>
+<span class="sourceLineNo">1227</span>         * However, this strategy alone leads to serious mis-estimates<a name="line.1227"></a>
+<span class="sourceLineNo">1228</span>         * in some non-steady-state conditions (ramp-up, ramp-down,<a name="line.1228"></a>
+<span class="sourceLineNo">1229</span>         * other stalls). We can detect many of these by further<a name="line.1229"></a>
+<span class="sourceLineNo">1230</span>         * considering the number of "idle" threads, that are known to<a name="line.1230"></a>
+<span class="sourceLineNo">1231</span>         * have zero queued tasks, so compensate by a factor of<a name="line.1231"></a>
+<span class="sourceLineNo">1232</span>         * (#idle/#active) threads.<a name="line.1232"></a>
+<span class="sourceLineNo">1233</span>         */<a name="line.1233"></a>
+<span class="sourceLineNo">1234</span>        ForkJoinWorkerThread wt =<a name="line.1234"></a>
+<span class="sourceLineNo">1235</span>            (ForkJoinWorkerThread)Thread.currentThread();<a name="line.1235"></a>
+<span class="sourceLineNo">1236</span>        return wt.workQueue.queueSize() - wt.pool.idlePerActive();<a name="line.1236"></a>
+<span class="sourceLineNo">1237</span>    }<a name="line.1237"></a>
+<span class="sourceLineNo">1238</span><a name="line.1238"></a>
+<span class="sourceLineNo">1239</span>    // Extension methods<a name="line.1239"></a>
+<span class="sourceLineNo">1240</span><a name="line.1240"></a>
+<span class="sourceLineNo">1241</span>    /**<a name="line.1241"></a>
+<span class="sourceLineNo">1242</span>     * Returns the result that would be returned by {@link #join}, even<a name="line.1242"></a>
+<span class="sourceLineNo">1243</span>     * if this task completed abnormally, or {@code null} if this task<a name="line.1243"></a>
+<span class="sourceLineNo">1244</span>     * is not known to have been completed.  This method is designed<a name="line.1244"></a>
+<span class="sourceLineNo">1245</span>     * to aid debugging, as well as to support extensions. Its use in<a name="line.1245"></a>
+<span class="sourceLineNo">1246</span>     * any other context is discouraged.<a name="line.1246"></a>
+<span class="sourceLineNo">1247</span>     *<a name="line.1247"></a>
+<span class="sourceLineNo">1248</span>     * @return the result, or {@code null} if not completed<a name="line.1248"></a>
+<span class="sourceLineNo">1249</span>     */<a name="line.1249"></a>
+<span class="sourceLineNo">1250</span>    public abstract V getRawResult();<a name="line.1250"></a>
+<span class="sourceLineNo">1251</span><a name="line.1251"></a>
+<span class="sourceLineNo">1252</span>    /**<a name="line.1252"></a>
+<span class="sourceLineNo">1253</span>     * Forces the given value to be returned as a result.  This method<a name="line.1253"></a>
+<span class="sourceLineNo">1254</span>     * is designed to support extensions, and should not in general be<a name="line.1254"></a>
+<span class="sourceLineNo">1255</span>     * called otherwise.<a name="line.1255"></a>
+<span class="sourceLineNo">1256</span>     *<a name="line.1256"></a>
+<span class="sourceLineNo">1257</span>     * @param value the value<a name="line.1257"></a>
+<span class="sourceLineNo">1258</span>     */<a name="line.1258"></a>
+<span class="sourceLineNo">1259</span>    protected abstract void setRawResult(V value);<a name="line.1259"></a>
+<span class="sourceLineNo">1260</span><a name="line.1260"></a>
+<span class="sourceLineNo">1261</span>    /**<a name="line.1261"></a>
+<span class="sourceLineNo">1262</span>     * Immediately performs the base action of this task and returns<a name="line.1262"></a>
+<span class="sourceLineNo">1263</span>     * true if, upon return from this method, this task is guaranteed<a name="line.1263"></a>
+<span class="sourceLineNo">1264</span>     * to have completed normally. This method may return false<a name="line.1264"></a>
+<span class="sourceLineNo">1265</span>     * otherwise, to indicate that this task is not necessarily<a name="line.1265"></a>
+<span class="sourceLineNo">1266</span>     * complete (or is not known to be complete), for example in<a name="line.1266"></a>
+<span class="sourceLineNo">1267</span>     * asynchronous actions that require explicit invocations of<a name="line.1267"></a>
+<span class="sourceLineNo">1268</span>     * completion methods. This method may also throw an (unchecked)<a name="line.1268"></a>
+<span class="sourceLineNo">1269</span>     * exception to indicate abnormal exit. This method is designed to<a name="line.1269"></a>
+<span class="sourceLineNo">1270</span>     * support extensions, and should not in general be called<a name="line.1270"></a>
+<span class="sourceLineNo">1271</span>     * otherwise.<a name="line.1271"></a>
+<span class="sourceLineNo">1272</span>     *<a name="line.1272"></a>
+<span class="sourceLineNo">1273</span>     * @return {@code true} if this task is known to have completed normally<a name="line.1273"></a>
+<span class="sourceLineNo">1274</span>     */<a name="line.1274"></a>
+<span class="sourceLineNo">1275</span>    protected abstract boolean exec();<a name="line.1275"></a>
+<span class="sourceLineNo">1276</span><a name="line.1276"></a>
+<span class="sourceLineNo">1277</span>    /**<a name="line.1277"></a>
+<span class="sourceLineNo">1278</span>     * Returns, but does not unschedule or execute, a task queued by<a name="line.1278"></a>
+<span class="sourceLineNo">1279</span>     * the current thread but not yet executed, if one is immediately<a name="line.1279"></a>
+<span class="sourceLineNo">1280</span>     * available. There is no guarantee that this task will actually<a name="line.1280"></a>
+<span class="sourceLineNo">1281</span>     * be polled or executed next. Conversely, this method may return<a name="line.1281"></a>
+<span class="sourceLineNo">1282</span>     * null even if a task exists but cannot be accessed without<a name="line.1282"></a>
+<span class="sourceLineNo">1283</span>     * contention with other threads.  This method is designed<a name="line.1283"></a>
+<span class="sourceLineNo">1284</span>     * primarily to support extensions, and is unlikely to be useful<a name="line.1284"></a>
+<span class="sourceLineNo">1285</span>     * otherwise.<a name="line.1285"></a>
+<span class="sourceLineNo">1286</span>     *<a name="line.1286"></a>
+<span class="sourceLineNo">1287</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1287"></a>
+<span class="sourceLineNo">1288</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1288"></a>
+<span class="sourceLineNo">1289</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1289"></a>
+<span class="sourceLineNo">1290</span>     * result in exceptions or errors, possibly including {@code<a name="line.1290"></a>
+<span class="sourceLineNo">1291</span>     * ClassCastException}.<a name="line.1291"></a>
+<span class="sourceLineNo">1292</span>     *<a name="line.1292"></a>
+<span class="sourceLineNo">1293</span>     * @return the next task, or {@code null} if none are available<a name="line.1293"></a>
+<span class="sourceLineNo">1294</span>     */<a name="line.1294"></a>
+<span class="sourceLineNo">1295</span>    protected static ForkJoinTask&lt;?&gt; peekNextLocalTask() {<a name="line.1295"></a>
+<span class="sourceLineNo">1296</span>        return ((ForkJoinWorkerThread) Thread.currentThread()).workQueue.peek();<a name="line.1296"></a>
+<span class="sourceLineNo">1297</span>    }<a name="line.1297"></a>
+<span class="sourceLineNo">1298</span><a name="line.1298"></a>
+<span class="sourceLineNo">1299</span>    /**<a name="line.1299"></a>
+<span class="sourceLineNo">1300</span>     * Unschedules and returns, without executing, the next task<a name="line.1300"></a>
+<span class="sourceLineNo">1301</span>     * queued by the current thread but not yet executed.  This method<a name="line.1301"></a>
+<span class="sourceLineNo">1302</span>     * is designed primarily to support extensions, and is unlikely to<a name="line.1302"></a>
+<span class="sourceLineNo">1303</span>     * be useful otherwise.<a name="line.1303"></a>
+<span class="sourceLineNo">1304</span>     *<a name="line.1304"></a>
+<span class="sourceLineNo">1305</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1305"></a>
+<span class="sourceLineNo">1306</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1306"></a>
+<span class="sourceLineNo">1307</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1307"></a>
+<span class="sourceLineNo">1308</span>     * result in exceptions or errors, possibly including {@code<a name="line.1308"></a>
+<span class="sourceLineNo">1309</span>     * ClassCastException}.<a name="line.1309"></a>
+<span class="sourceLineNo">1310</span>     *<a name="line.1310"></a>
+<span class="sourceLineNo">1311</span>     * @return the next task, or {@code null} if none are available<a name="line.1311"></a>
+<span class="sourceLineNo">1312</span>     */<a name="line.1312"></a>
+<span class="sourceLineNo">1313</span>    protected static ForkJoinTask&lt;?&gt; pollNextLocalTask() {<a name="line.1313"></a>
+<span class="sourceLineNo">1314</span>        return ((ForkJoinWorkerThread) Thread.currentThread())<a name="line.1314"></a>
+<span class="sourceLineNo">1315</span>            .workQueue.nextLocalTask();<a name="line.1315"></a>
+<span class="sourceLineNo">1316</span>    }<a name="line.1316"></a>
+<span class="sourceLineNo">1317</span><a name="line.1317"></a>
+<span class="sourceLineNo">1318</span>    /**<a name="line.1318"></a>
+<span class="sourceLineNo">1319</span>     * Unschedules and returns, without executing, the next task<a name="line.1319"></a>
+<span class="sourceLineNo">1320</span>     * queued by the current thread but not yet executed, if one is<a name="line.1320"></a>
+<span class="sourceLineNo">1321</span>     * available, or if not available, a task that was forked by some<a name="line.1321"></a>
+<span class="sourceLineNo">1322</span>     * other thread, if available. Availability may be transient, so a<a name="line.1322"></a>
+<span class="sourceLineNo">1323</span>     * {@code null} result does not necessarily imply quiescence<a name="line.1323"></a>
+<span class="sourceLineNo">1324</span>     * of the pool this task is operating in.  This method is designed<a name="line.1324"></a>
+<span class="sourceLineNo">1325</span>     * primarily to support extensions, and is unlikely to be useful<a name="line.1325"></a>
+<span class="sourceLineNo">1326</span>     * otherwise.<a name="line.1326"></a>
+<span class="sourceLineNo">1327</span>     *<a name="line.1327"></a>
+<span class="sourceLineNo">1328</span>     * &lt;p&gt;This method may be invoked only from within {@code<a name="line.1328"></a>
+<span class="sourceLineNo">1329</span>     * ForkJoinPool} computations (as may be determined using method<a name="line.1329"></a>
+<span class="sourceLineNo">1330</span>     * {@link #inForkJoinPool}).  Attempts to invoke in other contexts<a name="line.1330"></a>
+<span class="sourceLineNo">1331</span>     * result in exceptions or errors, possibly including {@code<a name="line.1331"></a>
+<span class="sourceLineNo">1332</span>     * ClassCastException}.<a name="line.1332"></a>
+<span class="sourceLineNo">1333</span>     *<a name="line.1333"></a>
+<span class="sourceLineNo">1334</span>     * @return a task, or {@code null} if none are available<a name="line.1334"></a>
+<span class="sourceLineNo">1335</span>     */<a name="line.1335"></a>
+<span class="sourceLineNo">1336</span>    protected static ForkJoinTask&lt;?&gt; pollTask() {<a name="line.1336"></a>
+<span class="sourceLineNo">1337</span>        ForkJoinWorkerThread wt =<a name="line.1337"></a>
+<span class="sourceLineNo">1338</span>            (ForkJoinWorkerThread)Thread.currentThread();<a name="line.1338"></a>
+<span class="sourceLineNo">1339</span>        return wt.pool.nextTaskFor(wt.workQueue);<a name="line.1339"></a>
+<span class="sourceLineNo">1340</span>    }<a name="line.1340"></a>
+<span class="sourceLineNo">1341</span><a name="line.1341"></a>
+<span class="sourceLineNo">1342</span>    // tag operations<a name="line.1342"></a>
+<span class="sourceLineNo">1343</span><a name="line.1343"></a>
+<span class="sourceLineNo">1344</span>    /**<a name="line.1344"></a>
+<span class="sourceLineNo">1345</span>     * Returns the tag for this task.<a name="line.1345"></a>
+<span class="sourceLineNo">1346</span>     *<a name="line.1346"></a>
+<span class="sourceLineNo">1347</span>     * @return the tag for this task<a name="line.1347"></a>
+<span class="sourceLineNo">1348</span>     * @since 1.8<a name="line.1348"></a>
+<span class="sourceLineNo">1349</span>     */<a name="line.1349"></a>
+<span class="sourceLineNo">1350</span>    public final short getForkJoinTaskTag() {<a name="line.1350"></a>
+<span class="sourceLineNo">1351</span>        return (short)status;<a name="line.1351"></a>
+<span class="sourceLineNo">1352</span>    }<a name="line.1352"></a>
+<span class="sourceLineNo">1353</span><a name="line.1353"></a>
+<span class="sourceLineNo">1354</span>    /**<a name="line.1354"></a>
+<span class="sourceLineNo">1355</span>     * Atomically sets the tag value for this task.<a name="line.1355"></a>
+<span class="sourceLineNo">1356</span>     *<a name="line.1356"></a>
+<span class="sourceLineNo">1357</span>     * @param tag the tag value<a name="line.1357"></a>
+<span class="sourceLineNo">1358</span>     * @return the previous value of the tag<a name="line.1358"></a>
+<span class="sourceLineNo">1359</span>     * @since 1.8<a name="line.1359"></a>
+<span class="sourceLineNo">1360</span>     */<a name="line.1360"></a>
+<span class="sourceLineNo">1361</span>    public final short setForkJoinTaskTag(short tag) {<a name="line.1361"></a>
+<span class="sourceLineNo">1362</span>        for (int s;;) {<a name="line.1362"></a>
+<span class="sourceLineNo">1363</span>            if (U.compareAndSwapInt(this, STATUS, s = status,<a name="line.1363"></a>
+<span class="sourceLineNo">1364</span>                                    (s &amp; ~SMASK) | (tag &amp; SMASK)))<a name="line.1364"></a>
+<span class="sourceLineNo">1365</span>                return (short)s;<a name="line.1365"></a>
+<span class="sourceLineNo">1366</span>        }<a name="line.1366"></a>
+<span class="sourceLineNo">1367</span>    }<a name="line.1367"></a>
+<span class="sourceLineNo">1368</span><a name="line.1368"></a>
+<span class="sourceLineNo">1369</span>    /**<a name="line.1369"></a>
+<span class="sourceLineNo">1370</span>     * Atomically conditionally sets the tag value for this task.<a name="line.1370"></a>
+<span class="sourceLineNo">1371</span>     * Among other applications, tags can be used as visit markers<a name="line.1371"></a>
+<span class="sourceLineNo">1372</span>     * in tasks operating on graphs, as in methods that check: {@code<a name="line.1372"></a>
+<span class="sourceLineNo">1373</span>     * if (task.compareAndSetForkJoinTaskTag((short)0, (short)1))}<a name="line.1373"></a>
+<span class="sourceLineNo">1374</span>     * before processing, otherwise exiting because the node has<a name="line.1374"></a>
+<span class="sourceLineNo">1375</span>     * already been visited.<a name="line.1375"></a>
+<span class="sourceLineNo">1376</span>     *<a name="line.1376"></a>
+<span class="sourceLineNo">1377</span>     * @param e the expected tag value<a name="line.1377"></a>
+<span class="sourceLineNo">1378</span>     * @param tag the new tag value<a name="line.1378"></a>
+<span class="sourceLineNo">1379</span>     * @return true if successful; i.e., the current value was<a name="line.1379"></a>
+<span class="sourceLineNo">1380</span>     * equal to e and is now tag.<a name="line.1380"></a>
+<span class="sourceLineNo">1381</span>     * @since 1.8<a name="line.1381"></a>
+<span class="sourceLineNo">1382</span>     */<a name="line.1382"></a>
+<span class="sourceLineNo">1383</span>    public final boolean compareAndSetForkJoinTaskTag(short e, short tag) {<a name="line.1383"></a>
+<span class="sourceLineNo">1384</span>        for (int s;;) {<a name="line.1384"></a>
+<span class="sourceLineNo">1385</span>            if ((short)(s = status) != e)<a name="line.1385"></a>
+<span class="sourceLineNo">1386</span>                return false;<a name="line.1386"></a>
+<span class="sourceLineNo">1387</span>            if (U.compareAndSwapInt(this, STATUS, s,<a name="line.1387"></a>
+<span class="sourceLineNo">1388</span>                                    (s &amp; ~SMASK) | (tag &amp; SMASK)))<a name="line.1388"></a>
+<span class="sourceLineNo">1389</span>                return true;<a name="line.1389"></a>
+<span class="sourceLineNo">1390</span>        }<a name="line.1390"></a>
+<span class="sourceLineNo">1391</span>    }<a name="line.1391"></a>
+<span class="sourceLineNo">1392</span><a name="line.1392"></a>
+<span class="sourceLineNo">1393</span>    /**<a name="line.1393"></a>
+<span class="sourceLineNo">1394</span>     * Adaptor for Runnables. This implements RunnableFuture<a name="line.1394"></a>
+<span class="sourceLineNo">1395</span>     * to be compliant with AbstractExecutorService constraints<a name="line.1395"></a>
+<span class="sourceLineNo">1396</span>     * when used in ForkJoinPool.<a name="line.1396"></a>
+<span class="sourceLineNo">1397</span>     */<a name="line.1397"></a>
+<span class="sourceLineNo">1398</span>    static final class AdaptedRunnable&lt;T&gt; extends ForkJoinTask&lt;T&gt;<a name="line.1398"></a>
+<span class="sourceLineNo">1399</span>        implements RunnableFuture&lt;T&gt; {<a name="line.1399"></a>
+<span class="sourceLineNo">1400</span>        final Runnable runnable;<a name="line.1400"></a>
+<span class="sourceLineNo">1401</span>        T result;<a name="line.1401"></a>
+<span class="sourceLineNo">1402</span>        AdaptedRunnable(Runnable runnable, T result) {<a name="line.1402"></a>
+<span class="sourceLineNo">1403</span>            if (runnable == null) throw new NullPointerException();<a name="line.1403"></a>
+<span class="sourceLineNo">1404</span>            this.runnable = runnable;<a name="line.1404"></a>
+<span class="sourceLineNo">1405</span>            this.result = result; // OK to set this even before completion<a name="line.1405"></a>
+<span class="sourceLineNo">1406</span>        }<a name="line.1406"></a>
+<span class="sourceLineNo">1407</span>        public final T getRawResult() { return result; }<a name="line.1407"></a>
+<span class="sourceLineNo">1408</span>        public final void setRawResult(T v) { result = v; }<a name="line.1408"></a>
+<span class="sourceLineNo">1409</span>        public final boolean exec() { runnable.run(); return true; }<a name="line.1409"></a>
+<span class="sourceLineNo">1410</span>        public final void run() { invoke(); }<a name="line.1410"></a>
+<span class="sourceLineNo">1411</span>        private static final long serialVersionUID = 5232453952276885070L;<a name="line.1411"></a>
+<span class="sourceLineNo">1412</span>    }<a name="line.1412"></a>
+<span class="sourceLineNo">1413</span><a name="line.1413"></a>
+<span class="sourceLineNo">1414</span>    /**<a name="line.1414"></a>
+<span class="sourceLineNo">1415</span>     * Adaptor for Runnables without results<a name="line.1415"></a>
+<span class="sourceLineNo">1416</span>     */<a name="line.1416"></a>
+<span class="sourceLineNo">1417</span>    static final class AdaptedRunnableAction extends ForkJoinTask&lt;Void&gt;<a name="line.1417"></a>
+<span class="sourceLineNo">1418</span>        implements RunnableFuture&lt;Void&gt; {<a name="line.1418"></a>
+<span class="sourceLineNo">1419</span>        final Runnable runnable;<a name="line.1419"></a>
+<span class="sourceLineNo">1420</span>        AdaptedRunnableAction(Runnable runnable) {<a name="line.1420"></a>
+<span class="sourceLineNo">1421</span>            if (runnable == null) throw new NullPointerException();<a name="line.1421"></a>
+<span class="sourceLineNo">1422</span>            this.runnable = runnable;<a name="line.1422"></a>
+<span class="sourceLineNo">1423</span>        }<a name="line.1423"></a>
+<span class="sourceLineNo">1424</span>        public final Void getRawResult() { return null; }<a name="line.1424"></a>
+<span class="sourceLineNo">1425</span>        public final void setRawResult(Void v) { }<a name="line.1425"></a>
+<span class="sourceLineNo">1426</span>        public final boolean exec() { runnable.run(); return true; }<a name="line.1426"></a>
+<span class="sourceLineNo">1427</span>        public final void run() { invoke(); }<a name="line.1427"></a>
+<span class="sourceLineNo">1428</span>        private static final long serialVersionUID = 5232453952276885070L;<a name="line.1428"></a>
+<span class="sourceLineNo">1429</span>    }<a name="line.1429"></a>
+<span class="sourceLineNo">1430</span><a name="line.1430"></a>
+<span class="sourceLineNo">1431</span>    /**<a name="line.1431"></a>
+<span class="sourceLineNo">1432</span>     * Adaptor for Callables<a name="line.1432"></a>
+<span class="sourceLineNo">1433</span>     */<a name="line.1433"></a>
+<span class="sourceLineNo">1434</span>    static final class AdaptedCallable&lt;T&gt; extends ForkJoinTask&lt;T&gt;<a name="line.1434"></a>
+<span class="sourceLineNo">1435</span>        implements RunnableFuture&lt;T&gt; {<a name="line.1435"></a>
+<span class="sourceLineNo">1436</span>        final Callable&lt;? extends T&gt; callable;<a name="line.1436"></a>
+<span class="sourceLineNo">1437</span>        T result;<a name="line.1437"></a>
+<span class="sourceLineNo">1438</span>        AdaptedCallable(Callable&lt;? extends T&gt; callable) {<a name="line.1438"></a>
+<span class="sourceLineNo">1439</span>            if (callable == null) throw new NullPointerException();<a name="line.1439"></a>
+<span class="sourceLineNo">1440</span>            this.callable = callable;<a name="line.1440"></a>
+<span class="sourceLineNo">1441</span>        }<a name="line.1441"></a>
+<span class="sourceLineNo">1442</span>        public final T getRawResult() { return result; }<a name="line.1442"></a>
+<span class="sourceLineNo">1443</span>        public final void setRawResult(T v) { result = v; }<a name="line.1443"></a>
+<span class="sourceLineNo">1444</span>        public final boolean exec() {<a name="line.1444"></a>
+<span class="sourceLineNo">1445</span>            try {<a name="line.1445"></a>
+<span class="sourceLineNo">1446</span>                result = callable.call();<a name="line.1446"></a>
+<span class="sourceLineNo">1447</span>                return true;<a name="line.1447"></a>
+<span class="sourceLineNo">1448</span>            } catch (Error err) {<a name="line.1448"></a>
+<span class="sourceLineNo">1449</span>                throw err;<a name="line.1449"></a>
+<span class="sourceLineNo">1450</span>            } catch (RuntimeException rex) {<a name="line.1450"></a>
+<span class="sourceLineNo">1451</span>                throw rex;<a name="line.1451"></a>
+<span class="sourceLineNo">1452</span>            } catch (Exception ex) {<a name="line.1452"></a>
+<span class="sourceLineNo">1453</span>                throw new RuntimeException(ex);<a name="line.1453"></a>
+<span class="sourceLineNo">1454</span>            }<a name="line.1454"></a>
+<span class="sourceLineNo">1455</span>        }<a name="line.1455"></a>
+<span class="sourceLineNo">1456</span>        public final void run() { invoke(); }<a name="line.1456"></a>
+<span class="sourceLineNo">1457</span>        private static final long serialVersionUID = 2838392045355241008L;<a name="line.1457"></a>
+<span class="sourceLineNo">1458</span>    }<a name="line.1458"></a>
+<span class="sourceLineNo">1459</span><a name="line.1459"></a>
+<span class="sourceLineNo">1460</span>    /**<a name="line.1460"></a>
+<span class="sourceLineNo">1461</span>     * Returns a new {@code ForkJoinTask} that performs the {@code run}<a name="line.1461"></a>
+<span class="sourceLineNo">1462</span>     * method of the given {@code Runnable} as its action, and returns<a name="line.1462"></a>
+<span class="sourceLineNo">1463</span>     * a null result upon {@link #join}.<a name="line.1463"></a>
+<span class="sourceLineNo">1464</span>     *<a name="line.1464"></a>
+<span class="sourceLineNo">1465</span>     * @param runnable the runnable action<a name="line.1465"></a>
+<span class="sourceLineNo">1466</span>     * @return the task<a name="line.1466"></a>
+<span class="sourceLineNo">1467</span>     */<a name="line.1467"></a>
+<span class="sourceLineNo">1468</span>    public static ForkJoinTask&lt;?&gt; adapt(Runnable runnable) {<a name="line.1468"></a>
+<span class="sourceLineNo">1469</span>        return new AdaptedRunnableAction(runnable);<a name="line.1469"></a>
+<span class="sourceLineNo">1470</span>    }<a name="line.1470"></a>
+<span class="sourceLineNo">1471</span><a name="line.1471"></a>
+<span class="sourceLineNo">1472</span>    /**<a name="line.1472"></a>
+<span class="sourceLineNo">1473</span>     * Returns a new {@code ForkJoinTask} that performs the {@code run}<a name="line.1473"></a>
+<span class="sourceLineNo">1474</span>     * method of the given {@code Runnable} as its action, and returns<a name="line.1474"></a>
+<span class="sourceLineNo">1475</span>     * the given result upon {@link #join}.<a name="line.1475"></a>
+<span class="sourceLineNo">1476</span>     *<a name="line.1476"></a>
+<span class="sourceLineNo">1477</span>     * @param runnable the runnable action<a name="line.1477"></a>
+<span class="sourceLineNo">1478</span>     * @param result the result upon completion<a name="line.1478"></a>
+<span class="sourceLineNo">1479</span>     * @return the task<a name="line.1479"></a>
+<span class="sourceLineNo">1480</span>     */<a name="line.1480"></a>
+<span class="sourceLineNo">1481</span>    public static &lt;T&gt; ForkJoinTask&lt;T&gt; adapt(Runnable runnable, T result) {<a name="line.1481"></a>
+<span class="sourceLineNo">1482</span>        return new AdaptedRunnable&lt;T&gt;(runnable, result);<a name="line.1482"></a>
+<span class="sourceLineNo">1483</span>    }<a name="line.1483"></a>
+<span class="sourceLineNo">1484</span><a name="line.1484"></a>
+<span class="sourceLineNo">1485</span>    /**<a name="line.1485"></a>
+<span class="sourceLineNo">1486</span>     * Returns a new {@code ForkJoinTask} that performs the {@code call}<a name="line.1486"></a>
+<span class="sourceLineNo">1487</span>     * method of the given {@code Callable} as its action, and returns<a name="line.1487"></a>
+<span class="sourceLineNo">1488</span>     * its result upon {@link #join}, translating any checked exceptions<a name="line.1488"></a>
+<span class="sourceLineNo">1489</span>     * encountered into {@code RuntimeException}.<a name="line.1489"></a>
+<span class="sourceLineNo">1490</span>     *<a name="line.1490"></a>
+<span class="sourceLineNo">1491</span>     * @param callable the callable action<a name="line.1491"></a>
+<span class="sourceLineNo">1492</span>     * @return the task<a name="line.1492"></a>
+<span class="sourceLineNo">1493</span>     */<a name="line.1493"></a>
+<span class="sourceLineNo">1494</span>    public static &lt;T&gt; ForkJoinTask&lt;T&gt; adapt(Callable&lt;? extends T&gt; callable) {<a name="line.1494"></a>
+<span class="sourceLineNo">1495</span>        return new AdaptedCallable&lt;T&gt;(callable);<a name="line.1495"></a>
+<span class="sourceLineNo">1496</span>    }<a name="line.1496"></a>
+<span class="sourceLineNo">1497</span><a name="line.1497"></a>
+<span class="sourceLineNo">1498</span>    // Serialization support<a name="line.1498"></a>
+<span class="sourceLineNo">1499</span><a name="line.1499"></a>
+<span class="sourceLineNo">1500</span>    private static final long serialVersionUID = -7721805057305804111L;<a name="line.1500"></a>
+<span class="sourceLineNo">1501</span><a name="line.1501"></a>
+<span class="sourceLineNo">1502</span>    /**<a name="line.1502"></a>
+<span class="sourceLineNo">1503</span>     * Saves this task to a stream (that is, serializes it).<a name="line.1503"></a>
+<span class="sourceLineNo">1504</span>     *<a name="line.1504"></a>
+<span class="sourceLineNo">1505</span>     * @serialData the current run status and the exception thrown<a name="line.1505"></a>
+<span class="sourceLineNo">1506</span>     * during execution, or {@code null} if none<a name="line.1506"></a>
+<span class="sourceLineNo">1507</span>     */<a name="line.1507"></a>
+<span class="sourceLineNo">1508</span>    private void writeObject(java.io.ObjectOutputStream s)<a name="line.1508"></a>
+<span class="sourceLineNo">1509</span>        throws java.io.IOException {<a name="line.1509"></a>
+<span class="sourceLineNo">1510</span>        s.defaultWriteObject();<a name="line.1510"></a>
+<span class="sourceLineNo">1511</span>        s.writeObject(getException());<a name="line.1511"></a>
+<span class="sourceLineNo">1512</span>    }<a name="line.1512"></a>
+<span class="sourceLineNo">1513</span><a name="line.1513"></a>
+<span class="sourceLineNo">1514</span>    /**<a name="line.1514"></a>
+<span class="sourceLineNo">1515</span>     * Reconstitutes this task from a stream (that is, deserializes it).<a name="line.1515"></a>
+<span class="sourceLineNo">1516</span>     */<a name="line.1516"></a>
+<span class="sourceLineNo">1517</span>    private void readObject(java.io.ObjectInputStream s)<a name="line.1517"></a>
+<span class="sourceLineNo">1518</span>        throws java.io.IOException, ClassNotFoundException {<a name="line.1518"></a>
+<span class="sourceLineNo">1519</span>        s.defaultReadObject();<a name="line.1519"></a>
+<span class="sourceLineNo">1520</span>        Object ex = s.readObject();<a name="line.1520"></a>
+<span class="sourceLineNo">1521</span>        if (ex != null)<a name="line.1521"></a>
+<span class="sourceLineNo">1522</span>            setExceptionalCompletion((Throwable)ex);<a name="line.1522"></a>
+<span class="sourceLineNo">1523</span>    }<a name="line.1523"></a>
+<span class="sourceLineNo">1524</span><a name="line.1524"></a>
+<span class="sourceLineNo">1525</span>    // Unsafe mechanics<a name="line.1525"></a>
+<span class="sourceLineNo">1526</span>    private static final sun.misc.Unsafe U;<a name="line.1526"></a>
+<span class="sourceLineNo">1527</span>    private static final long STATUS;<a name="line.1527"></a>
+<span class="sourceLineNo">1528</span>    static {<a name="line.1528"></a>
+<span class="sourceLineNo">1529</span>        exceptionTableLock = new ReentrantLock();<a name="line.1529"></a>
+<span class="sourceLineNo">1530</span>        exceptionTableRefQueue = new ReferenceQueue&lt;Object&gt;();<a name="line.1530"></a>
+<span class="sourceLineNo">1531</span>        exceptionTable = new ExceptionNode[EXCEPTION_MAP_CAPACITY];<a name="line.1531"></a>
+<span class="sourceLineNo">1532</span>        try {<a name="line.1532"></a>
+<span class="sourceLineNo">1533</span>            U = getUnsafe();<a name="line.1533"></a>
+<span class="sourceLineNo">1534</span>            STATUS = U.objectFieldOffset<a name="line.1534"></a>
+<span class="sourceLineNo">1535</span>                (ForkJoinTask.class.getDeclaredField("status"));<a name="line.1535"></a>
+<span class="sourceLineNo">1536</span>        } catch (Exception e) {<a name="line.1536"></a>
+<span class="sourceLineNo">1537</span>            throw new Error(e);<a name="line.1537"></a>
+<span class="sourceLineNo">1538</span>        }<a name="line.1538"></a>
+<span class="sourceLineNo">1539</span>    }<a name="line.1539"></a>
+<span class="sourceLineNo">1540</span><a name="line.1540"></a>
+<span class="sourceLineNo">1541</span>    /**<a name="line.1541"></a>
+<span class="sourceLineNo">1542</span>     * Returns a sun.misc.Unsafe.  Suitable for use in a 3rd party package.<a name="line.1542"></a>
+<span class="sourceLineNo">1543</span>     * Replace with a simple call to Unsafe.getUnsafe when integrating<a name="line.1543"></a>
+<span class="sourceLineNo">1544</span>     * into a jdk.<a name="line.1544"></a>
+<span class="sourceLineNo">1545</span>     *<a name="line.1545"></a>
+<span class="sourceLineNo">1546</span>     * @return a sun.misc.Unsafe<a name="line.1546"></a>
+<span class="sourceLineNo">1547</span>     */<a name="line.1547"></a>
+<span class="sourceLineNo">1548</span>    private static sun.misc.Unsafe getUnsafe() {<a name="line.1548"></a>
+<span class="sourceLineNo">1549</span>        try {<a name="line.1549"></a>
+<span class="sourceLineNo">1550</span>            return sun.misc.Unsafe.getUnsafe();<a name="line.1550"></a>
+<span class="sourceLineNo">1551</span>        } catch (SecurityException se) {<a name="line.1551"></a>
+<span class="sourceLineNo">1552</span>            try {<a name="line.1552"></a>
+<span class="sourceLineNo">1553</span>                return java.security.AccessController.doPrivileged<a name="line.1553"></a>
+<span class="sourceLineNo">1554</span>                    (new java.security<a name="line.1554"></a>
+<span class="sourceLineNo">1555</span>                     .PrivilegedExceptionAction&lt;sun.misc.Unsafe&gt;() {<a name="line.1555"></a>
+<span class="sourceLineNo">1556</span>                        public sun.misc.Unsafe run() throws Exception {<a name="line.1556"></a>
+<span class="sourceLineNo">1557</span>                            java.lang.reflect.Field f = sun.misc<a name="line.1557"></a>
+<span class="sourceLineNo">1558</span>                                .Unsafe.class.getDeclaredField("theUnsafe");<a name="line.1558"></a>
+<span class="sourceLineNo">1559</span>                            f.setAccessible(true);<a name="line.1559"></a>
+<span class="sourceLineNo">1560</span>                            return (sun.misc.Unsafe) f.get(null);<a name="line.1560"></a>
+<span class="sourceLineNo">1561</span>                        }});<a name="line.1561"></a>
+<span class="sourceLineNo">1562</span>            } catch (java.security.PrivilegedActionException e) {<a name="line.1562"></a>
+<span class="sourceLineNo">1563</span>                throw new RuntimeException("Could not initialize intrinsics",<a name="line.1563"></a>
+<span class="sourceLineNo">1564</span>                                           e.getCause());<a name="line.1564"></a>
+<span class="sourceLineNo">1565</span>            }<a name="line.1565"></a>
+<span class="sourceLineNo">1566</span>        }<a name="line.1566"></a>
+<span class="sourceLineNo">1567</span>    }<a name="line.1567"></a>
+<span class="sourceLineNo">1568</span>}<a name="line.1568"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Written by Doug Lea with assistance from members of JCP JSR-166<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Expert Group and released to the public domain, as explained at<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * http://creativecommons.org/publicdomain/zero/1.0/<a name="line.4"></a>
+<span class="sourceLineNo">005</span> */<a name="line.5"></a>
+<span class="sourceLineNo">006</span><a name="line.6"></a>
+<span class="sourceLineNo">007</span>package org.elasticsearch.common.util.concurrent.jsr166y;<a name="line.7"></a>
+<span class="sourceLineNo">008</span>import java.util.concurrent.*;<a name="line.8"></a>
+<span class="sourceLineNo">009</span><a name="line.9"></a>
+<span class="sourceLineNo">010</span>/**<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * A {@link BlockingQueue} in which producers may wait for consumers<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * to receive elements.  A {@code TransferQueue} may be useful for<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * example in message passing applications in which producers<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * sometimes (using method {@link #transfer}) await receipt of<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * elements by consumers invoking {@code take} or {@code poll}, while<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * at other times enqueue elements (via method {@code put}) without<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * waiting for receipt.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * {@linkplain #tryTransfer(Object) Non-blocking} and<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * {@linkplain #tryTransfer(Object,long,TimeUnit) time-out} versions of<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * {@code tryTransfer} are also available.<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * A {@code TransferQueue} may also be queried, via {@link<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * #hasWaitingConsumer}, whether there are any threads waiting for<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * items, which is a converse analogy to a {@code peek} operation.<a name="line.23"></a>
+<span class="sourceLineNo">024</span> *<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * &lt;p&gt;Like other blocking queues, a {@code TransferQueue} may be<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * capacity bounded.  If so, an attempted transfer operation may<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * initially block waiting for available space, and/or subsequently<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * block waiting for reception by a consumer.  Note that in a queue<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * with zero capacity, such as {@link SynchronousQueue}, {@code put}<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * and {@code transfer} are effectively synonymous.<a name="line.30"></a>
+<span class="sourceLineNo">031</span> *<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * &lt;p&gt;This interface is a member of the<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * &lt;a href="{@docRoot}/../technotes/guides/collections/index.html"&gt;<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * Java Collections Framework&lt;/a&gt;.<a name="line.34"></a>
+<span class="sourceLineNo">035</span> *<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * @since 1.7<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * @author Doug Lea<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * @param &lt;E&gt; the type of elements held in this collection<a name="line.38"></a>
+<span class="sourceLineNo">039</span> */<a name="line.39"></a>
+<span class="sourceLineNo">040</span>public interface TransferQueue&lt;E&gt; extends BlockingQueue&lt;E&gt; {<a name="line.40"></a>
+<span class="sourceLineNo">041</span>    /**<a name="line.41"></a>
+<span class="sourceLineNo">042</span>     * Transfers the element to a waiting consumer immediately, if possible.<a name="line.42"></a>
+<span class="sourceLineNo">043</span>     *<a name="line.43"></a>
+<span class="sourceLineNo">044</span>     * &lt;p&gt;More precisely, transfers the specified element immediately<a name="line.44"></a>
+<span class="sourceLineNo">045</span>     * if there exists a consumer already waiting to receive it (in<a name="line.45"></a>
+<span class="sourceLineNo">046</span>     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),<a name="line.46"></a>
+<span class="sourceLineNo">047</span>     * otherwise returning {@code false} without enqueuing the element.<a name="line.47"></a>
+<span class="sourceLineNo">048</span>     *<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     * @param e the element to transfer<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * @return {@code true} if the element was transferred, else<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     *         {@code false}<a name="line.51"></a>
+<span class="sourceLineNo">052</span>     * @throws ClassCastException if the class of the specified element<a name="line.52"></a>
+<span class="sourceLineNo">053</span>     *         prevents it from being added to this queue<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     * @throws NullPointerException if the specified element is null<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     * @throws IllegalArgumentException if some property of the specified<a name="line.55"></a>
+<span class="sourceLineNo">056</span>     *         element prevents it from being added to this queue<a name="line.56"></a>
+<span class="sourceLineNo">057</span>     */<a name="line.57"></a>
+<span class="sourceLineNo">058</span>    boolean tryTransfer(E e);<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>    /**<a name="line.60"></a>
+<span class="sourceLineNo">061</span>     * Transfers the element to a consumer, waiting if necessary to do so.<a name="line.61"></a>
+<span class="sourceLineNo">062</span>     *<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * &lt;p&gt;More precisely, transfers the specified element immediately<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * if there exists a consumer already waiting to receive it (in<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     * else waits until the element is received by a consumer.<a name="line.66"></a>
+<span class="sourceLineNo">067</span>     *<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * @param e the element to transfer<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * @throws InterruptedException if interrupted while waiting,<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     *         in which case the element is not left enqueued<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * @throws ClassCastException if the class of the specified element<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     *         prevents it from being added to this queue<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * @throws NullPointerException if the specified element is null<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     * @throws IllegalArgumentException if some property of the specified<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     *         element prevents it from being added to this queue<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    void transfer(E e) throws InterruptedException;<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>    /**<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     * Transfers the element to a consumer if it is possible to do so<a name="line.80"></a>
+<span class="sourceLineNo">081</span>     * before the timeout elapses.<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     *<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * &lt;p&gt;More precisely, transfers the specified element immediately<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * if there exists a consumer already waiting to receive it (in<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * {@link #take} or timed {@link #poll(long,TimeUnit) poll}),<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * else waits until the element is received by a consumer,<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * returning {@code false} if the specified wait time elapses<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * before the element can be transferred.<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     *<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * @param e the element to transfer<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * @param timeout how long to wait before giving up, in units of<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     *        {@code unit}<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     * @param unit a {@code TimeUnit} determining how to interpret the<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     *        {@code timeout} parameter<a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * @return {@code true} if successful, or {@code false} if<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     *         the specified waiting time elapses before completion,<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     *         in which case the element is not left enqueued<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * @throws InterruptedException if interrupted while waiting,<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     *         in which case the element is not left enqueued<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * @throws ClassCastException if the class of the specified element<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     *         prevents it from being added to this queue<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * @throws NullPointerException if the specified element is null<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     * @throws IllegalArgumentException if some property of the specified<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     *         element prevents it from being added to this queue<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     */<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    boolean tryTransfer(E e, long timeout, TimeUnit unit)<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        throws InterruptedException;<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>    /**<a name="line.109"></a>
+<span class="sourceLineNo">110</span>     * Returns {@code true} if there is at least one consumer waiting<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * to receive an element via {@link #take} or<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     * timed {@link #poll(long,TimeUnit) poll}.<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * The return value represents a momentary state of affairs.<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     *<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * @return {@code true} if there is at least one waiting consumer<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     */<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    boolean hasWaitingConsumer();<a name="line.117"></a>
+<span class="sourceLineNo">118</span><a name="line.118"></a>
+<span class="sourceLineNo">119</span>    /**<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * Returns an estimate of the number of consumers waiting to<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * receive elements via {@link #take} or timed<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * {@link #poll(long,TimeUnit) poll}.  The return value is an<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * approximation of a momentary state of affairs, that may be<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * inaccurate if consumers have completed or given up waiting.<a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * The value may be useful for monitoring and heuristics, but<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     * not for synchronization control.  Implementations of this<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * method are likely to be noticeably slower than those for<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     * {@link #hasWaitingConsumer}.<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     *<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     * @return the number of consumers waiting to receive elements<a name="line.130"></a>
+<span class="sourceLineNo">131</span>     */<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    int getWaitingConsumerCount();<a name="line.132"></a>
+<span class="sourceLineNo">133</span>}<a name="line.133"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

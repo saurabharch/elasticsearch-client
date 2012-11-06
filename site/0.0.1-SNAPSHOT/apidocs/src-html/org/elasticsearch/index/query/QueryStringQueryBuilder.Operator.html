@@ -1,0 +1,462 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Licensed to ElasticSearch and Shay Banon under one<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * or more contributor license agreements.  See the NOTICE file<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * distributed with this work for additional information<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * regarding copyright ownership. ElasticSearch licenses this<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * file to you under the Apache License, Version 2.0 (the<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * "License"); you may not use this file except in compliance<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * with the License.  You may obtain a copy of the License at<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *    http://www.apache.org/licenses/LICENSE-2.0<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * Unless required by applicable law or agreed to in writing,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * software distributed under the License is distributed on an<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * KIND, either express or implied.  See the License for the<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * specific language governing permissions and limitations<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * under the License.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> */<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>package org.elasticsearch.index.query;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>import gnu.trove.impl.Constants;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import gnu.trove.map.hash.TObjectFloatHashMap;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.elasticsearch.common.xcontent.XContentBuilder;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.io.IOException;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import java.util.List;<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>import static com.google.common.collect.Lists.newArrayList;<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>/**<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * A query that parses a query string and runs it. There are two modes that this operates. The first,<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * when no field is added (using {@link #field(String)}, will run the query once and non prefixed fields<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * will use the {@link #defaultField(String)} set. The second, when one or more fields are added<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * (using {@link #field(String)}), will run the parsed query against the provided fields, and combine<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * them either using DisMax or a plain boolean query (see {@link #useDisMax(boolean)}).<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * &lt;p/&gt;<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * (shay.baon)<a name="line.38"></a>
+<span class="sourceLineNo">039</span> */<a name="line.39"></a>
+<span class="sourceLineNo">040</span>public class QueryStringQueryBuilder extends BaseQueryBuilder implements BoostableQueryBuilder&lt;QueryStringQueryBuilder&gt; {<a name="line.40"></a>
+<span class="sourceLineNo">041</span><a name="line.41"></a>
+<span class="sourceLineNo">042</span>    public static final String NAME = "query_string";<a name="line.42"></a>
+<span class="sourceLineNo">043</span><a name="line.43"></a>
+<span class="sourceLineNo">044</span>    public static enum Operator {<a name="line.44"></a>
+<span class="sourceLineNo">045</span>        OR,<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        AND<a name="line.46"></a>
+<span class="sourceLineNo">047</span>    }<a name="line.47"></a>
+<span class="sourceLineNo">048</span><a name="line.48"></a>
+<span class="sourceLineNo">049</span>    private final String queryString;<a name="line.49"></a>
+<span class="sourceLineNo">050</span><a name="line.50"></a>
+<span class="sourceLineNo">051</span>    private String defaultField;<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>    private Operator defaultOperator;<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    private String analyzer;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    private String quoteAnalyzer;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>    private String quoteFieldSuffix;<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>    private Boolean autoGeneratePhraseQueries;<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>    private Boolean allowLeadingWildcard;<a name="line.62"></a>
+<span class="sourceLineNo">063</span><a name="line.63"></a>
+<span class="sourceLineNo">064</span>    private Boolean lowercaseExpandedTerms;<a name="line.64"></a>
+<span class="sourceLineNo">065</span><a name="line.65"></a>
+<span class="sourceLineNo">066</span>    private Boolean enablePositionIncrements;<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>    private Boolean analyzeWildcard;<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>    private float boost = -1;<a name="line.71"></a>
+<span class="sourceLineNo">072</span><a name="line.72"></a>
+<span class="sourceLineNo">073</span>    private float fuzzyMinSim = -1;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    private int fuzzyPrefixLength = -1;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>    private int fuzzyMaxExpansions = -1;<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    private String fuzzyRewrite;<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>    private int phraseSlop = -1;<a name="line.78"></a>
+<span class="sourceLineNo">079</span><a name="line.79"></a>
+<span class="sourceLineNo">080</span>    private List&lt;String&gt; fields;<a name="line.80"></a>
+<span class="sourceLineNo">081</span><a name="line.81"></a>
+<span class="sourceLineNo">082</span>    private TObjectFloatHashMap&lt;String&gt; fieldsBoosts;<a name="line.82"></a>
+<span class="sourceLineNo">083</span><a name="line.83"></a>
+<span class="sourceLineNo">084</span>    private Boolean useDisMax;<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>    private float tieBreaker = -1;<a name="line.86"></a>
+<span class="sourceLineNo">087</span><a name="line.87"></a>
+<span class="sourceLineNo">088</span>    private String rewrite = null;<a name="line.88"></a>
+<span class="sourceLineNo">089</span><a name="line.89"></a>
+<span class="sourceLineNo">090</span>    private String minimumShouldMatch;<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    private Boolean lenient;<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>    public QueryStringQueryBuilder(String queryString) {<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        this.queryString = queryString;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>    }<a name="line.96"></a>
+<span class="sourceLineNo">097</span><a name="line.97"></a>
+<span class="sourceLineNo">098</span>    /**<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     * The default field to run against when no prefix field is specified. Only relevant when<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * not explicitly adding fields the query string will run against.<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>    public QueryStringQueryBuilder defaultField(String defaultField) {<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        this.defaultField = defaultField;<a name="line.103"></a>
+<span class="sourceLineNo">104</span>        return this;<a name="line.104"></a>
+<span class="sourceLineNo">105</span>    }<a name="line.105"></a>
+<span class="sourceLineNo">106</span><a name="line.106"></a>
+<span class="sourceLineNo">107</span>    /**<a name="line.107"></a>
+<span class="sourceLineNo">108</span>     * Adds a field to run the query string against.<a name="line.108"></a>
+<span class="sourceLineNo">109</span>     */<a name="line.109"></a>
+<span class="sourceLineNo">110</span>    public QueryStringQueryBuilder field(String field) {<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        if (fields == null) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>            fields = newArrayList();<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        }<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        fields.add(field);<a name="line.114"></a>
+<span class="sourceLineNo">115</span>        return this;<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    }<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>    /**<a name="line.118"></a>
+<span class="sourceLineNo">119</span>     * Adds a field to run the query string against with a specific boost.<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     */<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    public QueryStringQueryBuilder field(String field, float boost) {<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        if (fields == null) {<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            fields = newArrayList();<a name="line.123"></a>
+<span class="sourceLineNo">124</span>        }<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        fields.add(field);<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        if (fieldsBoosts == null) {<a name="line.126"></a>
+<span class="sourceLineNo">127</span>            fieldsBoosts = new TObjectFloatHashMap&lt;String&gt;(Constants.DEFAULT_CAPACITY, Constants.DEFAULT_LOAD_FACTOR, -1);<a name="line.127"></a>
+<span class="sourceLineNo">128</span>        }<a name="line.128"></a>
+<span class="sourceLineNo">129</span>        fieldsBoosts.put(field, boost);<a name="line.129"></a>
+<span class="sourceLineNo">130</span>        return this;<a name="line.130"></a>
+<span class="sourceLineNo">131</span>    }<a name="line.131"></a>
+<span class="sourceLineNo">132</span><a name="line.132"></a>
+<span class="sourceLineNo">133</span>    /**<a name="line.133"></a>
+<span class="sourceLineNo">134</span>     * When more than one field is used with the query string, should queries be combined using<a name="line.134"></a>
+<span class="sourceLineNo">135</span>     * dis max, or boolean query. Defaults to dis max (&lt;tt&gt;true&lt;/tt&gt;).<a name="line.135"></a>
+<span class="sourceLineNo">136</span>     */<a name="line.136"></a>
+<span class="sourceLineNo">137</span>    public QueryStringQueryBuilder useDisMax(boolean useDisMax) {<a name="line.137"></a>
+<span class="sourceLineNo">138</span>        this.useDisMax = useDisMax;<a name="line.138"></a>
+<span class="sourceLineNo">139</span>        return this;<a name="line.139"></a>
+<span class="sourceLineNo">140</span>    }<a name="line.140"></a>
+<span class="sourceLineNo">141</span><a name="line.141"></a>
+<span class="sourceLineNo">142</span>    /**<a name="line.142"></a>
+<span class="sourceLineNo">143</span>     * When more than one field is used with the query string, and combined queries are using<a name="line.143"></a>
+<span class="sourceLineNo">144</span>     * dis max, control the tie breaker for it.<a name="line.144"></a>
+<span class="sourceLineNo">145</span>     */<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    public QueryStringQueryBuilder tieBreaker(float tieBreaker) {<a name="line.146"></a>
+<span class="sourceLineNo">147</span>        this.tieBreaker = tieBreaker;<a name="line.147"></a>
+<span class="sourceLineNo">148</span>        return this;<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    }<a name="line.149"></a>
+<span class="sourceLineNo">150</span><a name="line.150"></a>
+<span class="sourceLineNo">151</span>    /**<a name="line.151"></a>
+<span class="sourceLineNo">152</span>     * Sets the boolean operator of the query parser used to parse the query string.<a name="line.152"></a>
+<span class="sourceLineNo">153</span>     * &lt;p/&gt;<a name="line.153"></a>
+<span class="sourceLineNo">154</span>     * &lt;p&gt;In default mode ({@link FieldQueryBuilder.Operator#OR}) terms without any modifiers<a name="line.154"></a>
+<span class="sourceLineNo">155</span>     * are considered optional: for example &lt;code&gt;capital of Hungary&lt;/code&gt; is equal to<a name="line.155"></a>
+<span class="sourceLineNo">156</span>     * &lt;code&gt;capital OR of OR Hungary&lt;/code&gt;.<a name="line.156"></a>
+<span class="sourceLineNo">157</span>     * &lt;p/&gt;<a name="line.157"></a>
+<span class="sourceLineNo">158</span>     * &lt;p&gt;In {@link FieldQueryBuilder.Operator#AND} mode terms are considered to be in conjunction: the<a name="line.158"></a>
+<span class="sourceLineNo">159</span>     * above mentioned query is parsed as &lt;code&gt;capital AND of AND Hungary&lt;/code&gt;<a name="line.159"></a>
+<span class="sourceLineNo">160</span>     */<a name="line.160"></a>
+<span class="sourceLineNo">161</span>    public QueryStringQueryBuilder defaultOperator(Operator defaultOperator) {<a name="line.161"></a>
+<span class="sourceLineNo">162</span>        this.defaultOperator = defaultOperator;<a name="line.162"></a>
+<span class="sourceLineNo">163</span>        return this;<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    }<a name="line.164"></a>
+<span class="sourceLineNo">165</span><a name="line.165"></a>
+<span class="sourceLineNo">166</span>    /**<a name="line.166"></a>
+<span class="sourceLineNo">167</span>     * The optional analyzer used to analyze the query string. Note, if a field has search analyzer<a name="line.167"></a>
+<span class="sourceLineNo">168</span>     * defined for it, then it will be used automatically. Defaults to the smart search analyzer.<a name="line.168"></a>
+<span class="sourceLineNo">169</span>     */<a name="line.169"></a>
+<span class="sourceLineNo">170</span>    public QueryStringQueryBuilder analyzer(String analyzer) {<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        this.analyzer = analyzer;<a name="line.171"></a>
+<span class="sourceLineNo">172</span>        return this;<a name="line.172"></a>
+<span class="sourceLineNo">173</span>    }<a name="line.173"></a>
+<span class="sourceLineNo">174</span><a name="line.174"></a>
+<span class="sourceLineNo">175</span>    /**<a name="line.175"></a>
+<span class="sourceLineNo">176</span>     * The optional analyzer used to analyze the query string for phrase searches. Note, if a field has search (quote) analyzer<a name="line.176"></a>
+<span class="sourceLineNo">177</span>     * defined for it, then it will be used automatically. Defaults to the smart search analyzer.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>     */<a name="line.178"></a>
+<span class="sourceLineNo">179</span>    public QueryStringQueryBuilder quoteAnalyzer(String analyzer) {<a name="line.179"></a>
+<span class="sourceLineNo">180</span>        this.quoteAnalyzer = analyzer;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>        return this;<a name="line.181"></a>
+<span class="sourceLineNo">182</span>    }<a name="line.182"></a>
+<span class="sourceLineNo">183</span><a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>    /**<a name="line.185"></a>
+<span class="sourceLineNo">186</span>     * Set to true if phrase queries will be automatically generated<a name="line.186"></a>
+<span class="sourceLineNo">187</span>     * when the analyzer returns more than one term from whitespace<a name="line.187"></a>
+<span class="sourceLineNo">188</span>     * delimited text.<a name="line.188"></a>
+<span class="sourceLineNo">189</span>     * NOTE: this behavior may not be suitable for all languages.<a name="line.189"></a>
+<span class="sourceLineNo">190</span>     * &lt;p/&gt;<a name="line.190"></a>
+<span class="sourceLineNo">191</span>     * Set to false if phrase queries should only be generated when<a name="line.191"></a>
+<span class="sourceLineNo">192</span>     * surrounded by double quotes.<a name="line.192"></a>
+<span class="sourceLineNo">193</span>     */<a name="line.193"></a>
+<span class="sourceLineNo">194</span>    public QueryStringQueryBuilder autoGeneratePhraseQueries(boolean autoGeneratePhraseQueries) {<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        this.autoGeneratePhraseQueries = autoGeneratePhraseQueries;<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        return this;<a name="line.196"></a>
+<span class="sourceLineNo">197</span>    }<a name="line.197"></a>
+<span class="sourceLineNo">198</span><a name="line.198"></a>
+<span class="sourceLineNo">199</span>    /**<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     * Should leading wildcards be allowed or not. Defaults to &lt;tt&gt;true&lt;/tt&gt;.<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     */<a name="line.201"></a>
+<span class="sourceLineNo">202</span>    public QueryStringQueryBuilder allowLeadingWildcard(boolean allowLeadingWildcard) {<a name="line.202"></a>
+<span class="sourceLineNo">203</span>        this.allowLeadingWildcard = allowLeadingWildcard;<a name="line.203"></a>
+<span class="sourceLineNo">204</span>        return this;<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    }<a name="line.205"></a>
+<span class="sourceLineNo">206</span><a name="line.206"></a>
+<span class="sourceLineNo">207</span>    /**<a name="line.207"></a>
+<span class="sourceLineNo">208</span>     * Whether terms of wildcard, prefix, fuzzy and range queries are to be automatically<a name="line.208"></a>
+<span class="sourceLineNo">209</span>     * lower-cased or not.  Default is &lt;tt&gt;true&lt;/tt&gt;.<a name="line.209"></a>
+<span class="sourceLineNo">210</span>     */<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    public QueryStringQueryBuilder lowercaseExpandedTerms(boolean lowercaseExpandedTerms) {<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        this.lowercaseExpandedTerms = lowercaseExpandedTerms;<a name="line.212"></a>
+<span class="sourceLineNo">213</span>        return this;<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    }<a name="line.214"></a>
+<span class="sourceLineNo">215</span><a name="line.215"></a>
+<span class="sourceLineNo">216</span>    /**<a name="line.216"></a>
+<span class="sourceLineNo">217</span>     * Set to &lt;tt&gt;true&lt;/tt&gt; to enable position increments in result query. Defaults to<a name="line.217"></a>
+<span class="sourceLineNo">218</span>     * &lt;tt&gt;true&lt;/tt&gt;.<a name="line.218"></a>
+<span class="sourceLineNo">219</span>     * &lt;p/&gt;<a name="line.219"></a>
+<span class="sourceLineNo">220</span>     * &lt;p&gt;When set, result phrase and multi-phrase queries will be aware of position increments.<a name="line.220"></a>
+<span class="sourceLineNo">221</span>     * Useful when e.g. a StopFilter increases the position increment of the token that follows an omitted token.<a name="line.221"></a>
+<span class="sourceLineNo">222</span>     */<a name="line.222"></a>
+<span class="sourceLineNo">223</span>    public QueryStringQueryBuilder enablePositionIncrements(boolean enablePositionIncrements) {<a name="line.223"></a>
+<span class="sourceLineNo">224</span>        this.enablePositionIncrements = enablePositionIncrements;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>        return this;<a name="line.225"></a>
+<span class="sourceLineNo">226</span>    }<a name="line.226"></a>
+<span class="sourceLineNo">227</span><a name="line.227"></a>
+<span class="sourceLineNo">228</span>    /**<a name="line.228"></a>
+<span class="sourceLineNo">229</span>     * Set the minimum similarity for fuzzy queries. Default is 0.5f.<a name="line.229"></a>
+<span class="sourceLineNo">230</span>     */<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    public QueryStringQueryBuilder fuzzyMinSim(float fuzzyMinSim) {<a name="line.231"></a>
+<span class="sourceLineNo">232</span>        this.fuzzyMinSim = fuzzyMinSim;<a name="line.232"></a>
+<span class="sourceLineNo">233</span>        return this;<a name="line.233"></a>
+<span class="sourceLineNo">234</span>    }<a name="line.234"></a>
+<span class="sourceLineNo">235</span><a name="line.235"></a>
+<span class="sourceLineNo">236</span>    /**<a name="line.236"></a>
+<span class="sourceLineNo">237</span>     * Set the minimum similarity for fuzzy queries. Default is 0.5f.<a name="line.237"></a>
+<span class="sourceLineNo">238</span>     */<a name="line.238"></a>
+<span class="sourceLineNo">239</span>    public QueryStringQueryBuilder fuzzyPrefixLength(int fuzzyPrefixLength) {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>        this.fuzzyPrefixLength = fuzzyPrefixLength;<a name="line.240"></a>
+<span class="sourceLineNo">241</span>        return this;<a name="line.241"></a>
+<span class="sourceLineNo">242</span>    }<a name="line.242"></a>
+<span class="sourceLineNo">243</span><a name="line.243"></a>
+<span class="sourceLineNo">244</span>    public QueryStringQueryBuilder fuzzyMaxExpansions(int fuzzyMaxExpansions) {<a name="line.244"></a>
+<span class="sourceLineNo">245</span>        this.fuzzyMaxExpansions = fuzzyMaxExpansions;<a name="line.245"></a>
+<span class="sourceLineNo">246</span>        return this;<a name="line.246"></a>
+<span class="sourceLineNo">247</span>    }<a name="line.247"></a>
+<span class="sourceLineNo">248</span><a name="line.248"></a>
+<span class="sourceLineNo">249</span>    public QueryStringQueryBuilder fuzzyRewrite(String fuzzyRewrite) {<a name="line.249"></a>
+<span class="sourceLineNo">250</span>        this.fuzzyRewrite = fuzzyRewrite;<a name="line.250"></a>
+<span class="sourceLineNo">251</span>        return this;<a name="line.251"></a>
+<span class="sourceLineNo">252</span>    }<a name="line.252"></a>
+<span class="sourceLineNo">253</span><a name="line.253"></a>
+<span class="sourceLineNo">254</span>    /**<a name="line.254"></a>
+<span class="sourceLineNo">255</span>     * Sets the default slop for phrases.  If zero, then exact phrase matches<a name="line.255"></a>
+<span class="sourceLineNo">256</span>     * are required. Default value is zero.<a name="line.256"></a>
+<span class="sourceLineNo">257</span>     */<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    public QueryStringQueryBuilder phraseSlop(int phraseSlop) {<a name="line.258"></a>
+<span class="sourceLineNo">259</span>        this.phraseSlop = phraseSlop;<a name="line.259"></a>
+<span class="sourceLineNo">260</span>        return this;<a name="line.260"></a>
+<span class="sourceLineNo">261</span>    }<a name="line.261"></a>
+<span class="sourceLineNo">262</span><a name="line.262"></a>
+<span class="sourceLineNo">263</span>    /**<a name="line.263"></a>
+<span class="sourceLineNo">264</span>     * Set to &lt;tt&gt;true&lt;/tt&gt; to enable analysis on wildcard and prefix queries.<a name="line.264"></a>
+<span class="sourceLineNo">265</span>     */<a name="line.265"></a>
+<span class="sourceLineNo">266</span>    public QueryStringQueryBuilder analyzeWildcard(boolean analyzeWildcard) {<a name="line.266"></a>
+<span class="sourceLineNo">267</span>        this.analyzeWildcard = analyzeWildcard;<a name="line.267"></a>
+<span class="sourceLineNo">268</span>        return this;<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    }<a name="line.269"></a>
+<span class="sourceLineNo">270</span><a name="line.270"></a>
+<span class="sourceLineNo">271</span>    public QueryStringQueryBuilder rewrite(String rewrite) {<a name="line.271"></a>
+<span class="sourceLineNo">272</span>        this.rewrite = rewrite;<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        return this;<a name="line.273"></a>
+<span class="sourceLineNo">274</span>    }<a name="line.274"></a>
+<span class="sourceLineNo">275</span><a name="line.275"></a>
+<span class="sourceLineNo">276</span>    public QueryStringQueryBuilder minimumShouldMatch(String minimumShouldMatch) {<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        this.minimumShouldMatch = minimumShouldMatch;<a name="line.277"></a>
+<span class="sourceLineNo">278</span>        return this;<a name="line.278"></a>
+<span class="sourceLineNo">279</span>    }<a name="line.279"></a>
+<span class="sourceLineNo">280</span><a name="line.280"></a>
+<span class="sourceLineNo">281</span>    /**<a name="line.281"></a>
+<span class="sourceLineNo">282</span>     * Sets the boost for this query.  Documents matching this query will (in addition to the normal<a name="line.282"></a>
+<span class="sourceLineNo">283</span>     * weightings) have their score multiplied by the boost provided.<a name="line.283"></a>
+<span class="sourceLineNo">284</span>     */<a name="line.284"></a>
+<span class="sourceLineNo">285</span>    public QueryStringQueryBuilder boost(float boost) {<a name="line.285"></a>
+<span class="sourceLineNo">286</span>        this.boost = boost;<a name="line.286"></a>
+<span class="sourceLineNo">287</span>        return this;<a name="line.287"></a>
+<span class="sourceLineNo">288</span>    }<a name="line.288"></a>
+<span class="sourceLineNo">289</span><a name="line.289"></a>
+<span class="sourceLineNo">290</span>    /**<a name="line.290"></a>
+<span class="sourceLineNo">291</span>     * An optional field name suffix to automatically try and add to the field searched when using quoted text.<a name="line.291"></a>
+<span class="sourceLineNo">292</span>     */<a name="line.292"></a>
+<span class="sourceLineNo">293</span>    public QueryStringQueryBuilder quoteFieldSuffix(String quoteFieldSuffix) {<a name="line.293"></a>
+<span class="sourceLineNo">294</span>        this.quoteFieldSuffix = quoteFieldSuffix;<a name="line.294"></a>
+<span class="sourceLineNo">295</span>        return this;<a name="line.295"></a>
+<span class="sourceLineNo">296</span>    }<a name="line.296"></a>
+<span class="sourceLineNo">297</span><a name="line.297"></a>
+<span class="sourceLineNo">298</span>    /**<a name="line.298"></a>
+<span class="sourceLineNo">299</span>     * Sets the query string parser to be lenient when parsing field values, defaults to the index<a name="line.299"></a>
+<span class="sourceLineNo">300</span>     * setting and if not set, defaults to false.<a name="line.300"></a>
+<span class="sourceLineNo">301</span>     */<a name="line.301"></a>
+<span class="sourceLineNo">302</span>    public QueryStringQueryBuilder lenient(Boolean lenient) {<a name="line.302"></a>
+<span class="sourceLineNo">303</span>        this.lenient = lenient;<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        return this;<a name="line.304"></a>
+<span class="sourceLineNo">305</span>    }<a name="line.305"></a>
+<span class="sourceLineNo">306</span><a name="line.306"></a>
+<span class="sourceLineNo">307</span>    @Override<a name="line.307"></a>
+<span class="sourceLineNo">308</span>    protected void doXContent(XContentBuilder builder, Params params) throws IOException {<a name="line.308"></a>
+<span class="sourceLineNo">309</span>        builder.startObject(NAME);<a name="line.309"></a>
+<span class="sourceLineNo">310</span>        builder.field("query", queryString);<a name="line.310"></a>
+<span class="sourceLineNo">311</span>        if (defaultField != null) {<a name="line.311"></a>
+<span class="sourceLineNo">312</span>            builder.field("default_field", defaultField);<a name="line.312"></a>
+<span class="sourceLineNo">313</span>        }<a name="line.313"></a>
+<span class="sourceLineNo">314</span>        if (fields != null) {<a name="line.314"></a>
+<span class="sourceLineNo">315</span>            builder.startArray("fields");<a name="line.315"></a>
+<span class="sourceLineNo">316</span>            for (String field : fields) {<a name="line.316"></a>
+<span class="sourceLineNo">317</span>                float boost = -1;<a name="line.317"></a>
+<span class="sourceLineNo">318</span>                if (fieldsBoosts != null) {<a name="line.318"></a>
+<span class="sourceLineNo">319</span>                    boost = fieldsBoosts.get(field);<a name="line.319"></a>
+<span class="sourceLineNo">320</span>                }<a name="line.320"></a>
+<span class="sourceLineNo">321</span>                if (boost != -1) {<a name="line.321"></a>
+<span class="sourceLineNo">322</span>                    field += "^" + boost;<a name="line.322"></a>
+<span class="sourceLineNo">323</span>                }<a name="line.323"></a>
+<span class="sourceLineNo">324</span>                builder.value(field);<a name="line.324"></a>
+<span class="sourceLineNo">325</span>            }<a name="line.325"></a>
+<span class="sourceLineNo">326</span>            builder.endArray();<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        }<a name="line.327"></a>
+<span class="sourceLineNo">328</span>        if (useDisMax != null) {<a name="line.328"></a>
+<span class="sourceLineNo">329</span>            builder.field("use_dis_max", useDisMax);<a name="line.329"></a>
+<span class="sourceLineNo">330</span>        }<a name="line.330"></a>
+<span class="sourceLineNo">331</span>        if (tieBreaker != -1) {<a name="line.331"></a>
+<span class="sourceLineNo">332</span>            builder.field("tie_breaker", tieBreaker);<a name="line.332"></a>
+<span class="sourceLineNo">333</span>        }<a name="line.333"></a>
+<span class="sourceLineNo">334</span>        if (defaultOperator != null) {<a name="line.334"></a>
+<span class="sourceLineNo">335</span>            builder.field("default_operator", defaultOperator.name().toLowerCase());<a name="line.335"></a>
+<span class="sourceLineNo">336</span>        }<a name="line.336"></a>
+<span class="sourceLineNo">337</span>        if (analyzer != null) {<a name="line.337"></a>
+<span class="sourceLineNo">338</span>            builder.field("analyzer", analyzer);<a name="line.338"></a>
+<span class="sourceLineNo">339</span>        }<a name="line.339"></a>
+<span class="sourceLineNo">340</span>        if (quoteAnalyzer != null) {<a name="line.340"></a>
+<span class="sourceLineNo">341</span>            builder.field("quote_analyzer", quoteAnalyzer);<a name="line.341"></a>
+<span class="sourceLineNo">342</span>        }<a name="line.342"></a>
+<span class="sourceLineNo">343</span>        if (autoGeneratePhraseQueries != null) {<a name="line.343"></a>
+<span class="sourceLineNo">344</span>            builder.field("auto_generate_phrase_queries", autoGeneratePhraseQueries);<a name="line.344"></a>
+<span class="sourceLineNo">345</span>        }<a name="line.345"></a>
+<span class="sourceLineNo">346</span>        if (allowLeadingWildcard != null) {<a name="line.346"></a>
+<span class="sourceLineNo">347</span>            builder.field("allow_leading_wildcard", allowLeadingWildcard);<a name="line.347"></a>
+<span class="sourceLineNo">348</span>        }<a name="line.348"></a>
+<span class="sourceLineNo">349</span>        if (lowercaseExpandedTerms != null) {<a name="line.349"></a>
+<span class="sourceLineNo">350</span>            builder.field("lowercase_expanded_terms", lowercaseExpandedTerms);<a name="line.350"></a>
+<span class="sourceLineNo">351</span>        }<a name="line.351"></a>
+<span class="sourceLineNo">352</span>        if (enablePositionIncrements != null) {<a name="line.352"></a>
+<span class="sourceLineNo">353</span>            builder.field("enable_position_increments", enablePositionIncrements);<a name="line.353"></a>
+<span class="sourceLineNo">354</span>        }<a name="line.354"></a>
+<span class="sourceLineNo">355</span>        if (fuzzyMinSim != -1) {<a name="line.355"></a>
+<span class="sourceLineNo">356</span>            builder.field("fuzzy_min_sim", fuzzyMinSim);<a name="line.356"></a>
+<span class="sourceLineNo">357</span>        }<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        if (boost != -1) {<a name="line.358"></a>
+<span class="sourceLineNo">359</span>            builder.field("boost", boost);<a name="line.359"></a>
+<span class="sourceLineNo">360</span>        }<a name="line.360"></a>
+<span class="sourceLineNo">361</span>        if (fuzzyPrefixLength != -1) {<a name="line.361"></a>
+<span class="sourceLineNo">362</span>            builder.field("fuzzy_prefix_length", fuzzyPrefixLength);<a name="line.362"></a>
+<span class="sourceLineNo">363</span>        }<a name="line.363"></a>
+<span class="sourceLineNo">364</span>        if (fuzzyMaxExpansions != -1) {<a name="line.364"></a>
+<span class="sourceLineNo">365</span>            builder.field("fuzzy_max_expansions", fuzzyMaxExpansions);<a name="line.365"></a>
+<span class="sourceLineNo">366</span>        }<a name="line.366"></a>
+<span class="sourceLineNo">367</span>        if (fuzzyRewrite != null) {<a name="line.367"></a>
+<span class="sourceLineNo">368</span>            builder.field("fuzzy_rewrite", fuzzyRewrite);<a name="line.368"></a>
+<span class="sourceLineNo">369</span>        }<a name="line.369"></a>
+<span class="sourceLineNo">370</span>        if (phraseSlop != -1) {<a name="line.370"></a>
+<span class="sourceLineNo">371</span>            builder.field("phrase_slop", phraseSlop);<a name="line.371"></a>
+<span class="sourceLineNo">372</span>        }<a name="line.372"></a>
+<span class="sourceLineNo">373</span>        if (analyzeWildcard != null) {<a name="line.373"></a>
+<span class="sourceLineNo">374</span>            builder.field("analyze_wildcard", analyzeWildcard);<a name="line.374"></a>
+<span class="sourceLineNo">375</span>        }<a name="line.375"></a>
+<span class="sourceLineNo">376</span>        if (rewrite != null) {<a name="line.376"></a>
+<span class="sourceLineNo">377</span>            builder.field("rewrite", rewrite);<a name="line.377"></a>
+<span class="sourceLineNo">378</span>        }<a name="line.378"></a>
+<span class="sourceLineNo">379</span>        if (minimumShouldMatch != null) {<a name="line.379"></a>
+<span class="sourceLineNo">380</span>            builder.field("minimum_should_match", minimumShouldMatch);<a name="line.380"></a>
+<span class="sourceLineNo">381</span>        }<a name="line.381"></a>
+<span class="sourceLineNo">382</span>        if (quoteFieldSuffix != null) {<a name="line.382"></a>
+<span class="sourceLineNo">383</span>            builder.field("quote_field_suffix", quoteFieldSuffix);<a name="line.383"></a>
+<span class="sourceLineNo">384</span>        }<a name="line.384"></a>
+<span class="sourceLineNo">385</span>        if (lenient != null) {<a name="line.385"></a>
+<span class="sourceLineNo">386</span>            builder.field("lenient", lenient);<a name="line.386"></a>
+<span class="sourceLineNo">387</span>        }<a name="line.387"></a>
+<span class="sourceLineNo">388</span>        builder.endObject();<a name="line.388"></a>
+<span class="sourceLineNo">389</span>    }<a name="line.389"></a>
+<span class="sourceLineNo">390</span>}<a name="line.390"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

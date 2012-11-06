@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Copyright 2010 Ning, Inc.<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Ning licenses this file to you under the Apache License, version 2.0<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * (the "License"); you may not use this file except in compliance with the<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * License.  You may obtain a copy of the License at:<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *    http://www.apache.org/licenses/LICENSE-2.0<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * Unless required by applicable law or agreed to in writing, software<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * License for the specific language governing permissions and limitations<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * under the License.<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package com.ning.http.client.oauth;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import com.ning.http.util.UTF8Codec;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>import javax.crypto.Mac;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import javax.crypto.spec.SecretKeySpec;<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>/**<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * Since cloning (of MAC instances)  is not necessarily supported on all platforms<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * (and specifically seems to fail on MacOS), let's wrap synchronization/reuse details here.<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * Assumption is that this is bit more efficient (even considering synchronization)<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * than locating and reconstructing instance each time.<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * In future we may want to use soft references and thread local instance.<a name="line.29"></a>
+<span class="sourceLineNo">030</span> *<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * @author tatu (tatu.saloranta@iki.fi)<a name="line.31"></a>
+<span class="sourceLineNo">032</span> */<a name="line.32"></a>
+<span class="sourceLineNo">033</span>public class ThreadSafeHMAC {<a name="line.33"></a>
+<span class="sourceLineNo">034</span>    private static final String HMAC_SHA1_ALGORITHM = "HmacSHA1";<a name="line.34"></a>
+<span class="sourceLineNo">035</span><a name="line.35"></a>
+<span class="sourceLineNo">036</span>    private final Mac mac;<a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>    public ThreadSafeHMAC(ConsumerKey consumerAuth, RequestToken userAuth) {<a name="line.38"></a>
+<span class="sourceLineNo">039</span>        byte[] keyBytes = UTF8Codec.toUTF8(consumerAuth.getSecret() + "&amp;" + userAuth.getSecret());<a name="line.39"></a>
+<span class="sourceLineNo">040</span>        SecretKeySpec signingKey = new SecretKeySpec(keyBytes, HMAC_SHA1_ALGORITHM);<a name="line.40"></a>
+<span class="sourceLineNo">041</span><a name="line.41"></a>
+<span class="sourceLineNo">042</span>        // Get an hmac_sha1 instance and initialize with the signing key<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        try {<a name="line.43"></a>
+<span class="sourceLineNo">044</span>            mac = Mac.getInstance(HMAC_SHA1_ALGORITHM);<a name="line.44"></a>
+<span class="sourceLineNo">045</span>            mac.init(signingKey);<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        } catch (Exception e) {<a name="line.46"></a>
+<span class="sourceLineNo">047</span>            throw new IllegalArgumentException(e);<a name="line.47"></a>
+<span class="sourceLineNo">048</span>        }<a name="line.48"></a>
+<span class="sourceLineNo">049</span><a name="line.49"></a>
+<span class="sourceLineNo">050</span>    }<a name="line.50"></a>
+<span class="sourceLineNo">051</span><a name="line.51"></a>
+<span class="sourceLineNo">052</span>    public synchronized byte[] digest(byte[] message) {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>        mac.reset();<a name="line.53"></a>
+<span class="sourceLineNo">054</span>        return mac.doFinal(message);<a name="line.54"></a>
+<span class="sourceLineNo">055</span>    }<a name="line.55"></a>
+<span class="sourceLineNo">056</span>}<a name="line.56"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

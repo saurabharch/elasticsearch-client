@@ -1,0 +1,952 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package org.elasticsearch.common.lucene.util;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>/**<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Licensed to the Apache Software Foundation (ASF) under one or more<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * contributor license agreements.  See the NOTICE file distributed with<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * this work for additional information regarding copyright ownership.<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * The ASF licenses this file to You under the Apache License, Version 2.0<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * (the "License"); you may not use this file except in compliance with<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * the License.  You may obtain a copy of the License at<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *     http://www.apache.org/licenses/LICENSE-2.0<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * Unless required by applicable law or agreed to in writing, software<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * See the License for the specific language governing permissions and<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * limitations under the License.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> */<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>import java.lang.management.ManagementFactory;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.lang.reflect.*;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.text.DecimalFormat;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.text.DecimalFormatSymbols;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.*;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>/**<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * Estimates the size (memory representation) of Java objects.<a name="line.27"></a>
+<span class="sourceLineNo">028</span> * <a name="line.28"></a>
+<span class="sourceLineNo">029</span> * &lt;p&gt;NOTE: Starting with Lucene 3.6, creating instances of this class<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * is deprecated. If you still do this, please note, that instances of<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * {@code RamUsageEstimator} are not thread-safe!<a name="line.31"></a>
+<span class="sourceLineNo">032</span> * It is also deprecated to enable checking of String intern-ness,<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * the new static method no longer allow to do this. Interned strings<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * will be counted as any other object and count for memory usage.<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * <a name="line.35"></a>
+<span class="sourceLineNo">036</span> * &lt;p&gt;In Lucene 3.6, custom {@code MemoryModel}s were completely<a name="line.36"></a>
+<span class="sourceLineNo">037</span> * removed. The new implementation is now using Hotspot&amp;trade; internals<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * to get the correct scale factors and offsets for calculating<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * memory usage.<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * <a name="line.40"></a>
+<span class="sourceLineNo">041</span> * @see #sizeOf(Object)<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * @see #shallowSizeOf(Object)<a name="line.42"></a>
+<span class="sourceLineNo">043</span> * @see #shallowSizeOfInstance(Class)<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * <a name="line.44"></a>
+<span class="sourceLineNo">045</span> */<a name="line.45"></a>
+<span class="sourceLineNo">046</span>public final class RamUsageEstimator {<a name="line.46"></a>
+<span class="sourceLineNo">047</span>  /**<a name="line.47"></a>
+<span class="sourceLineNo">048</span>   * JVM diagnostic features.<a name="line.48"></a>
+<span class="sourceLineNo">049</span>   */<a name="line.49"></a>
+<span class="sourceLineNo">050</span>  public static enum JvmFeature {<a name="line.50"></a>
+<span class="sourceLineNo">051</span>    OBJECT_REFERENCE_SIZE("Object reference size estimated using array index scale"),<a name="line.51"></a>
+<span class="sourceLineNo">052</span>    ARRAY_HEADER_SIZE("Array header size estimated using array based offset"),<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    FIELD_OFFSETS("Shallow instance size based on field offsets"),<a name="line.53"></a>
+<span class="sourceLineNo">054</span>    OBJECT_ALIGNMENT("Object alignment retrieved from HotSpotDiagnostic MX bean");<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public final String description;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>    private JvmFeature(String description) {<a name="line.58"></a>
+<span class="sourceLineNo">059</span>      this.description = description;<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    }<a name="line.60"></a>
+<span class="sourceLineNo">061</span>    <a name="line.61"></a>
+<span class="sourceLineNo">062</span>    @Override<a name="line.62"></a>
+<span class="sourceLineNo">063</span>    public String toString() {<a name="line.63"></a>
+<span class="sourceLineNo">064</span>      return super.name() + " (" + description + ")";<a name="line.64"></a>
+<span class="sourceLineNo">065</span>    }<a name="line.65"></a>
+<span class="sourceLineNo">066</span>  }<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>  /** JVM info string for debugging and reports. */<a name="line.68"></a>
+<span class="sourceLineNo">069</span>  public final static String JVM_INFO_STRING;<a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>  /** One kilobyte bytes. */<a name="line.71"></a>
+<span class="sourceLineNo">072</span>  public static final long ONE_KB = 1024;<a name="line.72"></a>
+<span class="sourceLineNo">073</span>  <a name="line.73"></a>
+<span class="sourceLineNo">074</span>  /** One megabyte bytes. */<a name="line.74"></a>
+<span class="sourceLineNo">075</span>  public static final long ONE_MB = ONE_KB * ONE_KB;<a name="line.75"></a>
+<span class="sourceLineNo">076</span>  <a name="line.76"></a>
+<span class="sourceLineNo">077</span>  /** One gigabyte bytes.*/<a name="line.77"></a>
+<span class="sourceLineNo">078</span>  public static final long ONE_GB = ONE_KB * ONE_MB;<a name="line.78"></a>
+<span class="sourceLineNo">079</span><a name="line.79"></a>
+<span class="sourceLineNo">080</span>  public final static int NUM_BYTES_BOOLEAN = 1;<a name="line.80"></a>
+<span class="sourceLineNo">081</span>  public final static int NUM_BYTES_BYTE = 1;<a name="line.81"></a>
+<span class="sourceLineNo">082</span>  public final static int NUM_BYTES_CHAR = 2;<a name="line.82"></a>
+<span class="sourceLineNo">083</span>  public final static int NUM_BYTES_SHORT = 2;<a name="line.83"></a>
+<span class="sourceLineNo">084</span>  public final static int NUM_BYTES_INT = 4;<a name="line.84"></a>
+<span class="sourceLineNo">085</span>  public final static int NUM_BYTES_FLOAT = 4;<a name="line.85"></a>
+<span class="sourceLineNo">086</span>  public final static int NUM_BYTES_LONG = 8;<a name="line.86"></a>
+<span class="sourceLineNo">087</span>  public final static int NUM_BYTES_DOUBLE = 8;<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>  /** <a name="line.89"></a>
+<span class="sourceLineNo">090</span>   * Number of bytes this jvm uses to represent an object reference. <a name="line.90"></a>
+<span class="sourceLineNo">091</span>   */<a name="line.91"></a>
+<span class="sourceLineNo">092</span>  public final static int NUM_BYTES_OBJECT_REF;<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>  /**<a name="line.94"></a>
+<span class="sourceLineNo">095</span>   * Number of bytes to represent an object header (no fields, no alignments).<a name="line.95"></a>
+<span class="sourceLineNo">096</span>   */<a name="line.96"></a>
+<span class="sourceLineNo">097</span>  public final static int NUM_BYTES_OBJECT_HEADER;<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>  /**<a name="line.99"></a>
+<span class="sourceLineNo">100</span>   * Number of bytes to represent an array header (no content, but with alignments).<a name="line.100"></a>
+<span class="sourceLineNo">101</span>   */<a name="line.101"></a>
+<span class="sourceLineNo">102</span>  public final static int NUM_BYTES_ARRAY_HEADER;<a name="line.102"></a>
+<span class="sourceLineNo">103</span>  <a name="line.103"></a>
+<span class="sourceLineNo">104</span>  /**<a name="line.104"></a>
+<span class="sourceLineNo">105</span>   * A constant specifying the object alignment boundary inside the JVM. Objects will<a name="line.105"></a>
+<span class="sourceLineNo">106</span>   * always take a full multiple of this constant, possibly wasting some space. <a name="line.106"></a>
+<span class="sourceLineNo">107</span>   */<a name="line.107"></a>
+<span class="sourceLineNo">108</span>  public final static int NUM_BYTES_OBJECT_ALIGNMENT;<a name="line.108"></a>
+<span class="sourceLineNo">109</span><a name="line.109"></a>
+<span class="sourceLineNo">110</span>  /**<a name="line.110"></a>
+<span class="sourceLineNo">111</span>   * Sizes of primitive classes.<a name="line.111"></a>
+<span class="sourceLineNo">112</span>   */<a name="line.112"></a>
+<span class="sourceLineNo">113</span>  private static final Map&lt;Class&lt;?&gt;,Integer&gt; primitiveSizes;<a name="line.113"></a>
+<span class="sourceLineNo">114</span>  static {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    primitiveSizes = new IdentityHashMap&lt;Class&lt;?&gt;,Integer&gt;();<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    primitiveSizes.put(boolean.class, Integer.valueOf(NUM_BYTES_BOOLEAN));<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    primitiveSizes.put(byte.class, Integer.valueOf(NUM_BYTES_BYTE));<a name="line.117"></a>
+<span class="sourceLineNo">118</span>    primitiveSizes.put(char.class, Integer.valueOf(NUM_BYTES_CHAR));<a name="line.118"></a>
+<span class="sourceLineNo">119</span>    primitiveSizes.put(short.class, Integer.valueOf(NUM_BYTES_SHORT));<a name="line.119"></a>
+<span class="sourceLineNo">120</span>    primitiveSizes.put(int.class, Integer.valueOf(NUM_BYTES_INT));<a name="line.120"></a>
+<span class="sourceLineNo">121</span>    primitiveSizes.put(float.class, Integer.valueOf(NUM_BYTES_FLOAT));<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    primitiveSizes.put(double.class, Integer.valueOf(NUM_BYTES_DOUBLE));<a name="line.122"></a>
+<span class="sourceLineNo">123</span>    primitiveSizes.put(long.class, Integer.valueOf(NUM_BYTES_LONG));<a name="line.123"></a>
+<span class="sourceLineNo">124</span>  }<a name="line.124"></a>
+<span class="sourceLineNo">125</span><a name="line.125"></a>
+<span class="sourceLineNo">126</span>  /**<a name="line.126"></a>
+<span class="sourceLineNo">127</span>   * A handle to &lt;code&gt;sun.misc.Unsafe&lt;/code&gt;.<a name="line.127"></a>
+<span class="sourceLineNo">128</span>   */<a name="line.128"></a>
+<span class="sourceLineNo">129</span>  private final static Object theUnsafe;<a name="line.129"></a>
+<span class="sourceLineNo">130</span>  <a name="line.130"></a>
+<span class="sourceLineNo">131</span>  /**<a name="line.131"></a>
+<span class="sourceLineNo">132</span>   * A handle to &lt;code&gt;sun.misc.Unsafe#fieldOffset(Field)&lt;/code&gt;.<a name="line.132"></a>
+<span class="sourceLineNo">133</span>   */<a name="line.133"></a>
+<span class="sourceLineNo">134</span>  private final static Method objectFieldOffsetMethod;<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>  /**<a name="line.136"></a>
+<span class="sourceLineNo">137</span>   * All the supported "internal" JVM features detected at clinit. <a name="line.137"></a>
+<span class="sourceLineNo">138</span>   */<a name="line.138"></a>
+<span class="sourceLineNo">139</span>  private final static EnumSet&lt;JvmFeature&gt; supportedFeatures;<a name="line.139"></a>
+<span class="sourceLineNo">140</span><a name="line.140"></a>
+<span class="sourceLineNo">141</span>  /**<a name="line.141"></a>
+<span class="sourceLineNo">142</span>   * Initialize constants and try to collect information about the JVM internals. <a name="line.142"></a>
+<span class="sourceLineNo">143</span>   */<a name="line.143"></a>
+<span class="sourceLineNo">144</span>  static {<a name="line.144"></a>
+<span class="sourceLineNo">145</span>    // Initialize empirically measured defaults. We'll modify them to the current<a name="line.145"></a>
+<span class="sourceLineNo">146</span>    // JVM settings later on if possible.<a name="line.146"></a>
+<span class="sourceLineNo">147</span>    int referenceSize = Constants.JRE_IS_64BIT ? 8 : 4;<a name="line.147"></a>
+<span class="sourceLineNo">148</span>    int objectHeader = Constants.JRE_IS_64BIT ? 16 : 8;<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    // The following is objectHeader + NUM_BYTES_INT, but aligned (object alignment)<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    // so on 64 bit JVMs it'll be align(16 + 4, @8) = 24.<a name="line.150"></a>
+<span class="sourceLineNo">151</span>    int arrayHeader = Constants.JRE_IS_64BIT ? 24 : 12;<a name="line.151"></a>
+<span class="sourceLineNo">152</span><a name="line.152"></a>
+<span class="sourceLineNo">153</span>    supportedFeatures = EnumSet.noneOf(JvmFeature.class);<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span>    Class&lt;?&gt; unsafeClass = null;<a name="line.155"></a>
+<span class="sourceLineNo">156</span>    Object tempTheUnsafe = null;<a name="line.156"></a>
+<span class="sourceLineNo">157</span>    try {<a name="line.157"></a>
+<span class="sourceLineNo">158</span>      unsafeClass = Class.forName("sun.misc.Unsafe");<a name="line.158"></a>
+<span class="sourceLineNo">159</span>      final Field unsafeField = unsafeClass.getDeclaredField("theUnsafe");<a name="line.159"></a>
+<span class="sourceLineNo">160</span>      unsafeField.setAccessible(true);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>      tempTheUnsafe = unsafeField.get(null);<a name="line.161"></a>
+<span class="sourceLineNo">162</span>    } catch (Exception e) {<a name="line.162"></a>
+<span class="sourceLineNo">163</span>      // Ignore.<a name="line.163"></a>
+<span class="sourceLineNo">164</span>    }<a name="line.164"></a>
+<span class="sourceLineNo">165</span>    theUnsafe = tempTheUnsafe;<a name="line.165"></a>
+<span class="sourceLineNo">166</span><a name="line.166"></a>
+<span class="sourceLineNo">167</span>    // get object reference size by getting scale factor of Object[] arrays:<a name="line.167"></a>
+<span class="sourceLineNo">168</span>    try {<a name="line.168"></a>
+<span class="sourceLineNo">169</span>      final Method arrayIndexScaleM = unsafeClass.getMethod("arrayIndexScale", Class.class);<a name="line.169"></a>
+<span class="sourceLineNo">170</span>      referenceSize = ((Number) arrayIndexScaleM.invoke(theUnsafe, Object[].class)).intValue();<a name="line.170"></a>
+<span class="sourceLineNo">171</span>      supportedFeatures.add(JvmFeature.OBJECT_REFERENCE_SIZE);<a name="line.171"></a>
+<span class="sourceLineNo">172</span>    } catch (Exception e) {<a name="line.172"></a>
+<span class="sourceLineNo">173</span>      // ignore.<a name="line.173"></a>
+<span class="sourceLineNo">174</span>    }<a name="line.174"></a>
+<span class="sourceLineNo">175</span><a name="line.175"></a>
+<span class="sourceLineNo">176</span>    // "best guess" based on reference size. We will attempt to modify<a name="line.176"></a>
+<span class="sourceLineNo">177</span>    // these to exact values if there is supported infrastructure.<a name="line.177"></a>
+<span class="sourceLineNo">178</span>    objectHeader = Constants.JRE_IS_64BIT ? (8 + referenceSize) : 8;<a name="line.178"></a>
+<span class="sourceLineNo">179</span>    arrayHeader =  Constants.JRE_IS_64BIT ? (8 + 2 * referenceSize) : 12;<a name="line.179"></a>
+<span class="sourceLineNo">180</span><a name="line.180"></a>
+<span class="sourceLineNo">181</span>    // get the object header size:<a name="line.181"></a>
+<span class="sourceLineNo">182</span>    // - first try out if the field offsets are not scaled (see warning in Unsafe docs)<a name="line.182"></a>
+<span class="sourceLineNo">183</span>    // - get the object header size by getting the field offset of the first field of a dummy object<a name="line.183"></a>
+<span class="sourceLineNo">184</span>    // If the scaling is byte-wise and unsafe is available, enable dynamic size measurement for<a name="line.184"></a>
+<span class="sourceLineNo">185</span>    // estimateRamUsage().<a name="line.185"></a>
+<span class="sourceLineNo">186</span>    Method tempObjectFieldOffsetMethod = null;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>    try {<a name="line.187"></a>
+<span class="sourceLineNo">188</span>      final Method objectFieldOffsetM = unsafeClass.getMethod("objectFieldOffset", Field.class);<a name="line.188"></a>
+<span class="sourceLineNo">189</span>      final Field dummy1Field = DummyTwoLongObject.class.getDeclaredField("dummy1");<a name="line.189"></a>
+<span class="sourceLineNo">190</span>      final int ofs1 = ((Number) objectFieldOffsetM.invoke(theUnsafe, dummy1Field)).intValue();<a name="line.190"></a>
+<span class="sourceLineNo">191</span>      final Field dummy2Field = DummyTwoLongObject.class.getDeclaredField("dummy2");<a name="line.191"></a>
+<span class="sourceLineNo">192</span>      final int ofs2 = ((Number) objectFieldOffsetM.invoke(theUnsafe, dummy2Field)).intValue();<a name="line.192"></a>
+<span class="sourceLineNo">193</span>      if (Math.abs(ofs2 - ofs1) == NUM_BYTES_LONG) {<a name="line.193"></a>
+<span class="sourceLineNo">194</span>        final Field baseField = DummyOneFieldObject.class.getDeclaredField("base");<a name="line.194"></a>
+<span class="sourceLineNo">195</span>        objectHeader = ((Number) objectFieldOffsetM.invoke(theUnsafe, baseField)).intValue();<a name="line.195"></a>
+<span class="sourceLineNo">196</span>        supportedFeatures.add(JvmFeature.FIELD_OFFSETS);<a name="line.196"></a>
+<span class="sourceLineNo">197</span>        tempObjectFieldOffsetMethod = objectFieldOffsetM;<a name="line.197"></a>
+<span class="sourceLineNo">198</span>      }<a name="line.198"></a>
+<span class="sourceLineNo">199</span>    } catch (Exception e) {<a name="line.199"></a>
+<span class="sourceLineNo">200</span>      // Ignore.<a name="line.200"></a>
+<span class="sourceLineNo">201</span>    }<a name="line.201"></a>
+<span class="sourceLineNo">202</span>    objectFieldOffsetMethod = tempObjectFieldOffsetMethod;<a name="line.202"></a>
+<span class="sourceLineNo">203</span><a name="line.203"></a>
+<span class="sourceLineNo">204</span>    // Get the array header size by retrieving the array base offset<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    // (offset of the first element of an array).<a name="line.205"></a>
+<span class="sourceLineNo">206</span>    try {<a name="line.206"></a>
+<span class="sourceLineNo">207</span>      final Method arrayBaseOffsetM = unsafeClass.getMethod("arrayBaseOffset", Class.class);<a name="line.207"></a>
+<span class="sourceLineNo">208</span>      // we calculate that only for byte[] arrays, it's actually the same for all types:<a name="line.208"></a>
+<span class="sourceLineNo">209</span>      arrayHeader = ((Number) arrayBaseOffsetM.invoke(theUnsafe, byte[].class)).intValue();<a name="line.209"></a>
+<span class="sourceLineNo">210</span>      supportedFeatures.add(JvmFeature.ARRAY_HEADER_SIZE);<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    } catch (Exception e) {<a name="line.211"></a>
+<span class="sourceLineNo">212</span>      // Ignore.<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    }<a name="line.213"></a>
+<span class="sourceLineNo">214</span><a name="line.214"></a>
+<span class="sourceLineNo">215</span>    NUM_BYTES_OBJECT_REF = referenceSize;<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    NUM_BYTES_OBJECT_HEADER = objectHeader;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    NUM_BYTES_ARRAY_HEADER = arrayHeader;<a name="line.217"></a>
+<span class="sourceLineNo">218</span>    <a name="line.218"></a>
+<span class="sourceLineNo">219</span>    // Try to get the object alignment (the default seems to be 8 on Hotspot, <a name="line.219"></a>
+<span class="sourceLineNo">220</span>    // regardless of the architecture). Retrieval only works with Java 6.<a name="line.220"></a>
+<span class="sourceLineNo">221</span>    int objectAlignment = 8;<a name="line.221"></a>
+<span class="sourceLineNo">222</span>    try {<a name="line.222"></a>
+<span class="sourceLineNo">223</span>      final Class&lt;?&gt; beanClazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");<a name="line.223"></a>
+<span class="sourceLineNo">224</span>      final Object hotSpotBean = ManagementFactory.newPlatformMXBeanProxy(<a name="line.224"></a>
+<span class="sourceLineNo">225</span>        ManagementFactory.getPlatformMBeanServer(),<a name="line.225"></a>
+<span class="sourceLineNo">226</span>        "com.sun.management:type=HotSpotDiagnostic",<a name="line.226"></a>
+<span class="sourceLineNo">227</span>        beanClazz<a name="line.227"></a>
+<span class="sourceLineNo">228</span>      );<a name="line.228"></a>
+<span class="sourceLineNo">229</span>      final Method getVMOptionMethod = beanClazz.getMethod("getVMOption", String.class);<a name="line.229"></a>
+<span class="sourceLineNo">230</span>      final Object vmOption = getVMOptionMethod.invoke(hotSpotBean, "ObjectAlignmentInBytes");<a name="line.230"></a>
+<span class="sourceLineNo">231</span>      objectAlignment = Integer.parseInt(<a name="line.231"></a>
+<span class="sourceLineNo">232</span>          vmOption.getClass().getMethod("getValue").invoke(vmOption).toString()<a name="line.232"></a>
+<span class="sourceLineNo">233</span>      );<a name="line.233"></a>
+<span class="sourceLineNo">234</span>      supportedFeatures.add(JvmFeature.OBJECT_ALIGNMENT);<a name="line.234"></a>
+<span class="sourceLineNo">235</span>    } catch (Exception e) {<a name="line.235"></a>
+<span class="sourceLineNo">236</span>      // Ignore.<a name="line.236"></a>
+<span class="sourceLineNo">237</span>    }<a name="line.237"></a>
+<span class="sourceLineNo">238</span><a name="line.238"></a>
+<span class="sourceLineNo">239</span>    NUM_BYTES_OBJECT_ALIGNMENT = objectAlignment;<a name="line.239"></a>
+<span class="sourceLineNo">240</span><a name="line.240"></a>
+<span class="sourceLineNo">241</span>    JVM_INFO_STRING = "[JVM: " +<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        Constants.JVM_NAME + ", " + Constants.JVM_VERSION + ", " + Constants.JVM_VENDOR + ", " + <a name="line.242"></a>
+<span class="sourceLineNo">243</span>        Constants.JAVA_VENDOR + ", " + Constants.JAVA_VERSION + "]";<a name="line.243"></a>
+<span class="sourceLineNo">244</span>  }<a name="line.244"></a>
+<span class="sourceLineNo">245</span><a name="line.245"></a>
+<span class="sourceLineNo">246</span>  /**<a name="line.246"></a>
+<span class="sourceLineNo">247</span>   * Cached information about a given class.   <a name="line.247"></a>
+<span class="sourceLineNo">248</span>   */<a name="line.248"></a>
+<span class="sourceLineNo">249</span>  private static final class ClassCache {<a name="line.249"></a>
+<span class="sourceLineNo">250</span>    public final long alignedShallowInstanceSize;<a name="line.250"></a>
+<span class="sourceLineNo">251</span>    public final Field[] referenceFields;<a name="line.251"></a>
+<span class="sourceLineNo">252</span><a name="line.252"></a>
+<span class="sourceLineNo">253</span>    public ClassCache(long alignedShallowInstanceSize, Field[] referenceFields) {<a name="line.253"></a>
+<span class="sourceLineNo">254</span>      this.alignedShallowInstanceSize = alignedShallowInstanceSize;<a name="line.254"></a>
+<span class="sourceLineNo">255</span>      this.referenceFields = referenceFields;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>    }    <a name="line.256"></a>
+<span class="sourceLineNo">257</span>  }<a name="line.257"></a>
+<span class="sourceLineNo">258</span><a name="line.258"></a>
+<span class="sourceLineNo">259</span>  // Object with just one field to determine the object header size by getting the offset of the dummy field:<a name="line.259"></a>
+<span class="sourceLineNo">260</span>  @SuppressWarnings("unused")<a name="line.260"></a>
+<span class="sourceLineNo">261</span>  private static final class DummyOneFieldObject {<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    public byte base;<a name="line.262"></a>
+<span class="sourceLineNo">263</span>  }<a name="line.263"></a>
+<span class="sourceLineNo">264</span><a name="line.264"></a>
+<span class="sourceLineNo">265</span>  // Another test object for checking, if the difference in offsets of dummy1 and dummy2 is 8 bytes.<a name="line.265"></a>
+<span class="sourceLineNo">266</span>  // Only then we can be sure that those are real, unscaled offsets:<a name="line.266"></a>
+<span class="sourceLineNo">267</span>  @SuppressWarnings("unused")<a name="line.267"></a>
+<span class="sourceLineNo">268</span>  private static final class DummyTwoLongObject {<a name="line.268"></a>
+<span class="sourceLineNo">269</span>    public long dummy1, dummy2;<a name="line.269"></a>
+<span class="sourceLineNo">270</span>  }<a name="line.270"></a>
+<span class="sourceLineNo">271</span>  <a name="line.271"></a>
+<span class="sourceLineNo">272</span>  /** <a name="line.272"></a>
+<span class="sourceLineNo">273</span>   * Returns true, if the current JVM is fully supported by {@code RamUsageEstimator}.<a name="line.273"></a>
+<span class="sourceLineNo">274</span>   * If this method returns {@code false} you are maybe using a 3rd party Java VM<a name="line.274"></a>
+<span class="sourceLineNo">275</span>   * that is not supporting Oracle/Sun private APIs. The memory estimates can be <a name="line.275"></a>
+<span class="sourceLineNo">276</span>   * imprecise then (no way of detecting compressed references, alignments, etc.). <a name="line.276"></a>
+<span class="sourceLineNo">277</span>   * Lucene still tries to use sensible defaults.<a name="line.277"></a>
+<span class="sourceLineNo">278</span>   */<a name="line.278"></a>
+<span class="sourceLineNo">279</span>  public static boolean isSupportedJVM() {<a name="line.279"></a>
+<span class="sourceLineNo">280</span>    return supportedFeatures.size() == JvmFeature.values().length;<a name="line.280"></a>
+<span class="sourceLineNo">281</span>  }<a name="line.281"></a>
+<span class="sourceLineNo">282</span><a name="line.282"></a>
+<span class="sourceLineNo">283</span>  /** <a name="line.283"></a>
+<span class="sourceLineNo">284</span>   * Aligns an object size to be the next multiple of {@link #NUM_BYTES_OBJECT_ALIGNMENT}. <a name="line.284"></a>
+<span class="sourceLineNo">285</span>   */<a name="line.285"></a>
+<span class="sourceLineNo">286</span>  public static long alignObjectSize(long size) {<a name="line.286"></a>
+<span class="sourceLineNo">287</span>    size += (long) NUM_BYTES_OBJECT_ALIGNMENT - 1L;<a name="line.287"></a>
+<span class="sourceLineNo">288</span>    return size - (size % NUM_BYTES_OBJECT_ALIGNMENT);<a name="line.288"></a>
+<span class="sourceLineNo">289</span>  }<a name="line.289"></a>
+<span class="sourceLineNo">290</span>  <a name="line.290"></a>
+<span class="sourceLineNo">291</span>  /** Returns the size in bytes of the byte[] object. */<a name="line.291"></a>
+<span class="sourceLineNo">292</span>  public static long sizeOf(byte[] arr) {<a name="line.292"></a>
+<span class="sourceLineNo">293</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);<a name="line.293"></a>
+<span class="sourceLineNo">294</span>  }<a name="line.294"></a>
+<span class="sourceLineNo">295</span>  <a name="line.295"></a>
+<span class="sourceLineNo">296</span>  /** Returns the size in bytes of the boolean[] object. */<a name="line.296"></a>
+<span class="sourceLineNo">297</span>  public static long sizeOf(boolean[] arr) {<a name="line.297"></a>
+<span class="sourceLineNo">298</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + arr.length);<a name="line.298"></a>
+<span class="sourceLineNo">299</span>  }<a name="line.299"></a>
+<span class="sourceLineNo">300</span>  <a name="line.300"></a>
+<span class="sourceLineNo">301</span>  /** Returns the size in bytes of the char[] object. */<a name="line.301"></a>
+<span class="sourceLineNo">302</span>  public static long sizeOf(char[] arr) {<a name="line.302"></a>
+<span class="sourceLineNo">303</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_CHAR * arr.length);<a name="line.303"></a>
+<span class="sourceLineNo">304</span>  }<a name="line.304"></a>
+<span class="sourceLineNo">305</span><a name="line.305"></a>
+<span class="sourceLineNo">306</span>  /** Returns the size in bytes of the short[] object. */<a name="line.306"></a>
+<span class="sourceLineNo">307</span>  public static long sizeOf(short[] arr) {<a name="line.307"></a>
+<span class="sourceLineNo">308</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_SHORT * arr.length);<a name="line.308"></a>
+<span class="sourceLineNo">309</span>  }<a name="line.309"></a>
+<span class="sourceLineNo">310</span>  <a name="line.310"></a>
+<span class="sourceLineNo">311</span>  /** Returns the size in bytes of the int[] object. */<a name="line.311"></a>
+<span class="sourceLineNo">312</span>  public static long sizeOf(int[] arr) {<a name="line.312"></a>
+<span class="sourceLineNo">313</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_INT * arr.length);<a name="line.313"></a>
+<span class="sourceLineNo">314</span>  }<a name="line.314"></a>
+<span class="sourceLineNo">315</span>  <a name="line.315"></a>
+<span class="sourceLineNo">316</span>  /** Returns the size in bytes of the float[] object. */<a name="line.316"></a>
+<span class="sourceLineNo">317</span>  public static long sizeOf(float[] arr) {<a name="line.317"></a>
+<span class="sourceLineNo">318</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_FLOAT * arr.length);<a name="line.318"></a>
+<span class="sourceLineNo">319</span>  }<a name="line.319"></a>
+<span class="sourceLineNo">320</span>  <a name="line.320"></a>
+<span class="sourceLineNo">321</span>  /** Returns the size in bytes of the long[] object. */<a name="line.321"></a>
+<span class="sourceLineNo">322</span>  public static long sizeOf(long[] arr) {<a name="line.322"></a>
+<span class="sourceLineNo">323</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_LONG * arr.length);<a name="line.323"></a>
+<span class="sourceLineNo">324</span>  }<a name="line.324"></a>
+<span class="sourceLineNo">325</span>  <a name="line.325"></a>
+<span class="sourceLineNo">326</span>  /** Returns the size in bytes of the double[] object. */<a name="line.326"></a>
+<span class="sourceLineNo">327</span>  public static long sizeOf(double[] arr) {<a name="line.327"></a>
+<span class="sourceLineNo">328</span>    return alignObjectSize((long) NUM_BYTES_ARRAY_HEADER + (long) NUM_BYTES_DOUBLE * arr.length);<a name="line.328"></a>
+<span class="sourceLineNo">329</span>  }<a name="line.329"></a>
+<span class="sourceLineNo">330</span><a name="line.330"></a>
+<span class="sourceLineNo">331</span>  /** <a name="line.331"></a>
+<span class="sourceLineNo">332</span>   * Estimates the RAM usage by the given object. It will<a name="line.332"></a>
+<span class="sourceLineNo">333</span>   * walk the object tree and sum up all referenced objects.<a name="line.333"></a>
+<span class="sourceLineNo">334</span>   * <a name="line.334"></a>
+<span class="sourceLineNo">335</span>   * &lt;p&gt;&lt;b&gt;Resource Usage:&lt;/b&gt; This method internally uses a set of<a name="line.335"></a>
+<span class="sourceLineNo">336</span>   * every object seen during traversals so it does allocate memory<a name="line.336"></a>
+<span class="sourceLineNo">337</span>   * (it isn't side-effect free). After the method exits, this memory<a name="line.337"></a>
+<span class="sourceLineNo">338</span>   * should be GCed.&lt;/p&gt;<a name="line.338"></a>
+<span class="sourceLineNo">339</span>   */<a name="line.339"></a>
+<span class="sourceLineNo">340</span>  public static long sizeOf(Object obj) {<a name="line.340"></a>
+<span class="sourceLineNo">341</span>    return measureObjectSize(obj, false);<a name="line.341"></a>
+<span class="sourceLineNo">342</span>  }<a name="line.342"></a>
+<span class="sourceLineNo">343</span><a name="line.343"></a>
+<span class="sourceLineNo">344</span>  /** <a name="line.344"></a>
+<span class="sourceLineNo">345</span>   * Estimates a "shallow" memory usage of the given object. For arrays, this will be the<a name="line.345"></a>
+<span class="sourceLineNo">346</span>   * memory taken by array storage (no subreferences will be followed). For objects, this<a name="line.346"></a>
+<span class="sourceLineNo">347</span>   * will be the memory taken by the fields.<a name="line.347"></a>
+<span class="sourceLineNo">348</span>   * <a name="line.348"></a>
+<span class="sourceLineNo">349</span>   * JVM object alignments are also applied.<a name="line.349"></a>
+<span class="sourceLineNo">350</span>   */<a name="line.350"></a>
+<span class="sourceLineNo">351</span>  public static long shallowSizeOf(Object obj) {<a name="line.351"></a>
+<span class="sourceLineNo">352</span>    if (obj == null) return 0;<a name="line.352"></a>
+<span class="sourceLineNo">353</span>    final Class&lt;?&gt; clz = obj.getClass();<a name="line.353"></a>
+<span class="sourceLineNo">354</span>    if (clz.isArray()) {<a name="line.354"></a>
+<span class="sourceLineNo">355</span>      return shallowSizeOfArray(obj);<a name="line.355"></a>
+<span class="sourceLineNo">356</span>    } else {<a name="line.356"></a>
+<span class="sourceLineNo">357</span>      return shallowSizeOfInstance(clz);<a name="line.357"></a>
+<span class="sourceLineNo">358</span>    }<a name="line.358"></a>
+<span class="sourceLineNo">359</span>  }<a name="line.359"></a>
+<span class="sourceLineNo">360</span><a name="line.360"></a>
+<span class="sourceLineNo">361</span>  /**<a name="line.361"></a>
+<span class="sourceLineNo">362</span>   * Returns the shallow instance size in bytes an instance of the given class would occupy.<a name="line.362"></a>
+<span class="sourceLineNo">363</span>   * This works with all conventional classes and primitive types, but not with arrays<a name="line.363"></a>
+<span class="sourceLineNo">364</span>   * (the size then depends on the number of elements and varies from object to object).<a name="line.364"></a>
+<span class="sourceLineNo">365</span>   * <a name="line.365"></a>
+<span class="sourceLineNo">366</span>   * @see #shallowSizeOf(Object)<a name="line.366"></a>
+<span class="sourceLineNo">367</span>   * @throws IllegalArgumentException if {@code clazz} is an array class. <a name="line.367"></a>
+<span class="sourceLineNo">368</span>   */<a name="line.368"></a>
+<span class="sourceLineNo">369</span>  public static long shallowSizeOfInstance(Class&lt;?&gt; clazz) {<a name="line.369"></a>
+<span class="sourceLineNo">370</span>    if (clazz.isArray())<a name="line.370"></a>
+<span class="sourceLineNo">371</span>      throw new IllegalArgumentException("This method does not work with array classes.");<a name="line.371"></a>
+<span class="sourceLineNo">372</span>    if (clazz.isPrimitive())<a name="line.372"></a>
+<span class="sourceLineNo">373</span>      return primitiveSizes.get(clazz);<a name="line.373"></a>
+<span class="sourceLineNo">374</span>    <a name="line.374"></a>
+<span class="sourceLineNo">375</span>    long size = NUM_BYTES_OBJECT_HEADER;<a name="line.375"></a>
+<span class="sourceLineNo">376</span><a name="line.376"></a>
+<span class="sourceLineNo">377</span>    // Walk type hierarchy<a name="line.377"></a>
+<span class="sourceLineNo">378</span>    for (;clazz != null; clazz = clazz.getSuperclass()) {<a name="line.378"></a>
+<span class="sourceLineNo">379</span>      final Field[] fields = clazz.getDeclaredFields();<a name="line.379"></a>
+<span class="sourceLineNo">380</span>      for (Field f : fields) {<a name="line.380"></a>
+<span class="sourceLineNo">381</span>        if (!Modifier.isStatic(f.getModifiers())) {<a name="line.381"></a>
+<span class="sourceLineNo">382</span>          size = adjustForField(size, f);<a name="line.382"></a>
+<span class="sourceLineNo">383</span>        }<a name="line.383"></a>
+<span class="sourceLineNo">384</span>      }<a name="line.384"></a>
+<span class="sourceLineNo">385</span>    }<a name="line.385"></a>
+<span class="sourceLineNo">386</span>    return alignObjectSize(size);    <a name="line.386"></a>
+<span class="sourceLineNo">387</span>  }<a name="line.387"></a>
+<span class="sourceLineNo">388</span><a name="line.388"></a>
+<span class="sourceLineNo">389</span>  /**<a name="line.389"></a>
+<span class="sourceLineNo">390</span>   * Return shallow size of any &lt;code&gt;array&lt;/code&gt;.<a name="line.390"></a>
+<span class="sourceLineNo">391</span>   */<a name="line.391"></a>
+<span class="sourceLineNo">392</span>  private static long shallowSizeOfArray(Object array) {<a name="line.392"></a>
+<span class="sourceLineNo">393</span>    long size = NUM_BYTES_ARRAY_HEADER;<a name="line.393"></a>
+<span class="sourceLineNo">394</span>    final int len = Array.getLength(array);<a name="line.394"></a>
+<span class="sourceLineNo">395</span>    if (len &gt; 0) {<a name="line.395"></a>
+<span class="sourceLineNo">396</span>      Class&lt;?&gt; arrayElementClazz = array.getClass().getComponentType();<a name="line.396"></a>
+<span class="sourceLineNo">397</span>      if (arrayElementClazz.isPrimitive()) {<a name="line.397"></a>
+<span class="sourceLineNo">398</span>        size += (long) len * primitiveSizes.get(arrayElementClazz);<a name="line.398"></a>
+<span class="sourceLineNo">399</span>      } else {<a name="line.399"></a>
+<span class="sourceLineNo">400</span>        size += (long) NUM_BYTES_OBJECT_REF * len;<a name="line.400"></a>
+<span class="sourceLineNo">401</span>      }<a name="line.401"></a>
+<span class="sourceLineNo">402</span>    }<a name="line.402"></a>
+<span class="sourceLineNo">403</span>    return alignObjectSize(size);<a name="line.403"></a>
+<span class="sourceLineNo">404</span>  }<a name="line.404"></a>
+<span class="sourceLineNo">405</span><a name="line.405"></a>
+<span class="sourceLineNo">406</span>  /*<a name="line.406"></a>
+<span class="sourceLineNo">407</span>   * Non-recursive version of object descend. This consumes more memory than recursive in-depth <a name="line.407"></a>
+<span class="sourceLineNo">408</span>   * traversal but prevents stack overflows on long chains of objects<a name="line.408"></a>
+<span class="sourceLineNo">409</span>   * or complex graphs (a max. recursion depth on my machine was ~5000 objects linked in a chain<a name="line.409"></a>
+<span class="sourceLineNo">410</span>   * so not too much).  <a name="line.410"></a>
+<span class="sourceLineNo">411</span>   */<a name="line.411"></a>
+<span class="sourceLineNo">412</span>  private static long measureObjectSize(Object root, boolean checkInterned) {<a name="line.412"></a>
+<span class="sourceLineNo">413</span>    // Objects seen so far.<a name="line.413"></a>
+<span class="sourceLineNo">414</span>    final IdentityHashSet&lt;Object&gt; seen = new IdentityHashSet&lt;Object&gt;();<a name="line.414"></a>
+<span class="sourceLineNo">415</span>    // Class cache with reference Field and precalculated shallow size. <a name="line.415"></a>
+<span class="sourceLineNo">416</span>    final IdentityHashMap&lt;Class&lt;?&gt;, ClassCache&gt; classCache = new IdentityHashMap&lt;Class&lt;?&gt;, ClassCache&gt;();<a name="line.416"></a>
+<span class="sourceLineNo">417</span>    // Stack of objects pending traversal. Recursion caused stack overflows. <a name="line.417"></a>
+<span class="sourceLineNo">418</span>    final ArrayList&lt;Object&gt; stack = new ArrayList&lt;Object&gt;();<a name="line.418"></a>
+<span class="sourceLineNo">419</span>    stack.add(root);<a name="line.419"></a>
+<span class="sourceLineNo">420</span><a name="line.420"></a>
+<span class="sourceLineNo">421</span>    long totalSize = 0;<a name="line.421"></a>
+<span class="sourceLineNo">422</span>    while (!stack.isEmpty()) {<a name="line.422"></a>
+<span class="sourceLineNo">423</span>      final Object ob = stack.remove(stack.size() - 1);<a name="line.423"></a>
+<span class="sourceLineNo">424</span><a name="line.424"></a>
+<span class="sourceLineNo">425</span>      if (ob == null || seen.contains(ob)) {<a name="line.425"></a>
+<span class="sourceLineNo">426</span>        continue;<a name="line.426"></a>
+<span class="sourceLineNo">427</span>      }<a name="line.427"></a>
+<span class="sourceLineNo">428</span>      seen.add(ob);<a name="line.428"></a>
+<span class="sourceLineNo">429</span><a name="line.429"></a>
+<span class="sourceLineNo">430</span>      // *** BEGIN deprecation<a name="line.430"></a>
+<span class="sourceLineNo">431</span>      if (checkInterned &amp;&amp; ob instanceof String &amp;&amp; ob == ((String) ob).intern()) {<a name="line.431"></a>
+<span class="sourceLineNo">432</span>        continue;<a name="line.432"></a>
+<span class="sourceLineNo">433</span>      }<a name="line.433"></a>
+<span class="sourceLineNo">434</span>      // *** END deprecation<a name="line.434"></a>
+<span class="sourceLineNo">435</span>      <a name="line.435"></a>
+<span class="sourceLineNo">436</span>      final Class&lt;?&gt; obClazz = ob.getClass();<a name="line.436"></a>
+<span class="sourceLineNo">437</span>      if (obClazz.isArray()) {<a name="line.437"></a>
+<span class="sourceLineNo">438</span>        /*<a name="line.438"></a>
+<span class="sourceLineNo">439</span>         * Consider an array, possibly of primitive types. Push any of its references to<a name="line.439"></a>
+<span class="sourceLineNo">440</span>         * the processing stack and accumulate this array's shallow size. <a name="line.440"></a>
+<span class="sourceLineNo">441</span>         */<a name="line.441"></a>
+<span class="sourceLineNo">442</span>        long size = NUM_BYTES_ARRAY_HEADER;<a name="line.442"></a>
+<span class="sourceLineNo">443</span>        final int len = Array.getLength(ob);<a name="line.443"></a>
+<span class="sourceLineNo">444</span>        if (len &gt; 0) {<a name="line.444"></a>
+<span class="sourceLineNo">445</span>          Class&lt;?&gt; componentClazz = obClazz.getComponentType();<a name="line.445"></a>
+<span class="sourceLineNo">446</span>          if (componentClazz.isPrimitive()) {<a name="line.446"></a>
+<span class="sourceLineNo">447</span>            size += (long) len * primitiveSizes.get(componentClazz);<a name="line.447"></a>
+<span class="sourceLineNo">448</span>          } else {<a name="line.448"></a>
+<span class="sourceLineNo">449</span>            size += (long) NUM_BYTES_OBJECT_REF * len;<a name="line.449"></a>
+<span class="sourceLineNo">450</span><a name="line.450"></a>
+<span class="sourceLineNo">451</span>            // Push refs for traversal later.<a name="line.451"></a>
+<span class="sourceLineNo">452</span>            for (int i = len; --i &gt;= 0 ;) {<a name="line.452"></a>
+<span class="sourceLineNo">453</span>              final Object o = Array.get(ob, i);<a name="line.453"></a>
+<span class="sourceLineNo">454</span>              if (o != null &amp;&amp; !seen.contains(o)) {<a name="line.454"></a>
+<span class="sourceLineNo">455</span>                stack.add(o);<a name="line.455"></a>
+<span class="sourceLineNo">456</span>              }<a name="line.456"></a>
+<span class="sourceLineNo">457</span>            }            <a name="line.457"></a>
+<span class="sourceLineNo">458</span>          }<a name="line.458"></a>
+<span class="sourceLineNo">459</span>        }<a name="line.459"></a>
+<span class="sourceLineNo">460</span>        totalSize += alignObjectSize(size);<a name="line.460"></a>
+<span class="sourceLineNo">461</span>      } else {<a name="line.461"></a>
+<span class="sourceLineNo">462</span>        /*<a name="line.462"></a>
+<span class="sourceLineNo">463</span>         * Consider an object. Push any references it has to the processing stack<a name="line.463"></a>
+<span class="sourceLineNo">464</span>         * and accumulate this object's shallow size. <a name="line.464"></a>
+<span class="sourceLineNo">465</span>         */<a name="line.465"></a>
+<span class="sourceLineNo">466</span>        try {<a name="line.466"></a>
+<span class="sourceLineNo">467</span>          ClassCache cachedInfo = classCache.get(obClazz);<a name="line.467"></a>
+<span class="sourceLineNo">468</span>          if (cachedInfo == null) {<a name="line.468"></a>
+<span class="sourceLineNo">469</span>            classCache.put(obClazz, cachedInfo = createCacheEntry(obClazz));<a name="line.469"></a>
+<span class="sourceLineNo">470</span>          }<a name="line.470"></a>
+<span class="sourceLineNo">471</span><a name="line.471"></a>
+<span class="sourceLineNo">472</span>          for (Field f : cachedInfo.referenceFields) {<a name="line.472"></a>
+<span class="sourceLineNo">473</span>            // Fast path to eliminate redundancies.<a name="line.473"></a>
+<span class="sourceLineNo">474</span>            final Object o = f.get(ob);<a name="line.474"></a>
+<span class="sourceLineNo">475</span>            if (o != null &amp;&amp; !seen.contains(o)) {<a name="line.475"></a>
+<span class="sourceLineNo">476</span>              stack.add(o);<a name="line.476"></a>
+<span class="sourceLineNo">477</span>            }<a name="line.477"></a>
+<span class="sourceLineNo">478</span>          }<a name="line.478"></a>
+<span class="sourceLineNo">479</span><a name="line.479"></a>
+<span class="sourceLineNo">480</span>          totalSize += cachedInfo.alignedShallowInstanceSize;<a name="line.480"></a>
+<span class="sourceLineNo">481</span>        } catch (IllegalAccessException e) {<a name="line.481"></a>
+<span class="sourceLineNo">482</span>          // this should never happen as we enabled setAccessible().<a name="line.482"></a>
+<span class="sourceLineNo">483</span>          throw new RuntimeException("Reflective field access failed?", e);<a name="line.483"></a>
+<span class="sourceLineNo">484</span>        }<a name="line.484"></a>
+<span class="sourceLineNo">485</span>      }<a name="line.485"></a>
+<span class="sourceLineNo">486</span>    }<a name="line.486"></a>
+<span class="sourceLineNo">487</span><a name="line.487"></a>
+<span class="sourceLineNo">488</span>    // Help the GC (?).<a name="line.488"></a>
+<span class="sourceLineNo">489</span>    seen.clear();<a name="line.489"></a>
+<span class="sourceLineNo">490</span>    stack.clear();<a name="line.490"></a>
+<span class="sourceLineNo">491</span>    classCache.clear();<a name="line.491"></a>
+<span class="sourceLineNo">492</span><a name="line.492"></a>
+<span class="sourceLineNo">493</span>    return totalSize;<a name="line.493"></a>
+<span class="sourceLineNo">494</span>  }<a name="line.494"></a>
+<span class="sourceLineNo">495</span><a name="line.495"></a>
+<span class="sourceLineNo">496</span>  /**<a name="line.496"></a>
+<span class="sourceLineNo">497</span>   * Create a cached information about shallow size and reference fields for <a name="line.497"></a>
+<span class="sourceLineNo">498</span>   * a given class.<a name="line.498"></a>
+<span class="sourceLineNo">499</span>   */<a name="line.499"></a>
+<span class="sourceLineNo">500</span>  private static ClassCache createCacheEntry(final Class&lt;?&gt; clazz) {<a name="line.500"></a>
+<span class="sourceLineNo">501</span>    ClassCache cachedInfo;<a name="line.501"></a>
+<span class="sourceLineNo">502</span>    long shallowInstanceSize = NUM_BYTES_OBJECT_HEADER;<a name="line.502"></a>
+<span class="sourceLineNo">503</span>    final ArrayList&lt;Field&gt; referenceFields = new ArrayList&lt;Field&gt;(32);<a name="line.503"></a>
+<span class="sourceLineNo">504</span>    for (Class&lt;?&gt; c = clazz; c != null; c = c.getSuperclass()) {<a name="line.504"></a>
+<span class="sourceLineNo">505</span>      final Field[] fields = c.getDeclaredFields();<a name="line.505"></a>
+<span class="sourceLineNo">506</span>      for (final Field f : fields) {<a name="line.506"></a>
+<span class="sourceLineNo">507</span>        if (!Modifier.isStatic(f.getModifiers())) {<a name="line.507"></a>
+<span class="sourceLineNo">508</span>          shallowInstanceSize = adjustForField(shallowInstanceSize, f);<a name="line.508"></a>
+<span class="sourceLineNo">509</span><a name="line.509"></a>
+<span class="sourceLineNo">510</span>          if (!f.getType().isPrimitive()) {<a name="line.510"></a>
+<span class="sourceLineNo">511</span>            f.setAccessible(true);<a name="line.511"></a>
+<span class="sourceLineNo">512</span>            referenceFields.add(f);<a name="line.512"></a>
+<span class="sourceLineNo">513</span>          }<a name="line.513"></a>
+<span class="sourceLineNo">514</span>        }<a name="line.514"></a>
+<span class="sourceLineNo">515</span>      }<a name="line.515"></a>
+<span class="sourceLineNo">516</span>    }<a name="line.516"></a>
+<span class="sourceLineNo">517</span><a name="line.517"></a>
+<span class="sourceLineNo">518</span>    cachedInfo = new ClassCache(<a name="line.518"></a>
+<span class="sourceLineNo">519</span>        alignObjectSize(shallowInstanceSize), <a name="line.519"></a>
+<span class="sourceLineNo">520</span>        referenceFields.toArray(new Field[referenceFields.size()]));<a name="line.520"></a>
+<span class="sourceLineNo">521</span>    return cachedInfo;<a name="line.521"></a>
+<span class="sourceLineNo">522</span>  }<a name="line.522"></a>
+<span class="sourceLineNo">523</span><a name="line.523"></a>
+<span class="sourceLineNo">524</span>  /**<a name="line.524"></a>
+<span class="sourceLineNo">525</span>   * This method returns the maximum representation size of an object. &lt;code&gt;sizeSoFar&lt;/code&gt;<a name="line.525"></a>
+<span class="sourceLineNo">526</span>   * is the object's size measured so far. &lt;code&gt;f&lt;/code&gt; is the field being probed.<a name="line.526"></a>
+<span class="sourceLineNo">527</span>   * <a name="line.527"></a>
+<span class="sourceLineNo">528</span>   * &lt;p&gt;The returned offset will be the maximum of whatever was measured so far and <a name="line.528"></a>
+<span class="sourceLineNo">529</span>   * &lt;code&gt;f&lt;/code&gt; field's offset and representation size (unaligned).<a name="line.529"></a>
+<span class="sourceLineNo">530</span>   */<a name="line.530"></a>
+<span class="sourceLineNo">531</span>  private static long adjustForField(long sizeSoFar, final Field f) {<a name="line.531"></a>
+<span class="sourceLineNo">532</span>    final Class&lt;?&gt; type = f.getType();<a name="line.532"></a>
+<span class="sourceLineNo">533</span>    final int fsize = type.isPrimitive() ? primitiveSizes.get(type) : NUM_BYTES_OBJECT_REF;<a name="line.533"></a>
+<span class="sourceLineNo">534</span>    if (objectFieldOffsetMethod != null) {<a name="line.534"></a>
+<span class="sourceLineNo">535</span>      try {<a name="line.535"></a>
+<span class="sourceLineNo">536</span>        final long offsetPlusSize =<a name="line.536"></a>
+<span class="sourceLineNo">537</span>          ((Number) objectFieldOffsetMethod.invoke(theUnsafe, f)).longValue() + fsize;<a name="line.537"></a>
+<span class="sourceLineNo">538</span>        return Math.max(sizeSoFar, offsetPlusSize);<a name="line.538"></a>
+<span class="sourceLineNo">539</span>      } catch (IllegalAccessException ex) {<a name="line.539"></a>
+<span class="sourceLineNo">540</span>        throw new RuntimeException("Access problem with sun.misc.Unsafe", ex);<a name="line.540"></a>
+<span class="sourceLineNo">541</span>      } catch (InvocationTargetException ite) {<a name="line.541"></a>
+<span class="sourceLineNo">542</span>        final Throwable cause = ite.getCause();<a name="line.542"></a>
+<span class="sourceLineNo">543</span>        if (cause instanceof RuntimeException)<a name="line.543"></a>
+<span class="sourceLineNo">544</span>          throw (RuntimeException) cause;<a name="line.544"></a>
+<span class="sourceLineNo">545</span>        if (cause instanceof Error)<a name="line.545"></a>
+<span class="sourceLineNo">546</span>          throw (Error) cause;<a name="line.546"></a>
+<span class="sourceLineNo">547</span>        // this should never happen (Unsafe does not declare<a name="line.547"></a>
+<span class="sourceLineNo">548</span>        // checked Exceptions for this method), but who knows?<a name="line.548"></a>
+<span class="sourceLineNo">549</span>        throw new RuntimeException("Call to Unsafe's objectFieldOffset() throwed "+<a name="line.549"></a>
+<span class="sourceLineNo">550</span>          "checked Exception when accessing field " +<a name="line.550"></a>
+<span class="sourceLineNo">551</span>          f.getDeclaringClass().getName() + "#" + f.getName(), cause);<a name="line.551"></a>
+<span class="sourceLineNo">552</span>      }<a name="line.552"></a>
+<span class="sourceLineNo">553</span>    } else {<a name="line.553"></a>
+<span class="sourceLineNo">554</span>      // TODO: No alignments based on field type/ subclass fields alignments?<a name="line.554"></a>
+<span class="sourceLineNo">555</span>      return sizeSoFar + fsize;<a name="line.555"></a>
+<span class="sourceLineNo">556</span>    }<a name="line.556"></a>
+<span class="sourceLineNo">557</span>  }<a name="line.557"></a>
+<span class="sourceLineNo">558</span><a name="line.558"></a>
+<span class="sourceLineNo">559</span>  /** Return the set of unsupported JVM features that improve the estimation. */<a name="line.559"></a>
+<span class="sourceLineNo">560</span>  public static EnumSet&lt;JvmFeature&gt; getUnsupportedFeatures() {<a name="line.560"></a>
+<span class="sourceLineNo">561</span>    EnumSet&lt;JvmFeature&gt; unsupported = EnumSet.allOf(JvmFeature.class);<a name="line.561"></a>
+<span class="sourceLineNo">562</span>    unsupported.removeAll(supportedFeatures);<a name="line.562"></a>
+<span class="sourceLineNo">563</span>    return unsupported;<a name="line.563"></a>
+<span class="sourceLineNo">564</span>  }<a name="line.564"></a>
+<span class="sourceLineNo">565</span><a name="line.565"></a>
+<span class="sourceLineNo">566</span>  /** Return the set of supported JVM features that improve the estimation. */<a name="line.566"></a>
+<span class="sourceLineNo">567</span>  public static EnumSet&lt;JvmFeature&gt; getSupportedFeatures() {<a name="line.567"></a>
+<span class="sourceLineNo">568</span>    return EnumSet.copyOf(supportedFeatures);<a name="line.568"></a>
+<span class="sourceLineNo">569</span>  }<a name="line.569"></a>
+<span class="sourceLineNo">570</span><a name="line.570"></a>
+<span class="sourceLineNo">571</span>  /**<a name="line.571"></a>
+<span class="sourceLineNo">572</span>   * Returns &lt;code&gt;size&lt;/code&gt; in human-readable units (GB, MB, KB or bytes).<a name="line.572"></a>
+<span class="sourceLineNo">573</span>   */<a name="line.573"></a>
+<span class="sourceLineNo">574</span>  public static String humanReadableUnits(long bytes) {<a name="line.574"></a>
+<span class="sourceLineNo">575</span>    return humanReadableUnits(bytes, <a name="line.575"></a>
+<span class="sourceLineNo">576</span>        new DecimalFormat("0.#", new DecimalFormatSymbols(Locale.ENGLISH)));<a name="line.576"></a>
+<span class="sourceLineNo">577</span>  }<a name="line.577"></a>
+<span class="sourceLineNo">578</span><a name="line.578"></a>
+<span class="sourceLineNo">579</span>  /**<a name="line.579"></a>
+<span class="sourceLineNo">580</span>   * Returns &lt;code&gt;size&lt;/code&gt; in human-readable units (GB, MB, KB or bytes). <a name="line.580"></a>
+<span class="sourceLineNo">581</span>   */<a name="line.581"></a>
+<span class="sourceLineNo">582</span>  public static String humanReadableUnits(long bytes, DecimalFormat df) {<a name="line.582"></a>
+<span class="sourceLineNo">583</span>    if (bytes / ONE_GB &gt; 0) {<a name="line.583"></a>
+<span class="sourceLineNo">584</span>      return df.format((float) bytes / ONE_GB) + " GB";<a name="line.584"></a>
+<span class="sourceLineNo">585</span>    } else if (bytes / ONE_MB &gt; 0) {<a name="line.585"></a>
+<span class="sourceLineNo">586</span>      return df.format((float) bytes / ONE_MB) + " MB";<a name="line.586"></a>
+<span class="sourceLineNo">587</span>    } else if (bytes / ONE_KB &gt; 0) {<a name="line.587"></a>
+<span class="sourceLineNo">588</span>      return df.format((float) bytes / ONE_KB) + " KB";<a name="line.588"></a>
+<span class="sourceLineNo">589</span>    } else {<a name="line.589"></a>
+<span class="sourceLineNo">590</span>      return bytes + " bytes";<a name="line.590"></a>
+<span class="sourceLineNo">591</span>    }<a name="line.591"></a>
+<span class="sourceLineNo">592</span>  }<a name="line.592"></a>
+<span class="sourceLineNo">593</span><a name="line.593"></a>
+<span class="sourceLineNo">594</span>  /**<a name="line.594"></a>
+<span class="sourceLineNo">595</span>   * Return a human-readable size of a given object.<a name="line.595"></a>
+<span class="sourceLineNo">596</span>   * @see #sizeOf(Object)<a name="line.596"></a>
+<span class="sourceLineNo">597</span>   * @see #humanReadableUnits(long)<a name="line.597"></a>
+<span class="sourceLineNo">598</span>   */<a name="line.598"></a>
+<span class="sourceLineNo">599</span>  public static String humanSizeOf(Object object) {<a name="line.599"></a>
+<span class="sourceLineNo">600</span>    return humanReadableUnits(sizeOf(object));<a name="line.600"></a>
+<span class="sourceLineNo">601</span>  }<a name="line.601"></a>
+<span class="sourceLineNo">602</span><a name="line.602"></a>
+<span class="sourceLineNo">603</span>  /**<a name="line.603"></a>
+<span class="sourceLineNo">604</span>   * An identity hash set implemented using open addressing. No null keys are allowed.<a name="line.604"></a>
+<span class="sourceLineNo">605</span>   * <a name="line.605"></a>
+<span class="sourceLineNo">606</span>   * TODO: If this is useful outside this class, make it public - needs some work<a name="line.606"></a>
+<span class="sourceLineNo">607</span>   */<a name="line.607"></a>
+<span class="sourceLineNo">608</span>  static final class IdentityHashSet&lt;KType&gt; implements Iterable&lt;KType&gt; {<a name="line.608"></a>
+<span class="sourceLineNo">609</span>    /**<a name="line.609"></a>
+<span class="sourceLineNo">610</span>     * Default load factor.<a name="line.610"></a>
+<span class="sourceLineNo">611</span>     */<a name="line.611"></a>
+<span class="sourceLineNo">612</span>    public final static float DEFAULT_LOAD_FACTOR = 0.75f;<a name="line.612"></a>
+<span class="sourceLineNo">613</span><a name="line.613"></a>
+<span class="sourceLineNo">614</span>    /**<a name="line.614"></a>
+<span class="sourceLineNo">615</span>     * Minimum capacity for the set.<a name="line.615"></a>
+<span class="sourceLineNo">616</span>     */<a name="line.616"></a>
+<span class="sourceLineNo">617</span>    public final static int MIN_CAPACITY = 4;<a name="line.617"></a>
+<span class="sourceLineNo">618</span><a name="line.618"></a>
+<span class="sourceLineNo">619</span>    /**<a name="line.619"></a>
+<span class="sourceLineNo">620</span>     * All of set entries. Always of power of two length.<a name="line.620"></a>
+<span class="sourceLineNo">621</span>     */<a name="line.621"></a>
+<span class="sourceLineNo">622</span>    public Object[] keys;<a name="line.622"></a>
+<span class="sourceLineNo">623</span>    <a name="line.623"></a>
+<span class="sourceLineNo">624</span>    /**<a name="line.624"></a>
+<span class="sourceLineNo">625</span>     * Cached number of assigned slots.<a name="line.625"></a>
+<span class="sourceLineNo">626</span>     */<a name="line.626"></a>
+<span class="sourceLineNo">627</span>    public int assigned;<a name="line.627"></a>
+<span class="sourceLineNo">628</span>    <a name="line.628"></a>
+<span class="sourceLineNo">629</span>    /**<a name="line.629"></a>
+<span class="sourceLineNo">630</span>     * The load factor for this set (fraction of allocated or deleted slots before<a name="line.630"></a>
+<span class="sourceLineNo">631</span>     * the buffers must be rehashed or reallocated).<a name="line.631"></a>
+<span class="sourceLineNo">632</span>     */<a name="line.632"></a>
+<span class="sourceLineNo">633</span>    public final float loadFactor;<a name="line.633"></a>
+<span class="sourceLineNo">634</span>    <a name="line.634"></a>
+<span class="sourceLineNo">635</span>    /**<a name="line.635"></a>
+<span class="sourceLineNo">636</span>     * Cached capacity threshold at which we must resize the buffers.<a name="line.636"></a>
+<span class="sourceLineNo">637</span>     */<a name="line.637"></a>
+<span class="sourceLineNo">638</span>    private int resizeThreshold;<a name="line.638"></a>
+<span class="sourceLineNo">639</span>    <a name="line.639"></a>
+<span class="sourceLineNo">640</span>    /**<a name="line.640"></a>
+<span class="sourceLineNo">641</span>     * Creates a hash set with the default capacity of 16.<a name="line.641"></a>
+<span class="sourceLineNo">642</span>     * load factor of {@value #DEFAULT_LOAD_FACTOR}. `<a name="line.642"></a>
+<span class="sourceLineNo">643</span>     */<a name="line.643"></a>
+<span class="sourceLineNo">644</span>    public IdentityHashSet() {<a name="line.644"></a>
+<span class="sourceLineNo">645</span>      this(16, DEFAULT_LOAD_FACTOR);<a name="line.645"></a>
+<span class="sourceLineNo">646</span>    }<a name="line.646"></a>
+<span class="sourceLineNo">647</span>    <a name="line.647"></a>
+<span class="sourceLineNo">648</span>    /**<a name="line.648"></a>
+<span class="sourceLineNo">649</span>     * Creates a hash set with the given capacity, load factor of<a name="line.649"></a>
+<span class="sourceLineNo">650</span>     * {@value #DEFAULT_LOAD_FACTOR}.<a name="line.650"></a>
+<span class="sourceLineNo">651</span>     */<a name="line.651"></a>
+<span class="sourceLineNo">652</span>    public IdentityHashSet(int initialCapacity) {<a name="line.652"></a>
+<span class="sourceLineNo">653</span>      this(initialCapacity, DEFAULT_LOAD_FACTOR);<a name="line.653"></a>
+<span class="sourceLineNo">654</span>    }<a name="line.654"></a>
+<span class="sourceLineNo">655</span>    <a name="line.655"></a>
+<span class="sourceLineNo">656</span>    /**<a name="line.656"></a>
+<span class="sourceLineNo">657</span>     * Creates a hash set with the given capacity and load factor.<a name="line.657"></a>
+<span class="sourceLineNo">658</span>     */<a name="line.658"></a>
+<span class="sourceLineNo">659</span>    public IdentityHashSet(int initialCapacity, float loadFactor) {<a name="line.659"></a>
+<span class="sourceLineNo">660</span>      initialCapacity = Math.max(MIN_CAPACITY, initialCapacity);<a name="line.660"></a>
+<span class="sourceLineNo">661</span>      <a name="line.661"></a>
+<span class="sourceLineNo">662</span>      assert initialCapacity &gt; 0 : "Initial capacity must be between (0, "<a name="line.662"></a>
+<span class="sourceLineNo">663</span>          + Integer.MAX_VALUE + "].";<a name="line.663"></a>
+<span class="sourceLineNo">664</span>      assert loadFactor &gt; 0 &amp;&amp; loadFactor &lt; 1 : "Load factor must be between (0, 1).";<a name="line.664"></a>
+<span class="sourceLineNo">665</span>      this.loadFactor = loadFactor;<a name="line.665"></a>
+<span class="sourceLineNo">666</span>      allocateBuffers(roundCapacity(initialCapacity));<a name="line.666"></a>
+<span class="sourceLineNo">667</span>    }<a name="line.667"></a>
+<span class="sourceLineNo">668</span>    <a name="line.668"></a>
+<span class="sourceLineNo">669</span>    /**<a name="line.669"></a>
+<span class="sourceLineNo">670</span>     * Adds a reference to the set. Null keys are not allowed.<a name="line.670"></a>
+<span class="sourceLineNo">671</span>     */<a name="line.671"></a>
+<span class="sourceLineNo">672</span>    public boolean add(KType e) {<a name="line.672"></a>
+<span class="sourceLineNo">673</span>      assert e != null : "Null keys not allowed.";<a name="line.673"></a>
+<span class="sourceLineNo">674</span>      <a name="line.674"></a>
+<span class="sourceLineNo">675</span>      if (assigned &gt;= resizeThreshold) expandAndRehash();<a name="line.675"></a>
+<span class="sourceLineNo">676</span>      <a name="line.676"></a>
+<span class="sourceLineNo">677</span>      final int mask = keys.length - 1;<a name="line.677"></a>
+<span class="sourceLineNo">678</span>      int slot = rehash(e) &amp; mask;<a name="line.678"></a>
+<span class="sourceLineNo">679</span>      Object existing;<a name="line.679"></a>
+<span class="sourceLineNo">680</span>      while ((existing = keys[slot]) != null) {<a name="line.680"></a>
+<span class="sourceLineNo">681</span>        if (e == existing) {<a name="line.681"></a>
+<span class="sourceLineNo">682</span>          return false; // already found.<a name="line.682"></a>
+<span class="sourceLineNo">683</span>        }<a name="line.683"></a>
+<span class="sourceLineNo">684</span>        slot = (slot + 1) &amp; mask;<a name="line.684"></a>
+<span class="sourceLineNo">685</span>      }<a name="line.685"></a>
+<span class="sourceLineNo">686</span>      assigned++;<a name="line.686"></a>
+<span class="sourceLineNo">687</span>      keys[slot] = e;<a name="line.687"></a>
+<span class="sourceLineNo">688</span>      return true;<a name="line.688"></a>
+<span class="sourceLineNo">689</span>    }<a name="line.689"></a>
+<span class="sourceLineNo">690</span><a name="line.690"></a>
+<span class="sourceLineNo">691</span>    /**<a name="line.691"></a>
+<span class="sourceLineNo">692</span>     * Checks if the set contains a given ref.<a name="line.692"></a>
+<span class="sourceLineNo">693</span>     */<a name="line.693"></a>
+<span class="sourceLineNo">694</span>    public boolean contains(KType e) {<a name="line.694"></a>
+<span class="sourceLineNo">695</span>      final int mask = keys.length - 1;<a name="line.695"></a>
+<span class="sourceLineNo">696</span>      int slot = rehash(e) &amp; mask;<a name="line.696"></a>
+<span class="sourceLineNo">697</span>      Object existing;<a name="line.697"></a>
+<span class="sourceLineNo">698</span>      while ((existing = keys[slot]) != null) {<a name="line.698"></a>
+<span class="sourceLineNo">699</span>        if (e == existing) {<a name="line.699"></a>
+<span class="sourceLineNo">700</span>          return true;<a name="line.700"></a>
+<span class="sourceLineNo">701</span>        }<a name="line.701"></a>
+<span class="sourceLineNo">702</span>        slot = (slot + 1) &amp; mask;<a name="line.702"></a>
+<span class="sourceLineNo">703</span>      }<a name="line.703"></a>
+<span class="sourceLineNo">704</span>      return false;<a name="line.704"></a>
+<span class="sourceLineNo">705</span>    }<a name="line.705"></a>
+<span class="sourceLineNo">706</span><a name="line.706"></a>
+<span class="sourceLineNo">707</span>    /** Rehash via MurmurHash.<a name="line.707"></a>
+<span class="sourceLineNo">708</span>     * <a name="line.708"></a>
+<span class="sourceLineNo">709</span>     * &lt;p&gt;The implementation is based on the<a name="line.709"></a>
+<span class="sourceLineNo">710</span>     * finalization step from Austin Appleby's<a name="line.710"></a>
+<span class="sourceLineNo">711</span>     * &lt;code&gt;MurmurHash3&lt;/code&gt;.<a name="line.711"></a>
+<span class="sourceLineNo">712</span>     * <a name="line.712"></a>
+<span class="sourceLineNo">713</span>     * @see "http://sites.google.com/site/murmurhash/"<a name="line.713"></a>
+<span class="sourceLineNo">714</span>     */<a name="line.714"></a>
+<span class="sourceLineNo">715</span>    private static int rehash(Object o) {<a name="line.715"></a>
+<span class="sourceLineNo">716</span>      int k = System.identityHashCode(o);<a name="line.716"></a>
+<span class="sourceLineNo">717</span>      k ^= k &gt;&gt;&gt; 16;<a name="line.717"></a>
+<span class="sourceLineNo">718</span>      k *= 0x85ebca6b;<a name="line.718"></a>
+<span class="sourceLineNo">719</span>      k ^= k &gt;&gt;&gt; 13;<a name="line.719"></a>
+<span class="sourceLineNo">720</span>      k *= 0xc2b2ae35;<a name="line.720"></a>
+<span class="sourceLineNo">721</span>      k ^= k &gt;&gt;&gt; 16;<a name="line.721"></a>
+<span class="sourceLineNo">722</span>      return k;<a name="line.722"></a>
+<span class="sourceLineNo">723</span>    }<a name="line.723"></a>
+<span class="sourceLineNo">724</span>    <a name="line.724"></a>
+<span class="sourceLineNo">725</span>    /**<a name="line.725"></a>
+<span class="sourceLineNo">726</span>     * Expand the internal storage buffers (capacity) or rehash current keys and<a name="line.726"></a>
+<span class="sourceLineNo">727</span>     * values if there are a lot of deleted slots.<a name="line.727"></a>
+<span class="sourceLineNo">728</span>     */<a name="line.728"></a>
+<span class="sourceLineNo">729</span>    private void expandAndRehash() {<a name="line.729"></a>
+<span class="sourceLineNo">730</span>      final Object[] oldKeys = this.keys;<a name="line.730"></a>
+<span class="sourceLineNo">731</span>      <a name="line.731"></a>
+<span class="sourceLineNo">732</span>      assert assigned &gt;= resizeThreshold;<a name="line.732"></a>
+<span class="sourceLineNo">733</span>      allocateBuffers(nextCapacity(keys.length));<a name="line.733"></a>
+<span class="sourceLineNo">734</span>      <a name="line.734"></a>
+<span class="sourceLineNo">735</span>      /*<a name="line.735"></a>
+<span class="sourceLineNo">736</span>       * Rehash all assigned slots from the old hash table.<a name="line.736"></a>
+<span class="sourceLineNo">737</span>       */<a name="line.737"></a>
+<span class="sourceLineNo">738</span>      final int mask = keys.length - 1;<a name="line.738"></a>
+<span class="sourceLineNo">739</span>      for (int i = 0; i &lt; oldKeys.length; i++) {<a name="line.739"></a>
+<span class="sourceLineNo">740</span>        final Object key = oldKeys[i];<a name="line.740"></a>
+<span class="sourceLineNo">741</span>        if (key != null) {<a name="line.741"></a>
+<span class="sourceLineNo">742</span>          int slot = rehash(key) &amp; mask;<a name="line.742"></a>
+<span class="sourceLineNo">743</span>          while (keys[slot] != null) {<a name="line.743"></a>
+<span class="sourceLineNo">744</span>            slot = (slot + 1) &amp; mask;<a name="line.744"></a>
+<span class="sourceLineNo">745</span>          }<a name="line.745"></a>
+<span class="sourceLineNo">746</span>          keys[slot] = key;<a name="line.746"></a>
+<span class="sourceLineNo">747</span>        }<a name="line.747"></a>
+<span class="sourceLineNo">748</span>      }<a name="line.748"></a>
+<span class="sourceLineNo">749</span>      Arrays.fill(oldKeys, null);<a name="line.749"></a>
+<span class="sourceLineNo">750</span>    }<a name="line.750"></a>
+<span class="sourceLineNo">751</span>    <a name="line.751"></a>
+<span class="sourceLineNo">752</span>    /**<a name="line.752"></a>
+<span class="sourceLineNo">753</span>     * Allocate internal buffers for a given capacity.<a name="line.753"></a>
+<span class="sourceLineNo">754</span>     * <a name="line.754"></a>
+<span class="sourceLineNo">755</span>     * @param capacity<a name="line.755"></a>
+<span class="sourceLineNo">756</span>     *          New capacity (must be a power of two).<a name="line.756"></a>
+<span class="sourceLineNo">757</span>     */<a name="line.757"></a>
+<span class="sourceLineNo">758</span>    private void allocateBuffers(int capacity) {<a name="line.758"></a>
+<span class="sourceLineNo">759</span>      this.keys = new Object[capacity];<a name="line.759"></a>
+<span class="sourceLineNo">760</span>      this.resizeThreshold = (int) (capacity * DEFAULT_LOAD_FACTOR);<a name="line.760"></a>
+<span class="sourceLineNo">761</span>    }<a name="line.761"></a>
+<span class="sourceLineNo">762</span>    <a name="line.762"></a>
+<span class="sourceLineNo">763</span>    /**<a name="line.763"></a>
+<span class="sourceLineNo">764</span>     * Return the next possible capacity, counting from the current buffers' size.<a name="line.764"></a>
+<span class="sourceLineNo">765</span>     */<a name="line.765"></a>
+<span class="sourceLineNo">766</span>    protected int nextCapacity(int current) {<a name="line.766"></a>
+<span class="sourceLineNo">767</span>      assert current &gt; 0 &amp;&amp; Long.bitCount(current) == 1 : "Capacity must be a power of two.";<a name="line.767"></a>
+<span class="sourceLineNo">768</span>      assert ((current &lt;&lt; 1) &gt; 0) : "Maximum capacity exceeded ("<a name="line.768"></a>
+<span class="sourceLineNo">769</span>          + (0x80000000 &gt;&gt;&gt; 1) + ").";<a name="line.769"></a>
+<span class="sourceLineNo">770</span>      <a name="line.770"></a>
+<span class="sourceLineNo">771</span>      if (current &lt; MIN_CAPACITY / 2) current = MIN_CAPACITY / 2;<a name="line.771"></a>
+<span class="sourceLineNo">772</span>      return current &lt;&lt; 1;<a name="line.772"></a>
+<span class="sourceLineNo">773</span>    }<a name="line.773"></a>
+<span class="sourceLineNo">774</span>    <a name="line.774"></a>
+<span class="sourceLineNo">775</span>    /**<a name="line.775"></a>
+<span class="sourceLineNo">776</span>     * Round the capacity to the next allowed value.<a name="line.776"></a>
+<span class="sourceLineNo">777</span>     */<a name="line.777"></a>
+<span class="sourceLineNo">778</span>    protected int roundCapacity(int requestedCapacity) {<a name="line.778"></a>
+<span class="sourceLineNo">779</span>      // Maximum positive integer that is a power of two.<a name="line.779"></a>
+<span class="sourceLineNo">780</span>      if (requestedCapacity &gt; (0x80000000 &gt;&gt;&gt; 1)) return (0x80000000 &gt;&gt;&gt; 1);<a name="line.780"></a>
+<span class="sourceLineNo">781</span>      <a name="line.781"></a>
+<span class="sourceLineNo">782</span>      int capacity = MIN_CAPACITY;<a name="line.782"></a>
+<span class="sourceLineNo">783</span>      while (capacity &lt; requestedCapacity) {<a name="line.783"></a>
+<span class="sourceLineNo">784</span>        capacity &lt;&lt;= 1;<a name="line.784"></a>
+<span class="sourceLineNo">785</span>      }<a name="line.785"></a>
+<span class="sourceLineNo">786</span><a name="line.786"></a>
+<span class="sourceLineNo">787</span>      return capacity;<a name="line.787"></a>
+<span class="sourceLineNo">788</span>    }<a name="line.788"></a>
+<span class="sourceLineNo">789</span>    <a name="line.789"></a>
+<span class="sourceLineNo">790</span>    public void clear() {<a name="line.790"></a>
+<span class="sourceLineNo">791</span>      assigned = 0;<a name="line.791"></a>
+<span class="sourceLineNo">792</span>      Arrays.fill(keys, null);<a name="line.792"></a>
+<span class="sourceLineNo">793</span>    }<a name="line.793"></a>
+<span class="sourceLineNo">794</span>    <a name="line.794"></a>
+<span class="sourceLineNo">795</span>    public int size() {<a name="line.795"></a>
+<span class="sourceLineNo">796</span>      return assigned;<a name="line.796"></a>
+<span class="sourceLineNo">797</span>    }<a name="line.797"></a>
+<span class="sourceLineNo">798</span>    <a name="line.798"></a>
+<span class="sourceLineNo">799</span>    public boolean isEmpty() {<a name="line.799"></a>
+<span class="sourceLineNo">800</span>      return size() == 0;<a name="line.800"></a>
+<span class="sourceLineNo">801</span>    }<a name="line.801"></a>
+<span class="sourceLineNo">802</span><a name="line.802"></a>
+<span class="sourceLineNo">803</span>    //@Override<a name="line.803"></a>
+<span class="sourceLineNo">804</span>    public Iterator&lt;KType&gt; iterator() {<a name="line.804"></a>
+<span class="sourceLineNo">805</span>      return new Iterator&lt;KType&gt;() {<a name="line.805"></a>
+<span class="sourceLineNo">806</span>        int pos = -1;<a name="line.806"></a>
+<span class="sourceLineNo">807</span>        Object nextElement = fetchNext();<a name="line.807"></a>
+<span class="sourceLineNo">808</span><a name="line.808"></a>
+<span class="sourceLineNo">809</span>        //@Override<a name="line.809"></a>
+<span class="sourceLineNo">810</span>        public boolean hasNext() {<a name="line.810"></a>
+<span class="sourceLineNo">811</span>          return nextElement != null;<a name="line.811"></a>
+<span class="sourceLineNo">812</span>        }<a name="line.812"></a>
+<span class="sourceLineNo">813</span><a name="line.813"></a>
+<span class="sourceLineNo">814</span>        @SuppressWarnings("unchecked")<a name="line.814"></a>
+<span class="sourceLineNo">815</span>        //@Override<a name="line.815"></a>
+<span class="sourceLineNo">816</span>        public KType next() {<a name="line.816"></a>
+<span class="sourceLineNo">817</span>          Object r = this.nextElement;<a name="line.817"></a>
+<span class="sourceLineNo">818</span>          if (r == null) {<a name="line.818"></a>
+<span class="sourceLineNo">819</span>            throw new NoSuchElementException();<a name="line.819"></a>
+<span class="sourceLineNo">820</span>          }<a name="line.820"></a>
+<span class="sourceLineNo">821</span>          this.nextElement = fetchNext();<a name="line.821"></a>
+<span class="sourceLineNo">822</span>          return (KType) r;<a name="line.822"></a>
+<span class="sourceLineNo">823</span>        }<a name="line.823"></a>
+<span class="sourceLineNo">824</span><a name="line.824"></a>
+<span class="sourceLineNo">825</span>        private Object fetchNext() {<a name="line.825"></a>
+<span class="sourceLineNo">826</span>          pos++;<a name="line.826"></a>
+<span class="sourceLineNo">827</span>          while (pos &lt; keys.length &amp;&amp; keys[pos] == null) {<a name="line.827"></a>
+<span class="sourceLineNo">828</span>            pos++;<a name="line.828"></a>
+<span class="sourceLineNo">829</span>          }<a name="line.829"></a>
+<span class="sourceLineNo">830</span><a name="line.830"></a>
+<span class="sourceLineNo">831</span>          return (pos &gt;= keys.length ? null : keys[pos]);<a name="line.831"></a>
+<span class="sourceLineNo">832</span>        }<a name="line.832"></a>
+<span class="sourceLineNo">833</span><a name="line.833"></a>
+<span class="sourceLineNo">834</span>        //@Override<a name="line.834"></a>
+<span class="sourceLineNo">835</span>        public void remove() {<a name="line.835"></a>
+<span class="sourceLineNo">836</span>          throw new UnsupportedOperationException();<a name="line.836"></a>
+<span class="sourceLineNo">837</span>        }<a name="line.837"></a>
+<span class="sourceLineNo">838</span>      };<a name="line.838"></a>
+<span class="sourceLineNo">839</span>    }<a name="line.839"></a>
+<span class="sourceLineNo">840</span>  }<a name="line.840"></a>
+<span class="sourceLineNo">841</span><a name="line.841"></a>
+<span class="sourceLineNo">842</span>  // deprecated API (will be removed in 4.0):<a name="line.842"></a>
+<span class="sourceLineNo">843</span>  private final boolean checkInterned;<a name="line.843"></a>
+<span class="sourceLineNo">844</span>  <a name="line.844"></a>
+<span class="sourceLineNo">845</span>  /** Creates a new instance of {@code RamUsageEstimator} with intern checking<a name="line.845"></a>
+<span class="sourceLineNo">846</span>   * enabled. Don't ever use this method, as intern checking is deprecated,<a name="line.846"></a>
+<span class="sourceLineNo">847</span>   * because it is not free of side-effects and strains the garbage collector<a name="line.847"></a>
+<span class="sourceLineNo">848</span>   * additionally.<a name="line.848"></a>
+<span class="sourceLineNo">849</span>   * @deprecated Don't create instances of this class, instead use the static<a name="line.849"></a>
+<span class="sourceLineNo">850</span>   * {@link #sizeOf(Object)} method that has no intern checking, too.<a name="line.850"></a>
+<span class="sourceLineNo">851</span>   */<a name="line.851"></a>
+<span class="sourceLineNo">852</span>  @Deprecated<a name="line.852"></a>
+<span class="sourceLineNo">853</span>  public RamUsageEstimator() {<a name="line.853"></a>
+<span class="sourceLineNo">854</span>    this(true);<a name="line.854"></a>
+<span class="sourceLineNo">855</span>  }<a name="line.855"></a>
+<span class="sourceLineNo">856</span>  <a name="line.856"></a>
+<span class="sourceLineNo">857</span>  /** Creates a new instance of {@code RamUsageEstimator}. <a name="line.857"></a>
+<span class="sourceLineNo">858</span>   * @param checkInterned check if Strings are interned and don't add to size<a name="line.858"></a>
+<span class="sourceLineNo">859</span>   * if they are. Defaults to true but if you know the objects you are checking<a name="line.859"></a>
+<span class="sourceLineNo">860</span>   * won't likely contain many interned Strings, it will be faster to turn off<a name="line.860"></a>
+<span class="sourceLineNo">861</span>   * intern checking. Intern checking is deprecated altogether, as it is not free<a name="line.861"></a>
+<span class="sourceLineNo">862</span>   * of side-effects and strains the garbage collector additionally.<a name="line.862"></a>
+<span class="sourceLineNo">863</span>   * @deprecated Don't create instances of this class, instead use the static<a name="line.863"></a>
+<span class="sourceLineNo">864</span>   * {@link #sizeOf(Object)} method.<a name="line.864"></a>
+<span class="sourceLineNo">865</span>   */<a name="line.865"></a>
+<span class="sourceLineNo">866</span>  @Deprecated<a name="line.866"></a>
+<span class="sourceLineNo">867</span>  public RamUsageEstimator(boolean checkInterned) {<a name="line.867"></a>
+<span class="sourceLineNo">868</span>    this.checkInterned = checkInterned;<a name="line.868"></a>
+<span class="sourceLineNo">869</span>  }<a name="line.869"></a>
+<span class="sourceLineNo">870</span>  <a name="line.870"></a>
+<span class="sourceLineNo">871</span>  /** Creates a new istance of {@code RamUsageEstimator}. <a name="line.871"></a>
+<span class="sourceLineNo">872</span>   * @deprecated Don't create instances of this class, instead use the static<a name="line.872"></a>
+<span class="sourceLineNo">873</span>   * {@link #sizeOf(Object)} method.<a name="line.873"></a>
+<span class="sourceLineNo">874</span>   * @see #sizeOf(Object)<a name="line.874"></a>
+<span class="sourceLineNo">875</span>   */<a name="line.875"></a>
+<span class="sourceLineNo">876</span>  @Deprecated<a name="line.876"></a>
+<span class="sourceLineNo">877</span>  public long estimateRamUsage(Object obj) {<a name="line.877"></a>
+<span class="sourceLineNo">878</span>    return measureObjectSize(obj, checkInterned);<a name="line.878"></a>
+<span class="sourceLineNo">879</span>  }<a name="line.879"></a>
+<span class="sourceLineNo">880</span>}<a name="line.880"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
