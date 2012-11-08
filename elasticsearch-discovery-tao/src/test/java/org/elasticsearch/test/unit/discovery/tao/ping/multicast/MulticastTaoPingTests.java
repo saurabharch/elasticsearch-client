@@ -42,7 +42,7 @@ import org.testng.annotations.Test;
 public class MulticastTaoPingTests extends Assert {
 
     @Test
-    public void testSimplePings() {
+    public void testLocalPings() {
         TransportThreadPool threadPool = new TransportThreadPool();
         ClusterName clusterName = new ClusterName("test");
 
@@ -59,7 +59,7 @@ public class MulticastTaoPingTests extends Assert {
         taoPingB.start();
 
         try {
-            TaoPing.PingResponse[] pingResponses = taoPingA.pingAndWait(TimeValue.timeValueSeconds(1));
+            TaoPing.PingResponse[] pingResponses = taoPingA.pingAndWait(TimeValue.timeValueSeconds(5));
             assertEquals(pingResponses.length, 1);
             assertEquals(pingResponses[0].target().id(), "B");
         } finally {
@@ -88,13 +88,13 @@ public class MulticastTaoPingTests extends Assert {
             multicastSocket = new MulticastSocket(54328);
             multicastSocket.setReceiveBufferSize(2048);
             multicastSocket.setSendBufferSize(2048);
-            multicastSocket.setSoTimeout(60000);
+            multicastSocket.setSoTimeout(5000);
 
             DatagramPacket datagramPacket = new DatagramPacket(new byte[2048], 2048, InetAddress.getByName("224.2.2.4"), 54328);
             XContentBuilder builder = XContentFactory.jsonBuilder().startObject().startObject("request").field("cluster_name", "test").endObject().endObject();
             datagramPacket.setData(builder.bytes().toBytes());
             multicastSocket.send(datagramPacket);
-            Thread.sleep(100);
+            Thread.sleep(5000);
         } finally {
             Loggers.getLogger(MulticastTaoPing.class).setLevel("INFO");
             if (multicastSocket != null) {
