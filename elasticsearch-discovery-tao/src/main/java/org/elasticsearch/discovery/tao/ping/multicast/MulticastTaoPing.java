@@ -85,7 +85,7 @@ public class MulticastTaoPing implements TaoPing {
         this.clusterName = clusterName;
         this.networkService = new TransportNetworkService(settings);
 
-        this.address = settings.get("address");
+        this.address = settings.get("address", "127.0.0.1");
         this.port = settings.getAsInt("port", 54328);
         this.group = settings.get("group", "224.2.2.4");
         this.bufferSize = settings.getAsInt("buffer_size", 2048);
