@@ -115,7 +115,7 @@ public class ByteSizeValue implements Serializable, Streamable {
         return gbFrac();
     }
 
-    @Override
+    
     public String toString() {
         long bytes = bytes();
         double value = bytes;
@@ -172,18 +172,18 @@ public class ByteSizeValue implements Serializable, Streamable {
         return sizeValue;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         size = in.readVLong();
         sizeUnit = ByteSizeUnit.BYTES;
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(bytes());
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -196,7 +196,7 @@ public class ByteSizeValue implements Serializable, Streamable {
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         int result = (int) (size ^ (size >>> 32));
         result = 31 * result + (sizeUnit != null ? sizeUnit.hashCode() : 0);

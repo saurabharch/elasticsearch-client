@@ -36,7 +36,6 @@ import static com.google.common.collect.Maps.newHashMap;
  */
 public class PropertiesSettingsLoader implements SettingsLoader {
 
-    @Override
     public Map<String, String> load(String source) throws IOException {
         Properties props = new Properties();
         FastStringReader reader = new FastStringReader(source);
@@ -52,7 +51,6 @@ public class PropertiesSettingsLoader implements SettingsLoader {
         }
     }
 
-    @Override
     public Map<String, String> load(byte[] source) throws IOException {
         Properties props = new Properties();
         FastByteArrayInputStream stream = new FastByteArrayInputStream(source);

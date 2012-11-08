@@ -174,6 +174,9 @@
                             <configuration>
                                 <source>${compiler.source.version}</source>
                                 <target>${compiler.target.version}</target>
+                                <excludes>
+                                    <exclude>javax</exclude>
+                                </excludes>
                             </configuration>
                         </plugin>
                         <plugin>
@@ -201,6 +204,69 @@
             </build>
 
             <modules>
+                <module>elasticsearch-client-compression-lzf</module>
+                <module>elasticsearch-client-common</module>
+                <module>elasticsearch-client-geo</module>
+                <module>elasticsearch-client-ingest</module>
+                <module>elasticsearch-client-search</module>
+                <module>elasticsearch-client-admin</module>
+                <module>elasticsearch-client-compression-snappy</module>
+                <module>elasticsearch-transport</module>
+                <module>elasticsearch-transport-netty</module>
+                <module>elasticsearch-discovery-tao</module>
+                <module>elasticsearch-client-scripting</module>
+                <module>elasticsearch-http-netty</module>
+                <module>elasticsearch-client-ingest-http</module>
+                <module>elasticsearch-client-search-http</module>
+                <module>elasticsearch-client-admin-http</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <!-- jdk5 build and test core modules -->
+            <id>jdk5</id>
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-compiler-plugin</artifactId>
+                            <version>2.5.1</version>
+                            <configuration>
+                                <source>1.5</source>
+                                <target>1.5</target>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-plugin</artifactId>
+                            <version>2.12.4</version>
+                            <configuration>
+                                <includes>
+                                    <include>**/*Tests.java</include>
+                                </includes>
+                            </configuration>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>  
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <version>2.9</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-source-plugin</artifactId>
+                            <version>2.2.1</version>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+
+            <modules>
+                <module>elasticsearch-client-jdk5</module>
                 <module>elasticsearch-client-compression-lzf</module>
                 <module>elasticsearch-client-common</module>
                 <module>elasticsearch-client-geo</module>
@@ -361,5 +427,8 @@
         </profile>
         
     </profiles>
-
+    <modules>
+        <module>elasticsearch-client-jdk5</module>
+        <module>jackson-dataformat-yaml</module>
+    </modules>
 </project>

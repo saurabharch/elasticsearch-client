@@ -53,17 +53,17 @@ public class FastStringReader extends CharSequenceReader {
             throw new IOException("Stream closed");
     }
 
-    @Override
+    
     public int length() {
         return length;
     }
 
-    @Override
+    
     public char charAt(int index) {
         return str.charAt(index);
     }
 
-    @Override
+    
     public CharSequence subSequence(int start, int end) {
         return str.subSequence(start, end);
     }
@@ -75,7 +75,7 @@ public class FastStringReader extends CharSequenceReader {
      *         reached
      * @throws IOException If an I/O error occurs
      */
-    @Override
+    
     public int read() throws IOException {
         ensureOpen();
         if (next >= length)
@@ -93,7 +93,7 @@ public class FastStringReader extends CharSequenceReader {
      *         stream has been reached
      * @throws IOException If an I/O error occurs
      */
-    @Override
+    
     public int read(char cbuf[], int off, int len) throws IOException {
         ensureOpen();
         if (len == 0) {
@@ -123,7 +123,7 @@ public class FastStringReader extends CharSequenceReader {
      *
      * @throws IOException If an I/O error occurs
      */
-    @Override
+    
     public long skip(long ns) throws IOException {
         ensureOpen();
         if (next >= length)
@@ -141,7 +141,7 @@ public class FastStringReader extends CharSequenceReader {
      * @return True if the next read() is guaranteed not to block for input
      * @throws IOException If the stream is closed
      */
-    @Override
+    
     public boolean ready() throws IOException {
         ensureOpen();
         return true;
@@ -150,7 +150,7 @@ public class FastStringReader extends CharSequenceReader {
     /**
      * Tells whether this stream supports the mark() operation, which it does.
      */
-    @Override
+    
     public boolean markSupported() {
         return true;
     }
@@ -167,7 +167,7 @@ public class FastStringReader extends CharSequenceReader {
      * @throws IllegalArgumentException If readAheadLimit is < 0
      * @throws IOException              If an I/O error occurs
      */
-    @Override
+    
     public void mark(int readAheadLimit) throws IOException {
         if (readAheadLimit < 0) {
             throw new IllegalArgumentException("Read-ahead limit < 0");
@@ -182,7 +182,7 @@ public class FastStringReader extends CharSequenceReader {
      *
      * @throws IOException If an I/O error occurs
      */
-    @Override
+    
     public void reset() throws IOException {
         ensureOpen();
         next = mark;
@@ -198,7 +198,7 @@ public class FastStringReader extends CharSequenceReader {
         length = -1;
     }
 
-    @Override
+    
     public String toString() {
         return str;
     }

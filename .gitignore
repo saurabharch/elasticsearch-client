@@ -22,3 +22,4 @@
 /elasticsearch-http-netty/target/
 /elasticsearch-client-admin-http/target/
 /elasticsearch-client-search-http/target/
+/elasticsearch-client-jdk5/target/

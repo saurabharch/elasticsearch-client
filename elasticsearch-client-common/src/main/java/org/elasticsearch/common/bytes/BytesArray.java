@@ -19,7 +19,6 @@
 
 package org.elasticsearch.common.bytes;
 
-import com.google.common.base.Charsets;
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
 import org.elasticsearch.common.Bytes;
 import org.elasticsearch.common.io.stream.BytesStreamInput;
@@ -27,6 +26,7 @@ import org.elasticsearch.common.io.stream.StreamInput;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 public class BytesArray implements BytesReference {
@@ -38,7 +38,15 @@ public class BytesArray implements BytesReference {
     protected int length;
 
     public BytesArray(String bytes) {
-        this(bytes.getBytes(Charsets.UTF_8));
+        this(toBytes(bytes));
+    }
+    
+    private static byte[] toBytes(String bytes) {
+        try {
+        return bytes.getBytes("UTF-8");
+        } catch(UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
     public BytesArray(byte[] bytes) {
@@ -53,17 +61,17 @@ public class BytesArray implements BytesReference {
         this.length = length;
     }
 
-    @Override
+    
     public byte get(int index) {
         return bytes[offset + index];
     }
 
-    @Override
+    
     public int length() {
         return length;
     }
 
-    @Override
+    
     public BytesReference slice(int from, int length) {
         if (from < 0 || (from + length) > this.length) {
             throw new ElasticSearchIllegalArgumentException("can't slice a buffer with length [" + this.length + "], with slice parameters from [" + from + "], length [" + length + "]");
@@ -71,17 +79,17 @@ public class BytesArray implements BytesReference {
         return new BytesArray(bytes, offset + from, length);
     }
 
-    @Override
+    
     public StreamInput streamInput() {
         return new BytesStreamInput(bytes, offset, length, false);
     }
 
-    @Override
+    
     public void writeTo(OutputStream os) throws IOException {
         os.write(bytes, offset, length);
     }
 
-    @Override
+    
     public byte[] toBytes() {
         if (offset == 0 && bytes.length == length) {
             return bytes;
@@ -89,40 +97,44 @@ public class BytesArray implements BytesReference {
         return Arrays.copyOfRange(bytes, offset, offset + length);
     }
 
-    @Override
+    
     public BytesArray toBytesArray() {
         return this;
     }
 
-    @Override
+    
     public BytesArray copyBytesArray() {
         return new BytesArray(Arrays.copyOfRange(bytes, offset, offset + length));
     }
 
-    @Override
+    
     public boolean hasArray() {
         return true;
     }
 
-    @Override
+    
     public byte[] array() {
         return bytes;
     }
 
-    @Override
+    
     public int arrayOffset() {
         return offset;
     }
 
-    @Override
+    
     public String toUtf8() {
         if (length == 0) {
             return "";
         }
-        return new String(bytes, offset, length, Charsets.UTF_8);
+        try {
+            return new String(bytes, offset, length, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
-    @Override
+    
     public boolean equals(Object obj) {
         return bytesEquals((BytesArray) obj);
     }
@@ -143,7 +155,7 @@ public class BytesArray implements BytesReference {
         }
     }
 
-    @Override
+    
     public int hashCode() {
         int result = 0;
         final int end = offset + length;

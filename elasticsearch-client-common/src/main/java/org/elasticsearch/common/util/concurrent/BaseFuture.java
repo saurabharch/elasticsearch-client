@@ -86,7 +86,7 @@ public abstract class BaseFuture<V> implements Future<V> {
      *                               or during the call (optional but recommended).
      * @throws CancellationException {@inheritDoc}
      */
-    @Override
+    
     public V get(long timeout, TimeUnit unit) throws InterruptedException,
             TimeoutException, ExecutionException {
         return sync.get(unit.toNanos(timeout));
@@ -108,22 +108,22 @@ public abstract class BaseFuture<V> implements Future<V> {
      *                               or during the call (optional but recommended).
      * @throws CancellationException {@inheritDoc}
      */
-    @Override
+    
     public V get() throws InterruptedException, ExecutionException {
         return sync.get();
     }
 
-    @Override
+    
     public boolean isDone() {
         return sync.isDone();
     }
 
-    @Override
+    
     public boolean isCancelled() {
         return sync.isCancelled();
     }
 
-    @Override
+    
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (!sync.cancel()) {
             return false;
@@ -224,7 +224,7 @@ public abstract class BaseFuture<V> implements Future<V> {
         /*
         * Acquisition succeeds if the future is done, otherwise it fails.
         */
-        @Override
+        
         protected int tryAcquireShared(int ignored) {
             if (isDone()) {
                 return 1;
@@ -236,7 +236,7 @@ public abstract class BaseFuture<V> implements Future<V> {
         * We always allow a release to go through, this means the state has been
         * successfully changed and the result is available.
         */
-        @Override
+        
         protected boolean tryReleaseShared(int finalState) {
             setState(finalState);
             return true;

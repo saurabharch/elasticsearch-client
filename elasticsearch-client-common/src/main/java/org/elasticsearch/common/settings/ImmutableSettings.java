@@ -62,22 +62,22 @@ public class ImmutableSettings implements Settings {
         this.classLoader = classLoader;
     }
 
-    @Override
+    
     public ClassLoader getClassLoader() {
         return this.classLoader == null ? Classes.getDefaultClassLoader() : classLoader;
     }
 
-    @Override
+    
     public ClassLoader getClassLoaderIfSet() {
         return this.classLoader;
     }
 
-    @Override
+    
     public ImmutableMap<String, String> getAsMap() {
         return this.settings;
     }
 
-    @Override
+    
     public Settings getComponentSettings(Class component) {
         if (component.getName().startsWith("org.elasticsearch")) {
             return getComponentSettings("org.elasticsearch", component);
@@ -86,7 +86,7 @@ public class ImmutableSettings implements Settings {
         return getComponentSettings(component.getName().substring(0, component.getName().indexOf('.')), component);
     }
 
-    @Override
+    
     public Settings getComponentSettings(String prefix, Class component) {
         String type = component.getName();
         if (!type.startsWith(prefix)) {
@@ -97,7 +97,7 @@ public class ImmutableSettings implements Settings {
         return getByPrefix(settingPrefix);
     }
 
-    @Override
+    
     public Settings getByPrefix(String prefix) {
         Builder builder = new Builder();
         for (Map.Entry<String, String> entry : getAsMap().entrySet()) {
@@ -113,7 +113,7 @@ public class ImmutableSettings implements Settings {
         return builder.build();
     }
 
-    @Override
+    
     public String get(String setting) {
         String retVal = settings.get(setting);
         if (retVal != null) {
@@ -123,13 +123,13 @@ public class ImmutableSettings implements Settings {
         return settings.get(toCamelCase(setting));
     }
 
-    @Override
+    
     public String get(String setting, String defaultValue) {
         String retVal = settings.get(setting);
         return retVal == null ? defaultValue : retVal;
     }
 
-    @Override
+    
     public Float getAsFloat(String setting, Float defaultValue) {
         String sValue = get(setting);
         if (sValue == null) {
@@ -142,7 +142,7 @@ public class ImmutableSettings implements Settings {
         }
     }
 
-    @Override
+    
     public Double getAsDouble(String setting, Double defaultValue) {
         String sValue = get(setting);
         if (sValue == null) {
@@ -155,7 +155,7 @@ public class ImmutableSettings implements Settings {
         }
     }
 
-    @Override
+    
     public Integer getAsInt(String setting, Integer defaultValue) {
         String sValue = get(setting);
         if (sValue == null) {
@@ -168,7 +168,7 @@ public class ImmutableSettings implements Settings {
         }
     }
 
-    @Override
+    
     public Long getAsLong(String setting, Long defaultValue) {
         String sValue = get(setting);
         if (sValue == null) {
@@ -181,28 +181,28 @@ public class ImmutableSettings implements Settings {
         }
     }
 
-    @Override
+    
     public Boolean getAsBoolean(String setting, Boolean defaultValue) {
         return Booleans.parseBoolean(get(setting), defaultValue);
     }
 
-    @Override
+    
     public TimeValue getAsTime(String setting, TimeValue defaultValue) {
         return parseTimeValue(get(setting), defaultValue);
     }
 
-    @Override
+    
     public ByteSizeValue getAsBytesSize(String setting, ByteSizeValue defaultValue) throws SettingsException {
         return parseBytesSizeValue(get(setting), defaultValue);
     }
 
-    @Override
+    
     public SizeValue getAsSize(String setting, SizeValue defaultValue) throws SettingsException {
         return parseSizeValue(get(setting), defaultValue);
     }
 
     @SuppressWarnings({"unchecked"})
-    @Override
+    
     public <T> Class<? extends T> getAsClass(String setting, Class<? extends T> defaultClazz) throws NoClassSettingsException {
         String sValue = get(setting);
         if (sValue == null) {
@@ -216,7 +216,7 @@ public class ImmutableSettings implements Settings {
     }
 
     @SuppressWarnings({"unchecked"})
-    @Override
+    
     public <T> Class<? extends T> getAsClass(String setting, Class<? extends T> defaultClazz, String prefixPackage, String suffixClassName) throws NoClassSettingsException {
         String sValue = get(setting);
         if (sValue == null) {
@@ -246,12 +246,12 @@ public class ImmutableSettings implements Settings {
         }
     }
 
-    @Override
+    
     public String[] getAsArray(String settingPrefix) throws SettingsException {
         return getAsArray(settingPrefix, Strings.EMPTY_ARRAY);
     }
 
-    @Override
+    
     public String[] getAsArray(String settingPrefix, String[] defaultArray) throws SettingsException {
         List<String> result = Lists.newArrayList();
 
@@ -278,7 +278,7 @@ public class ImmutableSettings implements Settings {
         return result.toArray(new String[result.size()]);
     }
 
-    @Override
+    
     public Map<String, Settings> getGroups(String settingPrefix) throws SettingsException {
         if (settingPrefix.charAt(settingPrefix.length() - 1) != '.') {
             settingPrefix = settingPrefix + ".";
@@ -310,7 +310,7 @@ public class ImmutableSettings implements Settings {
         return Collections.unmodifiableMap(retVal);
     }
 
-    @Override
+    
     public Version getAsVersion(String setting, Version defaultVersion) throws SettingsException {
         String sValue = get(setting);
         if (sValue == null) {
@@ -323,7 +323,7 @@ public class ImmutableSettings implements Settings {
         }
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -336,7 +336,7 @@ public class ImmutableSettings implements Settings {
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         int result = settings != null ? settings.hashCode() : 0;
         result = 31 * result + (classLoader != null ? classLoader.hashCode() : 0);
@@ -708,7 +708,7 @@ public class ImmutableSettings implements Settings {
         public Builder replacePropertyPlaceholders() {
             PropertyPlaceholder propertyPlaceholder = new PropertyPlaceholder("${", "}", false);
             PropertyPlaceholder.PlaceholderResolver placeholderResolver = new PropertyPlaceholder.PlaceholderResolver() {
-                @Override
+                
                 public String resolvePlaceholder(String placeholderName) {
                     String value = System.getProperty(placeholderName);
                     if (value != null) {

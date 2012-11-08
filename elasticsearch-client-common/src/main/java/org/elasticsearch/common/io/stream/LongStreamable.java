@@ -43,12 +43,10 @@ public class LongStreamable implements Streamable {
         return this.value;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         value = in.readLong();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeLong(value);
     }

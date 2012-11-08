@@ -39,7 +39,7 @@ public abstract class AdapterActionFuture<T, L> extends BaseFuture<T> implements
 
     private Throwable rootFailure;
 
-    @Override
+    
     public T actionGet() throws ElasticSearchException {
         try {
             return get();
@@ -50,22 +50,22 @@ public abstract class AdapterActionFuture<T, L> extends BaseFuture<T> implements
         }
     }
 
-    @Override
+    
     public T actionGet(String timeout) throws ElasticSearchException {
         return actionGet(TimeValue.parseTimeValue(timeout, null));
     }
 
-    @Override
+    
     public T actionGet(long timeoutMillis) throws ElasticSearchException {
         return actionGet(timeoutMillis, TimeUnit.MILLISECONDS);
     }
 
-    @Override
+    
     public T actionGet(TimeValue timeout) throws ElasticSearchException {
         return actionGet(timeout.millis(), TimeUnit.MILLISECONDS);
     }
 
-    @Override
+    
     public T actionGet(long timeout, TimeUnit unit) throws ElasticSearchException {
         try {
             return get(timeout, unit);
@@ -91,19 +91,19 @@ public abstract class AdapterActionFuture<T, L> extends BaseFuture<T> implements
         }
     }
 
-    @Override
+    
     public void onResponse(L result) {
         set(convert(result));
     }
 
-    @Override
+    
     public void onFailure(Throwable e) {
         setException(e);
     }
 
     protected abstract T convert(L listenerResponse);
 
-    @Override
+    
     public Throwable getRootFailure() {
         return rootFailure;
     }

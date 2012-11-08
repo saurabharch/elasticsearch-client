@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public abstract class AbstractXContentParser implements XContentParser {
 
-    @Override
+    
     public boolean booleanValue() throws IOException {
         Token token = currentToken();
         if (token == Token.VALUE_NUMBER) {
@@ -43,7 +43,7 @@ public abstract class AbstractXContentParser implements XContentParser {
 
     protected abstract boolean doBooleanValue() throws IOException;
 
-    @Override
+    
     public short shortValue() throws IOException {
         Token token = currentToken();
         if (token == Token.VALUE_STRING) {
@@ -54,7 +54,7 @@ public abstract class AbstractXContentParser implements XContentParser {
 
     protected abstract short doShortValue() throws IOException;
 
-    @Override
+    
     public int intValue() throws IOException {
         Token token = currentToken();
         if (token == Token.VALUE_STRING) {

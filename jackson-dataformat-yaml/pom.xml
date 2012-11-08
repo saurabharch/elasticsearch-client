@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-client</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>jackson-dataformat-yaml</artifactId>
+
+    <packaging>jar</packaging>
+
+    <name>jackson-dataformat-yaml</name>
+    
+    <description>
+        Elasticsearch Client - Jackson YAML, compatible to JDK5
+    </description>
+    
+    <dependencies>
+        <!-- Extends Jackson core; uses SnakeYAML for parsing, generation -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.10</version>
+        </dependency>
+
+        <!-- and for testing, JUnit (or TestNG?) is needed; as well as databinder, annotatons -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.1.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>                
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <shadedArtifactId>${project.artifactId}</shadedArtifactId>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <shadedClassifierName>compat</shadedClassifierName>
+                    <minimizeJar>false</minimizeJar>
+                    <artifactSet>
+                        <includes>
+                            <include>org.yaml:snakeyaml</include>
+                        </includes>
+                    </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.yaml.snakeyaml</pattern>
+                            <shadedPattern>com.fasterxml.jackson.dataformat.yaml.snakeyaml</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+            </plugin>            
+        </plugins>
+    </build>
+</project>

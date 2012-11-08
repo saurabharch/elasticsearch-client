@@ -106,7 +106,7 @@ public class SizeValue implements Serializable, Streamable {
         return gigaFrac();
     }
 
-    @Override
+    
     public String toString() {
         long singles = singles();
         double value = singles;
@@ -157,18 +157,18 @@ public class SizeValue implements Serializable, Streamable {
         return sizeValue;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         size = in.readVLong();
         sizeUnit = SizeUnit.SINGLE;
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(singles());
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -181,7 +181,7 @@ public class SizeValue implements Serializable, Streamable {
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         int result = (int) (size ^ (size >>> 32));
         result = 31 * result + (sizeUnit != null ? sizeUnit.hashCode() : 0);

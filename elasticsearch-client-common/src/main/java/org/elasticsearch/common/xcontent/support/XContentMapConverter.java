@@ -39,14 +39,14 @@ public class XContentMapConverter {
     }
 
     public static final MapFactory SIMPLE_MAP_FACTORY = new MapFactory() {
-        @Override
+        
         public Map<String, Object> newMap() {
             return new HashMap<String, Object>();
         }
     };
 
     public static final MapFactory ORDERED_MAP_FACTORY = new MapFactory() {
-        @Override
+        
         public Map<String, Object> newMap() {
             return new LinkedHashMap<String, Object>();
         }
