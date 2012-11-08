@@ -63,12 +63,12 @@ public class InetSocketTransportAddress implements TransportAddress {
         return address;
     }
 
-    @Override
+    
     public short uniqueAddressTypeId() {
         return 1;
     }
 
-    @Override
+    
     public boolean match(String otherAddress) {
         if (address.getHostName() != null && Regex.simpleMatch(otherAddress, address.getHostName())) {
             return true;
@@ -84,7 +84,7 @@ public class InetSocketTransportAddress implements TransportAddress {
         return false;
     }
 
-    @Override
+    
     public boolean sameHost(TransportAddress other) {
         if (!(other instanceof InetSocketTransportAddress)) {
             return false;
@@ -102,7 +102,7 @@ public class InetSocketTransportAddress implements TransportAddress {
         return this.address;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         if (in.readByte() == 0) {
             int len = in.readByte();
@@ -122,7 +122,7 @@ public class InetSocketTransportAddress implements TransportAddress {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         if (!resolveAddress && address.getAddress() != null) {
             out.writeByte((byte) 0);
@@ -138,7 +138,7 @@ public class InetSocketTransportAddress implements TransportAddress {
         out.writeInt(address.getPort());
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -146,12 +146,12 @@ public class InetSocketTransportAddress implements TransportAddress {
         return address.equals(address1.address);
     }
 
-    @Override
+    
     public int hashCode() {
         return address != null ? address.hashCode() : 0;
     }
 
-    @Override
+    
     public String toString() {
         return "inet[" + address + "]";
     }

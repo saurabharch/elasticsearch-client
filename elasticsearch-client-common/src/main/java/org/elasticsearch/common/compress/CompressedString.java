@@ -102,19 +102,19 @@ public class CompressedString implements Streamable {
         return compressedString;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         bytes = new byte[in.readVInt()];
         in.readBytes(bytes, 0, bytes.length);
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(bytes.length);
         out.writeBytes(bytes);
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -126,12 +126,12 @@ public class CompressedString implements Streamable {
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         return bytes != null ? Arrays.hashCode(bytes) : 0;
     }
 
-    @Override
+    
     public String toString() {
         try {
             return string();

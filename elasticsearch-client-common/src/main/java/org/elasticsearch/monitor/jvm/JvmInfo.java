@@ -263,7 +263,7 @@ public class JvmInfo implements Streamable, Serializable, ToXContent {
         return systemProperties;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.JVM);
         builder.field(Fields.PID, pid);
@@ -318,7 +318,7 @@ public class JvmInfo implements Streamable, Serializable, ToXContent {
         return jvmInfo;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         pid = in.readLong();
         version = in.readUTF();
@@ -341,7 +341,7 @@ public class JvmInfo implements Streamable, Serializable, ToXContent {
         mem.readFrom(in);
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeLong(pid);
         out.writeUTF(version);
@@ -420,7 +420,7 @@ public class JvmInfo implements Streamable, Serializable, ToXContent {
             return mem;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             heapInit = in.readVLong();
             heapMax = in.readVLong();
@@ -429,7 +429,7 @@ public class JvmInfo implements Streamable, Serializable, ToXContent {
             directMemoryMax = in.readVLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeVLong(heapInit);
             out.writeVLong(heapMax);

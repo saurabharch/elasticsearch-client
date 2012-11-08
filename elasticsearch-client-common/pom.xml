@@ -116,8 +116,10 @@
             <activation>
                 <jdk>1.5</jdk>
             </activation>
+            
+            
             <dependencies>
-
+<!--
                 <dependency>
                     <groupId>org.elasticsearch.client</groupId>
                     <artifactId>elasticsearch-client-jdk5</artifactId>
@@ -126,11 +128,11 @@
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>        
-
+-->
                 <dependency>
                     <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                    <version>11.0.2</version>
+                    <artifactId>guava-jdk5</artifactId>
+                    <version>13.0</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -152,6 +154,7 @@
                 </dependency>
 
                 <dependency>
+                    <!-- replacing jdk6 build -->
                     <groupId>org.elasticsearch.client</groupId>
                     <artifactId>jackson-dataformat-yaml</artifactId>
                     <version>${project.version}</version>
@@ -176,7 +179,6 @@
                     <scope>compile</scope>
                 </dependency>        
         
-
                 <dependency>
                     <groupId>com.ning</groupId>
                     <artifactId>compress-lzf</artifactId>
@@ -188,24 +190,24 @@
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
-                    <version>1.6.4</version>
+                    <version>1.7.2</version>
                     <optional>true</optional>
                 </dependency>
         
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
-                    <version>1.6.4</version>
+                    <version>1.7.2</version>
                     <optional>true</optional>
                 </dependency>
         
                 <dependency>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
-                    <version>1.2.16</version>
+                    <version>1.2.17</version>
                     <optional>true</optional>
                 </dependency>
-        
+               
             </dependencies>
 
         </profile>
@@ -214,12 +216,15 @@
 
     <build>
         <plugins>
+            
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
+            
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>                
-            </plugin>
+            </plugin>          
+            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>

@@ -34,87 +34,87 @@ public class Slf4jESLogger extends AbstractESLogger {
         this.logger = logger;
     }
 
-    @Override
+    
     public void setLevel(String level) {
         // can't set it in slf4j...
     }
 
-    @Override
+    
     public String getName() {
         return logger.getName();
     }
 
-    @Override
+    
     public boolean isTraceEnabled() {
         return logger.isTraceEnabled();
     }
 
-    @Override
+    
     public boolean isDebugEnabled() {
         return logger.isDebugEnabled();
     }
 
-    @Override
+    
     public boolean isInfoEnabled() {
         return logger.isInfoEnabled();
     }
 
-    @Override
+    
     public boolean isWarnEnabled() {
         return logger.isWarnEnabled();
     }
 
-    @Override
+    
     public boolean isErrorEnabled() {
         return logger.isErrorEnabled();
     }
 
-    @Override
+    
     protected void internalTrace(String msg) {
         logger.trace(msg);
     }
 
-    @Override
+    
     protected void internalTrace(String msg, Throwable cause) {
         logger.trace(msg, cause);
     }
 
-    @Override
+    
     protected void internalDebug(String msg) {
         logger.debug(msg);
     }
 
-    @Override
+    
     protected void internalDebug(String msg, Throwable cause) {
         logger.debug(msg, cause);
     }
 
-    @Override
+    
     protected void internalInfo(String msg) {
         logger.info(msg);
     }
 
-    @Override
+    
     protected void internalInfo(String msg, Throwable cause) {
         logger.info(msg, cause);
     }
 
-    @Override
+    
     protected void internalWarn(String msg) {
         logger.warn(msg);
     }
 
-    @Override
+    
     protected void internalWarn(String msg, Throwable cause) {
         logger.warn(msg, cause);
     }
 
-    @Override
+    
     protected void internalError(String msg) {
         logger.error(msg);
     }
 
-    @Override
+    
     protected void internalError(String msg, Throwable cause) {
         logger.error(msg, cause);
     }

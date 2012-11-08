@@ -48,47 +48,47 @@ public class YamlXContent implements XContent {
     private YamlXContent() {
     }
 
-    @Override
+    
     public XContentType type() {
         return XContentType.YAML;
     }
 
-    @Override
+    
     public byte streamSeparator() {
         throw new ElasticSearchParseException("yaml does not support stream parsing...");
     }
 
-    @Override
+    
     public XContentGenerator createGenerator(OutputStream os) throws IOException {
         return new YamlXContentGenerator(yamlFactory.createJsonGenerator(os, JsonEncoding.UTF8));
     }
 
-    @Override
+    
     public XContentGenerator createGenerator(Writer writer) throws IOException {
         return new YamlXContentGenerator(yamlFactory.createJsonGenerator(writer));
     }
 
-    @Override
+    
     public XContentParser createParser(String content) throws IOException {
         return new YamlXContentParser(yamlFactory.createJsonParser(new FastStringReader(content)));
     }
 
-    @Override
+    
     public XContentParser createParser(InputStream is) throws IOException {
         return new YamlXContentParser(yamlFactory.createJsonParser(is));
     }
 
-    @Override
+    
     public XContentParser createParser(byte[] data) throws IOException {
         return new YamlXContentParser(yamlFactory.createJsonParser(data));
     }
 
-    @Override
+    
     public XContentParser createParser(byte[] data, int offset, int length) throws IOException {
         return new YamlXContentParser(yamlFactory.createJsonParser(data, offset, length));
     }
 
-    @Override
+    
     public XContentParser createParser(BytesReference bytes) throws IOException {
         if (bytes.hasArray()) {
             return createParser(bytes.array(), bytes.arrayOffset(), bytes.length());
@@ -96,7 +96,7 @@ public class YamlXContent implements XContent {
         return createParser(bytes.streamInput());
     }
 
-    @Override
+    
     public XContentParser createParser(Reader reader) throws IOException {
         return new YamlXContentParser(yamlFactory.createJsonParser(reader));
     }

@@ -34,26 +34,26 @@ public class DummyTransportAddress implements TransportAddress {
     DummyTransportAddress() {
     }
 
-    @Override
+    
     public short uniqueAddressTypeId() {
         return 0;
     }
 
-    @Override
+    
     public boolean match(String otherAddress) {
         return false;
     }
 
-    @Override
+    
     public boolean sameHost(TransportAddress otherAddress) {
         return false;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
     }
 }

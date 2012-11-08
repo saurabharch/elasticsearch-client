@@ -51,12 +51,12 @@ public class Percent implements Streamable, Serializable {
         return p.substring(0, ix) + p.substring(ix, ix + 1) + "%";
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         value = in.readDouble();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeDouble(value);
     }

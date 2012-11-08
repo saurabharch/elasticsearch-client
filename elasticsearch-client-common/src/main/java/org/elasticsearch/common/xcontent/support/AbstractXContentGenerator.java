@@ -28,61 +28,61 @@ import java.io.IOException;
  */
 public abstract class AbstractXContentGenerator implements XContentGenerator {
 
-    @Override
+    
     public void writeStringField(String fieldName, String value) throws IOException {
         writeFieldName(fieldName);
         writeString(value);
     }
 
-    @Override
+    
     public void writeBooleanField(String fieldName, boolean value) throws IOException {
         writeFieldName(fieldName);
         writeBoolean(value);
     }
 
-    @Override
+    
     public void writeNullField(String fieldName) throws IOException {
         writeFieldName(fieldName);
         writeNull();
     }
 
-    @Override
+    
     public void writeNumberField(String fieldName, int value) throws IOException {
         writeFieldName(fieldName);
         writeNumber(value);
     }
 
-    @Override
+    
     public void writeNumberField(String fieldName, long value) throws IOException {
         writeFieldName(fieldName);
         writeNumber(value);
     }
 
-    @Override
+    
     public void writeNumberField(String fieldName, double value) throws IOException {
         writeFieldName(fieldName);
         writeNumber(value);
     }
 
-    @Override
+    
     public void writeNumberField(String fieldName, float value) throws IOException {
         writeFieldName(fieldName);
         writeNumber(value);
     }
 
-    @Override
+    
     public void writeBinaryField(String fieldName, byte[] data) throws IOException {
         writeFieldName(fieldName);
         writeBinary(data);
     }
 
-    @Override
+    
     public void writeArrayFieldStart(String fieldName) throws IOException {
         writeFieldName(fieldName);
         writeStartArray();
     }
 
-    @Override
+    
     public void writeObjectFieldStart(String fieldName) throws IOException {
         writeFieldName(fieldName);
         writeStartObject();

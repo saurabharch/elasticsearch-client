@@ -192,7 +192,7 @@ public class TimeValue implements Serializable, Streamable {
         return PeriodFormat.getDefault().withParseType(type).print(period);
     }
 
-    @Override
+    
     public String toString() {
         if (duration < 0) {
             return Long.toString(duration);
@@ -268,18 +268,18 @@ public class TimeValue implements Serializable, Streamable {
         return timeValue;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         duration = in.readLong();
         timeUnit = TimeUnit.NANOSECONDS;
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeLong(nanos());
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -292,7 +292,7 @@ public class TimeValue implements Serializable, Streamable {
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         int result = (int) (duration ^ (duration >>> 32));
         result = 31 * result + (timeUnit != null ? timeUnit.hashCode() : 0);

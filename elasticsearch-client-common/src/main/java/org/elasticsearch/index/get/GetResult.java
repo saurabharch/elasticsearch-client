@@ -30,8 +30,6 @@ import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.common.xcontent.XContentHelper;
-//import org.elasticsearch.rest.action.support.RestXContentBuilder;
-//import org.elasticsearch.search.lookup.SourceLookup;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -214,7 +212,7 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
         return fields.get(name);
     }
 
-    @Override
+    
     public Iterator<GetField> iterator() {
         if (fields == null) {
             return emptyIterator();
@@ -260,7 +258,7 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
         return builder;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         if (!exists()) {
             builder.startObject();
@@ -290,7 +288,7 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
         return result;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         index = in.readUTF();
         type = in.readOptionalUTF();
@@ -315,7 +313,7 @@ public class GetResult implements Streamable, Iterable<GetField>, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(index);
         out.writeOptionalUTF(type);

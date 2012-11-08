@@ -80,14 +80,14 @@ public abstract class TransportResponse implements Streamable {
         return this.headers;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             headers = in.readMap();
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         if (headers == null) {
             out.writeBoolean(false);

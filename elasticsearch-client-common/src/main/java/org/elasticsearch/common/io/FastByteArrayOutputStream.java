@@ -133,7 +133,7 @@ public class FastByteArrayOutputStream extends OutputStream implements BytesStre
      * Returns the underlying byte array. Note, use {@link #size()} in order to know
      * the length of it.
      */
-    @Override
+    
     public BytesReference bytes() {
         return new BytesArray(buf, 0, count);
     }

@@ -42,22 +42,22 @@ public interface ToXContent {
     }
 
     public static final Params EMPTY_PARAMS = new Params() {
-        @Override
+        
         public String param(String key) {
             return null;
         }
 
-        @Override
+        
         public String param(String key, String defaultValue) {
             return defaultValue;
         }
 
-        @Override
+        
         public boolean paramAsBoolean(String key, boolean defaultValue) {
             return defaultValue;
         }
 
-        @Override
+        
         public Boolean paramAsBooleanOptional(String key, Boolean defaultValue) {
             return defaultValue;
         }
@@ -71,12 +71,12 @@ public interface ToXContent {
             this.params = params;
         }
 
-        @Override
+        
         public String param(String key) {
             return params.get(key);
         }
 
-        @Override
+        
         public String param(String key, String defaultValue) {
             String value = params.get(key);
             if (value == null) {
@@ -85,12 +85,12 @@ public interface ToXContent {
             return value;
         }
 
-        @Override
+        
         public boolean paramAsBoolean(String key, boolean defaultValue) {
             return Booleans.parseBoolean(param(key), defaultValue);
         }
 
-        @Override
+        
         public Boolean paramAsBooleanOptional(String key, Boolean defaultValue) {
             String sValue = param(key);
             if (sValue == null) {

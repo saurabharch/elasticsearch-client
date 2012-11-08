@@ -66,7 +66,7 @@ public class ClientThreadPoolStatsElement implements ThreadPoolStatsElement {
         return rejected;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         name = in.readUTF();
         threads = in.readInt();
@@ -75,7 +75,7 @@ public class ClientThreadPoolStatsElement implements ThreadPoolStatsElement {
         rejected = in.readLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(name);
         out.writeInt(threads);
@@ -84,7 +84,7 @@ public class ClientThreadPoolStatsElement implements ThreadPoolStatsElement {
         out.writeLong(rejected);
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(name, XContentBuilder.FieldCaseConversion.NONE);
         if (threads != -1) {

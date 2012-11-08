@@ -53,12 +53,12 @@ public class StringAndBytesText implements Text {
         this.text = text;
     }
 
-    @Override
+    
     public boolean hasBytes() {
         return bytes != null;
     }
 
-    @Override
+    
     public BytesReference bytes() {
         if (bytes == null) {
             bytes = new BytesArray(text.getBytes(Charsets.UTF_8));
@@ -66,12 +66,12 @@ public class StringAndBytesText implements Text {
         return bytes;
     }
 
-    @Override
+    
     public boolean hasString() {
         return text != null;
     }
 
-    @Override
+    
     public String string() {
         // TODO: we can optimize the conversion based on the bytes reference API similar to UnicodeUtil
         if (text == null) {
@@ -83,7 +83,7 @@ public class StringAndBytesText implements Text {
         return text;
     }
 
-    @Override
+    
     public String toString() {
         return string();
     }

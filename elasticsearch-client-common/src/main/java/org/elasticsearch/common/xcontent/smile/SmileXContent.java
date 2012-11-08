@@ -50,47 +50,47 @@ public class SmileXContent implements XContent {
     private SmileXContent() {
     }
 
-    @Override
+    
     public XContentType type() {
         return XContentType.SMILE;
     }
 
-    @Override
+    
     public byte streamSeparator() {
         return (byte) 0xFF;
     }
 
-    @Override
+    
     public XContentGenerator createGenerator(OutputStream os) throws IOException {
         return new SmileXContentGenerator(smileFactory.createJsonGenerator(os, JsonEncoding.UTF8));
     }
 
-    @Override
+    
     public XContentGenerator createGenerator(Writer writer) throws IOException {
         return new SmileXContentGenerator(smileFactory.createJsonGenerator(writer));
     }
 
-    @Override
+    
     public XContentParser createParser(String content) throws IOException {
         return new SmileXContentParser(smileFactory.createJsonParser(new FastStringReader(content)));
     }
 
-    @Override
+    
     public XContentParser createParser(InputStream is) throws IOException {
         return new SmileXContentParser(smileFactory.createJsonParser(is));
     }
 
-    @Override
+    
     public XContentParser createParser(byte[] data) throws IOException {
         return new SmileXContentParser(smileFactory.createJsonParser(data));
     }
 
-    @Override
+    
     public XContentParser createParser(byte[] data, int offset, int length) throws IOException {
         return new SmileXContentParser(smileFactory.createJsonParser(data, offset, length));
     }
 
-    @Override
+    
     public XContentParser createParser(BytesReference bytes) throws IOException {
         if (bytes.hasArray()) {
             return createParser(bytes.array(), bytes.arrayOffset(), bytes.length());
@@ -98,7 +98,7 @@ public class SmileXContent implements XContent {
         return createParser(bytes.streamInput());
     }
 
-    @Override
+    
     public XContentParser createParser(Reader reader) throws IOException {
         return new JsonXContentParser(smileFactory.createJsonParser(reader));
     }

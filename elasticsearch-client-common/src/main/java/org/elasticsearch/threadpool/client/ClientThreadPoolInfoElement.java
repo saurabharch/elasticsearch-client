@@ -91,7 +91,7 @@ public class ClientThreadPoolInfoElement implements ThreadPoolInfoElement {
         return this.capacity;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         name = in.readUTF();
         type = in.readUTF();
@@ -105,7 +105,7 @@ public class ClientThreadPoolInfoElement implements ThreadPoolInfoElement {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(name);
         out.writeUTF(type);
@@ -125,7 +125,7 @@ public class ClientThreadPoolInfoElement implements ThreadPoolInfoElement {
         }
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(name, XContentBuilder.FieldCaseConversion.NONE);
         builder.field(ThreadPoolInfoElement.Fields.TYPE, type);

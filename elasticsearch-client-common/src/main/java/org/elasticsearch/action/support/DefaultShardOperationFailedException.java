@@ -55,17 +55,17 @@ public class DefaultShardOperationFailedException implements ShardOperationFaile
         this.reason = detailedMessage(t);
     }
 
-    @Override
+    
     public String index() {
         return this.index;
     }
 
-    @Override
+    
     public int shardId() {
         return this.shardId;
     }
 
-    @Override
+    
     public String reason() {
         return this.reason;
     }
@@ -76,7 +76,7 @@ public class DefaultShardOperationFailedException implements ShardOperationFaile
         return exp;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             index = in.readUTF();
@@ -85,7 +85,7 @@ public class DefaultShardOperationFailedException implements ShardOperationFaile
         reason = in.readUTF();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         if (index == null) {
             out.writeBoolean(false);
@@ -97,7 +97,7 @@ public class DefaultShardOperationFailedException implements ShardOperationFaile
         out.writeUTF(reason);
     }
 
-    @Override
+    
     public String toString() {
         return "[" + index + "][" + shardId + "] failed, reason [" + reason + "]";
     }

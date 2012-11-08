@@ -65,7 +65,7 @@ public abstract class AbstractXContentParser implements XContentParser {
 
     protected abstract int doIntValue() throws IOException;
 
-    @Override
+    
     public long longValue() throws IOException {
         Token token = currentToken();
         if (token == Token.VALUE_STRING) {
@@ -76,7 +76,7 @@ public abstract class AbstractXContentParser implements XContentParser {
 
     protected abstract long doLongValue() throws IOException;
 
-    @Override
+    
     public float floatValue() throws IOException {
         Token token = currentToken();
         if (token == Token.VALUE_STRING) {
@@ -87,7 +87,7 @@ public abstract class AbstractXContentParser implements XContentParser {
 
     protected abstract float doFloatValue() throws IOException;
 
-    @Override
+    
     public double doubleValue() throws IOException {
         Token token = currentToken();
         if (token == Token.VALUE_STRING) {
@@ -98,7 +98,7 @@ public abstract class AbstractXContentParser implements XContentParser {
 
     protected abstract double doDoubleValue() throws IOException;
 
-    @Override
+    
     public String textOrNull() throws IOException {
         if (currentToken() == Token.VALUE_NULL) {
             return null;
@@ -106,17 +106,17 @@ public abstract class AbstractXContentParser implements XContentParser {
         return text();
     }
 
-    @Override
+    
     public Map<String, Object> map() throws IOException {
         return XContentMapConverter.readMap(this);
     }
 
-    @Override
+    
     public Map<String, Object> mapOrdered() throws IOException {
         return XContentMapConverter.readOrderedMap(this);
     }
 
-    @Override
+    
     public Map<String, Object> mapAndClose() throws IOException {
         try {
             return map();
@@ -125,7 +125,7 @@ public abstract class AbstractXContentParser implements XContentParser {
         }
     }
 
-    @Override
+    
     public Map<String, Object> mapOrderedAndClose() throws IOException {
         try {
             return mapOrdered();
