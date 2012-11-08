@@ -12,11 +12,11 @@ import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.client.GenericClient;
 import org.elasticsearch.common.settings.Settings;
 
-public class InternalHttpAdminClient extends HttpClient {
+public class InternalHttpClusterAdminClient extends HttpClient {
 
     private final HttpClusterAdminActionModule actions;
     
-    public InternalHttpAdminClient(Settings settings, HttpClusterAdminActionModule actions) {
+    public InternalHttpClusterAdminClient(Settings settings, HttpClusterAdminActionModule actions) {
         super(settings);
         this.actions = actions;
     }

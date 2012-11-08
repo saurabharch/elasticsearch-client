@@ -59,7 +59,7 @@ public class DeleteWarmerRequest extends MasterNodeOperationRequest<DeleteWarmer
      * The name to delete.
      */
     @Nullable
-    String name() {
+    public String name() {
         return name;
     }
 

@@ -119,7 +119,7 @@ public class PutMappingRequest extends MasterNodeOperationRequest<PutMappingRequ
     /**
      * The mapping source definition.
      */
-    String source() {
+    public String source() {
         return mappingSource;
     }
 
@@ -162,7 +162,7 @@ public class PutMappingRequest extends MasterNodeOperationRequest<PutMappingRequ
      * Timeout to wait till the put mapping gets acknowledged of all current cluster nodes. Defaults to
      * <tt>10s</tt>.
      */
-    TimeValue timeout() {
+    public TimeValue timeout() {
         return timeout;
     }
 

@@ -41,7 +41,7 @@ public class DeleteMappingRequest extends MasterNodeOperationRequest<DeleteMappi
     }
 
     /**
-     * Constructs a new put mapping request against one or more indices. If nothing is set then
+     * Constructs a new delete mapping request against one or more indices. If nothing is set then
      * it will be executed against all indices.
      */
     public DeleteMappingRequest(String... indices) {

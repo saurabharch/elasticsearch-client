@@ -90,5 +90,5 @@ public class HttpIndicesAliasesAction extends HttpAction<IndicesAliasesRequest, 
             }
         }        
     }    
-    
+
 }

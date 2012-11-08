@@ -57,6 +57,11 @@ import org.elasticsearch.action.admin.cluster.state.ClusterStateAction;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequestBuilder;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesAction;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.client.ClusterAdminClient;
 
 /**
@@ -204,4 +209,19 @@ public abstract class AbstractClusterAdminClient implements ClusterAdminClient {
     public NodesShutdownRequestBuilder prepareNodesShutdown(String... nodesIds) {
         return new NodesShutdownRequestBuilder(this).setNodesIds(nodesIds);
     }
+    
+    @Override
+    public ActionFuture<IndicesGetAliasesResponse> getAliases(final IndicesGetAliasesRequest request) {
+        return execute(IndicesGetAliasesAction.INSTANCE, request);
+    }
+
+    @Override
+    public void getAliases(final IndicesGetAliasesRequest request, final ActionListener<IndicesGetAliasesResponse> listener) {
+        execute(IndicesGetAliasesAction.INSTANCE, request, listener);
+    }
+
+    @Override
+    public IndicesGetAliasesRequestBuilder prepareGetAliases() {
+        return new IndicesGetAliasesRequestBuilder(this);
+    }    
 }

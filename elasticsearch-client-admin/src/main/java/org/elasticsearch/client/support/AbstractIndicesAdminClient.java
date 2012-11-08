@@ -25,6 +25,9 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesAction;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesAction;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequestBuilder;
@@ -65,6 +68,10 @@ import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingAction
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingAction;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingAction;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
@@ -85,6 +92,10 @@ import org.elasticsearch.action.admin.indices.segments.IndicesSegmentResponse;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsAction;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsRequest;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsAction;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsResponse;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsAction;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsRequestBuilder;
@@ -281,6 +292,21 @@ public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
     }
 
     @Override
+    public ActionFuture<GetMappingResponse> getMapping(final GetMappingRequest request) {
+        return execute(GetMappingAction.INSTANCE, request);
+    }
+
+    @Override
+    public void getMapping(final GetMappingRequest request, final ActionListener<GetMappingResponse> listener) {
+        execute(GetMappingAction.INSTANCE, request, listener);
+    }
+
+    @Override
+    public GetMappingRequestBuilder prepareGetMapping(String... indices) {
+        return new GetMappingRequestBuilder(this).setIndices(indices);
+    }
+
+    @Override
     public ActionFuture<PutMappingResponse> putMapping(final PutMappingRequest request) {
         return execute(PutMappingAction.INSTANCE, request);
     }
@@ -385,6 +411,21 @@ public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
         return new IndicesSegmentsRequestBuilder(this).setIndices(indices);
     }
 
+    @Override
+    public ActionFuture<GetSettingsResponse> getSettings(final GetSettingsRequest request) {
+        return execute(GetSettingsAction.INSTANCE, request);
+    }
+
+    @Override
+    public void getSettings(final GetSettingsRequest request, final ActionListener<GetSettingsResponse> listener) {
+        execute(GetSettingsAction.INSTANCE, request, listener);
+    }
+
+    @Override
+    public GetSettingsRequestBuilder prepareGetSettings(String... indices) {
+        return new GetSettingsRequestBuilder(this).setIndices(indices);
+    }
+    
     @Override
     public ActionFuture<UpdateSettingsResponse> updateSettings(final UpdateSettingsRequest request) {
         return execute(UpdateSettingsAction.INSTANCE, request);

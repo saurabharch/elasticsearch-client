@@ -61,7 +61,7 @@ public class PutWarmerRequest extends MasterNodeOperationRequest<PutWarmerReques
         return this;
     }
 
-    String name() {
+    public String name() {
         return this.name;
     }
 
@@ -82,7 +82,7 @@ public class PutWarmerRequest extends MasterNodeOperationRequest<PutWarmerReques
     }
 
     @Nullable
-    SearchRequest searchRequest() {
+    public SearchRequest searchRequest() {
         return this.searchRequest;
     }
 

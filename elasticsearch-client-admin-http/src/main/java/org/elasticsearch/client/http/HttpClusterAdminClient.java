@@ -32,7 +32,7 @@ import org.elasticsearch.action.HttpClusterAdminActionModule;
 import org.elasticsearch.action.admin.cluster.ClusterAction;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpClient;
-import org.elasticsearch.client.http.support.InternalHttpAdminClient;
+import org.elasticsearch.client.http.support.InternalHttpClusterAdminClient;
 import org.elasticsearch.client.internal.InternalClientSettingsPreparer;
 import org.elasticsearch.client.support.AbstractClusterAdminClient;
 import org.elasticsearch.common.collect.Tuple;
@@ -92,7 +92,7 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient {
         this.environment = tuple.v2();
         this.threadPool = new ClientThreadPool();
         this.addresses = Sets.newHashSet();
-        this.internalClient = new InternalHttpAdminClient(settings, actions);
+        this.internalClient = new InternalHttpClusterAdminClient(settings, actions);
         BasicCompressorFactory.configure(settings);
     }
 

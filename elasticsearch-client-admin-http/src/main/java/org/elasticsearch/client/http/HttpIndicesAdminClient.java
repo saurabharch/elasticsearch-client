@@ -32,7 +32,7 @@ import org.elasticsearch.action.HttpClusterAdminActionModule;
 import org.elasticsearch.action.admin.indices.IndicesAction;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpClient;
-import org.elasticsearch.client.http.support.InternalHttpAdminClient;
+import org.elasticsearch.client.http.support.InternalHttpClusterAdminClient;
 import org.elasticsearch.client.internal.InternalClientSettingsPreparer;
 import org.elasticsearch.client.support.AbstractIndicesAdminClient;
 import org.elasticsearch.common.collect.Tuple;
@@ -50,6 +50,8 @@ import org.elasticsearch.threadpool.client.ClientThreadPool;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import org.elasticsearch.action.HttpIndicesAdminActionModule;
+import org.elasticsearch.client.http.support.InternalHttpIndicesAdminClient;
 
 public class HttpIndicesAdminClient extends AbstractIndicesAdminClient {
 
@@ -59,7 +61,7 @@ public class HttpIndicesAdminClient extends AbstractIndicesAdminClient {
 
     private final ThreadPool threadPool;
 
-    private final HttpClusterAdminActionModule actions = new HttpClusterAdminActionModule();
+    private final HttpIndicesAdminActionModule actions = new HttpIndicesAdminActionModule();
     
     private final HttpClient internalClient;
     
@@ -91,7 +93,7 @@ public class HttpIndicesAdminClient extends AbstractIndicesAdminClient {
         this.environment = tuple.v2();
         this.threadPool = new ClientThreadPool();
         this.addresses = Sets.newHashSet();
-        this.internalClient = new InternalHttpAdminClient(settings, actions);
+        this.internalClient = new InternalHttpIndicesAdminClient(settings, actions);
         BasicCompressorFactory.configure(settings);
     }
 

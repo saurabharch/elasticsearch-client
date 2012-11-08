@@ -35,11 +35,12 @@ public class HttpCloseIndexAction extends HttpAction<CloseIndexRequest, CloseInd
 
     public static final String NAME = "close";
     private static final String METHOD = "POST";
-    private static final String ENDPOINT = "/_close";
+    private static final String ENDPOINT = "_close";
     
     @Override
     protected void doExecute(HttpClient client, CloseIndexRequest request, ActionListener<CloseIndexResponse> listener) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, request.index() + ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+                .index(request.index())
                 .param("timeout", request.timeout());
         submit(client, httpRequest, listener);
     }

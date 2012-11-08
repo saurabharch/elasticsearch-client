@@ -102,7 +102,7 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
     /**
      * The index name to create.
      */
-    String index() {
+    public String index() {
         return index;
     }
 
@@ -114,14 +114,14 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
     /**
      * The settings to created the index with.
      */
-    Settings settings() {
+    public Settings settings() {
         return settings;
     }
 
     /**
      * The cause for this index creation.
      */
-    String cause() {
+    public String cause() {
         return cause;
     }
 
@@ -307,7 +307,7 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
         return this;
     }
 
-    Map<String, String> mappings() {
+    public Map<String, String> mappings() {
         return this.mappings;
     }
 
@@ -316,7 +316,7 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
         return this;
     }
 
-    Map<String, IndexMetaData.Custom> customs() {
+    public Map<String, IndexMetaData.Custom> customs() {
         return this.customs;
     }
 
@@ -324,7 +324,7 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
      * Timeout to wait for the index creation to be acknowledged by current cluster nodes. Defaults
      * to <tt>10s</tt>.
      */
-    TimeValue timeout() {
+    public TimeValue timeout() {
         return timeout;
     }
 

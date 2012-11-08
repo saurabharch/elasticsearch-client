@@ -74,11 +74,11 @@ public class UpdateSettingsRequest extends MasterNodeOperationRequest<UpdateSett
         return validationException;
     }
 
-    String[] indices() {
+    public String[] indices() {
         return indices;
     }
 
-    Settings settings() {
+    public Settings settings() {
         return settings;
     }
 

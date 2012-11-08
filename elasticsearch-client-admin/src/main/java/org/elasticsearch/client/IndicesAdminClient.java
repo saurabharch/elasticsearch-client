@@ -54,6 +54,9 @@ import org.elasticsearch.action.admin.indices.gateway.snapshot.GatewaySnapshotRe
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.delete.DeleteMappingResponse;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingRequest;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingRequestBuilder;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
@@ -69,6 +72,9 @@ import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentResponse;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsRequest;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsRequest;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.GetSettingsResponse;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsRequestBuilder;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsResponse;
@@ -389,6 +395,29 @@ public interface IndicesAdminClient extends InternalIndicesAdminClient {
     OptimizeRequestBuilder prepareOptimize(String... indices);
 
     /**
+     * Get mapping definition for a type in one or more indices.
+     *
+     * @param request The mapping request
+     * @return A result future
+     * @see org.elasticsearch.client.Requests#getMappingRequest(String...)
+     */
+    ActionFuture<GetMappingResponse> getMapping(GetMappingRequest request);
+
+    /**
+     * Get mapping definition for a type in one or more indices.
+     *
+     * @param request  The mapping request
+     * @param listener A listener to be notified with a result
+     * @see org.elasticsearch.client.Requests#getMappingRequest(String...)
+     */
+    void getMapping(GetMappingRequest request, ActionListener<GetMappingResponse> listener);
+
+    /**
+     * Get mapping definition for a type in one or more indices.
+     */
+    GetMappingRequestBuilder prepareGetMapping(String... indices);
+
+    /**
      * Add mapping definition for a type into one or more indices.
      *
      * @param request The create mapping request
@@ -502,6 +531,27 @@ public interface IndicesAdminClient extends InternalIndicesAdminClient {
      * Clear indices cache.
      */
     ClearIndicesCacheRequestBuilder prepareClearCache(String... indices);
+
+    /**
+     * Get settings of one or more indices.
+     *
+     * @param request the get settings request
+     * @return The result future
+     */
+    ActionFuture<GetSettingsResponse> getSettings(GetSettingsRequest request);
+
+    /**
+     * Get settings of one or more indices.
+     *
+     * @param request  the get settings request
+     * @param listener A listener to be notified with the response
+     */
+    void getSettings(GetSettingsRequest request, ActionListener<GetSettingsResponse> listener);
+
+    /**
+     * Get indices settings.
+     */
+    GetSettingsRequestBuilder prepareGetSettings(String... indices);
 
     /**
      * Updates settings of one or more indices.

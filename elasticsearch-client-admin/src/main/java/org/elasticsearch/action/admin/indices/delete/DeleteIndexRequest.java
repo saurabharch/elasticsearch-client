@@ -71,7 +71,7 @@ public class DeleteIndexRequest extends MasterNodeOperationRequest<DeleteIndexRe
     /**
      * The index to delete.
      */
-    String[] indices() {
+    public String[] indices() {
         return indices;
     }
 
@@ -79,7 +79,7 @@ public class DeleteIndexRequest extends MasterNodeOperationRequest<DeleteIndexRe
      * Timeout to wait for the index deletion to be acknowledged by current cluster nodes. Defaults
      * to <tt>10s</tt>.
      */
-    TimeValue timeout() {
+    public TimeValue timeout() {
         return timeout;
     }
 

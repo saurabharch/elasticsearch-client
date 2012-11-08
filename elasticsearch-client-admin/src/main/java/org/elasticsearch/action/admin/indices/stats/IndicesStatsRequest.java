@@ -47,7 +47,15 @@ public class IndicesStatsRequest extends BroadcastOperationRequest<IndicesStatsR
     private boolean warmer = false;
     private String[] types = null;
     private String[] groups = null;
+    
+    private boolean all;
+    
+    private boolean clear;
 
+    public boolean isAll() {
+        return all;
+    }
+    
     /**
      * Sets all flags to return all stats.
      */
@@ -63,7 +71,12 @@ public class IndicesStatsRequest extends BroadcastOperationRequest<IndicesStatsR
         warmer = true;
         types = null;
         groups = null;
+        all = true;
         return this;
+    }
+
+    public boolean isClear() {
+        return clear;
     }
 
     /**
@@ -81,6 +94,7 @@ public class IndicesStatsRequest extends BroadcastOperationRequest<IndicesStatsR
         warmer = false;
         types = null;
         groups = null;
+        clear = true;
         return this;
     }
 

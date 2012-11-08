@@ -177,7 +177,7 @@ public class PutIndexTemplateRequest extends MasterNodeOperationRequest<PutIndex
         return this;
     }
 
-    Settings settings() {
+    public Settings settings() {
         return this.settings;
     }
 
@@ -338,7 +338,7 @@ public class PutIndexTemplateRequest extends MasterNodeOperationRequest<PutIndex
         return this;
     }
 
-    Map<String, IndexMetaData.Custom> customs() {
+    public Map<String, IndexMetaData.Custom> customs() {
         return this.customs;
     }
 
@@ -346,7 +346,7 @@ public class PutIndexTemplateRequest extends MasterNodeOperationRequest<PutIndex
      * Timeout to wait till the put mapping gets acknowledged of all current cluster nodes. Defaults to
      * <tt>10s</tt>.
      */
-    TimeValue timeout() {
+    public TimeValue timeout() {
         return timeout;
     }
 
