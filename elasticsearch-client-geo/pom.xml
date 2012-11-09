@@ -19,37 +19,75 @@
         Elasticsearch Client - Geographical Search
     </description>
 
-    <dependencies>
+    <profiles>
+        <profile>
+            <!-- build modules from external jars -->
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
 
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-client-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>        
+                <dependency>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-client-common</artifactId>
+                    <version>${project.version}</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>        
 
-        <dependency>
-            <groupId>com.spatial4j</groupId>
-            <artifactId>spatial4j</artifactId>
-            <version>0.3</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>
+                <dependency>
+                    <groupId>com.spatial4j</groupId>
+                    <artifactId>spatial4j</artifactId>
+                    <version>0.3</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>
 
-        <dependency>
-            <groupId>com.vividsolutions</groupId>
-            <artifactId>jts</artifactId>
-            <version>1.12</version>
-            <type>jar</type>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>xerces</groupId>
-                    <artifactId>xercesImpl</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+                <dependency>
+                    <groupId>com.vividsolutions</groupId>
+                    <artifactId>jts</artifactId>
+                    <version>1.12</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>xerces</groupId>
+                            <artifactId>xercesImpl</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
 
-    </dependencies>
+            </dependencies>
+        </profile>
+        
+        <profile>
+            <!-- jdk5 build, with JTS and spatial4j compiled for jdk5 -->
+            <id>jdk5</id>
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+            <dependencies>
+
+                <dependency>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-client-common</artifactId>
+                    <version>${project.version}</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>
+
+                <dependency>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-client-spatial4j-jdk5</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+
+            </dependencies>
+        </profile>
+        
+    </profiles>
+
 
     <build>
         <plugins>

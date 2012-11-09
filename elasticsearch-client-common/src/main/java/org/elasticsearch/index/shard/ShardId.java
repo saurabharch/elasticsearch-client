@@ -98,14 +98,12 @@ public class ShardId implements Serializable, Streamable {
         return shardId;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         index = Index.readIndexName(in);
         shardId = in.readVInt();
         hashCode = computeHashCode();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         index.writeTo(out);
         out.writeVInt(shardId);

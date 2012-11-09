@@ -1,6 +1,5 @@
 package org.elasticsearch.common;
 
-import java.nio.charset.Charset;
 
 /**
  * <p>Encodes and decodes to and from Base64 notation.</p>
@@ -229,7 +228,7 @@ public class Base64 {
     /**
      * Preferred encoding.
      */
-    public final static Charset PREFERRED_ENCODING = Charset.forName("US-ASCII");
+    public final static String PREFERRED_ENCODING = "US-ASCII";
 
 
     private final static byte WHITE_SPACE_ENC = -5; // Indicates white space in encoding

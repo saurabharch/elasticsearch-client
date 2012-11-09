@@ -20,22 +20,17 @@ package org.elasticsearch.threadpool.transport;
 
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.io.stream.Streamable;
-import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.ToXContent.Params;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilderString;
-import org.elasticsearch.common.Nullable;
-import org.elasticsearch.common.unit.SizeValue;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.ToXContent.Params;
 import org.elasticsearch.threadpool.ThreadPoolInfo;
+import org.elasticsearch.threadpool.ThreadPoolInfoElement;
 import org.elasticsearch.threadpool.transport.TransportThreadPoolInfo.Fields;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.elasticsearch.threadpool.ThreadPoolInfoElement;
 
 public class TransportThreadPoolInfo implements ThreadPoolInfo {
 
@@ -48,7 +43,6 @@ public class TransportThreadPoolInfo implements ThreadPoolInfo {
         this.infos = infos;
     }
 
-    @Override
     public Iterator<ThreadPoolInfoElement> iterator() {
         return infos.iterator();
     }
@@ -59,7 +53,6 @@ public class TransportThreadPoolInfo implements ThreadPoolInfo {
         return info;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         int size = in.readVInt();
         infos = new ArrayList(size);
@@ -70,7 +63,6 @@ public class TransportThreadPoolInfo implements ThreadPoolInfo {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(infos.size());
         for (ThreadPoolInfoElement info : infos) {
@@ -83,7 +75,6 @@ public class TransportThreadPoolInfo implements ThreadPoolInfo {
         static final XContentBuilderString THREAD_POOL = new XContentBuilderString("thread_pool");
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.THREAD_POOL);
         for (ThreadPoolInfoElement info : infos) {

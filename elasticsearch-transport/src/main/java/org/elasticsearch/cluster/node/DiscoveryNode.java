@@ -227,7 +227,6 @@ public class DiscoveryNode implements Streamable, Serializable {
         return node;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         nodeName = in.readString().intern();
         nodeId = in.readString().intern();
@@ -241,7 +240,6 @@ public class DiscoveryNode implements Streamable, Serializable {
         version = Version.readVersion(in);
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeString(nodeName);
         out.writeString(nodeId);

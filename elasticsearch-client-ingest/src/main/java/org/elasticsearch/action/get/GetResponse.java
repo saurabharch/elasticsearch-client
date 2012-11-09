@@ -186,12 +186,10 @@ public class GetResponse extends ActionResponse implements Iterable<GetField>, T
         return getResult.field(name);
     }
 
-    @Override
     public Iterator<GetField> iterator() {
         return getResult.iterator();
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         return getResult.toXContent(builder, params);
     }

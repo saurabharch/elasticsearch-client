@@ -73,7 +73,6 @@ public class GetField implements Streamable, Iterable<Object> {
         return values;
     }
 
-    @Override
     public Iterator<Object> iterator() {
         return values.iterator();
     }
@@ -84,7 +83,6 @@ public class GetField implements Streamable, Iterable<Object> {
         return result;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         name = in.readUTF();
         int size = in.readVInt();
@@ -94,7 +92,6 @@ public class GetField implements Streamable, Iterable<Object> {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(name);
         out.writeVInt(values.size());

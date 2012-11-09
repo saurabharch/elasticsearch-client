@@ -110,7 +110,6 @@ public abstract class NetworkUtils {
             getIndexMethod.setAccessible(true);
 
             Collections.sort(intfsList, new Comparator<NetworkInterface>() {
-                @Override
                 public int compare(NetworkInterface o1, NetworkInterface o2) {
                     try {
                         return ((Integer) getIndexMethod.invoke(o1)).intValue() - ((Integer) getIndexMethod.invoke(o2)).intValue();

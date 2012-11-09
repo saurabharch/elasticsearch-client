@@ -60,13 +60,11 @@ public class BoundTransportAddress implements Streamable {
         return addr;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         boundAddress = TransportAddressSerializers.addressFromStream(in);
         publishAddress = TransportAddressSerializers.addressFromStream(in);
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         TransportAddressSerializers.addressToStream(out, boundAddress);
         TransportAddressSerializers.addressToStream(out, publishAddress);

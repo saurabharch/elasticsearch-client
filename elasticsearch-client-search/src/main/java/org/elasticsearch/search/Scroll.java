@@ -62,14 +62,12 @@ public class Scroll implements Streamable {
         return scroll;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             keepAlive = readTimeValue(in);
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         if (keepAlive == null) {
             out.writeBoolean(false);

@@ -45,7 +45,6 @@ public class OpenBitDocSet extends DocSet {
         this.set = new OpenBitSetDISI(disi, numBits);
     }
 
-    @Override
     public int length() {
         return set.length();
     }

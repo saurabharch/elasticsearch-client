@@ -112,12 +112,12 @@ public class InternalSearchHit implements SearchHit {
         this.score = score;
     }
 
-    @Override
+    
     public float score() {
         return this.score;
     }
 
-    @Override
+    
     public float getScore() {
         return score();
     }
@@ -126,42 +126,42 @@ public class InternalSearchHit implements SearchHit {
         this.version = version;
     }
 
-    @Override
+    
     public long version() {
         return this.version;
     }
 
-    @Override
+    
     public long getVersion() {
         return this.version;
     }
 
-    @Override
+    
     public String index() {
         return shard.index();
     }
 
-    @Override
+    
     public String getIndex() {
         return index();
     }
 
-    @Override
+    
     public String id() {
         return id;
     }
 
-    @Override
+    
     public String getId() {
         return id();
     }
 
-    @Override
+    
     public String type() {
         return type;
     }
 
-    @Override
+    
     public String getType() {
         return type();
     }
@@ -179,7 +179,7 @@ public class InternalSearchHit implements SearchHit {
         }
     }
 
-    @Override
+    
     public BytesReference getSourceRef() {
         return sourceRef();
     }
@@ -191,7 +191,7 @@ public class InternalSearchHit implements SearchHit {
         return source;
     }
 
-    @Override
+    
     public byte[] source() {
         if (source == null) {
             return null;
@@ -203,17 +203,17 @@ public class InternalSearchHit implements SearchHit {
         return this.sourceAsBytes;
     }
 
-    @Override
+    
     public boolean isSourceEmpty() {
         return source == null;
     }
 
-    @Override
+    
     public Map<String, Object> getSource() {
         return sourceAsMap();
     }
 
-    @Override
+    
     public String sourceAsString() {
         if (source == null) {
             return null;
@@ -225,13 +225,13 @@ public class InternalSearchHit implements SearchHit {
         }
     }
 
-    @Override
+    
     public String getSourceAsString() {
         return sourceAsString();
     }
 
     @SuppressWarnings({"unchecked"})
-    @Override
+    
     public Map<String, Object> sourceAsMap() throws ElasticSearchParseException {
         if (source == null) {
             return null;
@@ -245,17 +245,17 @@ public class InternalSearchHit implements SearchHit {
         return sourceAsMap;
     }
 
-    @Override
+    
     public Iterator<SearchHitField> iterator() {
         return fields.values().iterator();
     }
 
-    @Override
+    
     public SearchHitField field(String fieldName) {
         return fields().get(fieldName);
     }
 
-    @Override
+    
     public Map<String, SearchHitField> fields() {
         if (fields == null) {
             return ImmutableMap.of();
@@ -268,7 +268,7 @@ public class InternalSearchHit implements SearchHit {
         return this.fields;
     }
 
-    @Override
+    
     public Map<String, SearchHitField> getFields() {
         return fields();
     }
@@ -281,7 +281,7 @@ public class InternalSearchHit implements SearchHit {
         return highlightFields;
     }
 
-    @Override
+    
     public Map<String, HighlightField> highlightFields() {
         if (highlightFields == null) {
             return ImmutableMap.of();
@@ -289,7 +289,7 @@ public class InternalSearchHit implements SearchHit {
         return this.highlightFields;
     }
 
-    @Override
+    
     public Map<String, HighlightField> getHighlightFields() {
         return highlightFields();
     }
@@ -302,22 +302,22 @@ public class InternalSearchHit implements SearchHit {
         this.sortValues = sortValues;
     }
 
-    @Override
+    
     public Object[] sortValues() {
         return sortValues;
     }
 
-    @Override
+    
     public Object[] getSortValues() {
         return sortValues();
     }
 
-    @Override
+    
     public Explanation explanation() {
         return explanation;
     }
 
-    @Override
+    
     public Explanation getExplanation() {
         return explanation();
     }
@@ -326,12 +326,12 @@ public class InternalSearchHit implements SearchHit {
         this.explanation = explanation;
     }
 
-    @Override
+    
     public SearchShardTarget shard() {
         return shard;
     }
 
-    @Override
+    
     public SearchShardTarget getShard() {
         return shard();
     }
@@ -348,7 +348,7 @@ public class InternalSearchHit implements SearchHit {
         return this.matchedFilters;
     }
 
-    @Override
+    
     public String[] getMatchedFilters() {
         return this.matchedFilters;
     }
@@ -369,7 +369,7 @@ public class InternalSearchHit implements SearchHit {
         static final XContentBuilderString DETAILS = new XContentBuilderString("details");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
         if (explanation() != null) {
@@ -468,7 +468,7 @@ public class InternalSearchHit implements SearchHit {
         return hit;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         readFrom(in, InternalSearchHits.streamContext().streamShardTarget(InternalSearchHits.StreamContext.ShardTargetType.STREAM));
     }
@@ -601,7 +601,7 @@ public class InternalSearchHit implements SearchHit {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         writeTo(out, InternalSearchHits.streamContext().streamShardTarget(InternalSearchHits.StreamContext.ShardTargetType.STREAM));
     }

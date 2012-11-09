@@ -28,7 +28,6 @@ public class GeoShapeQueryBuilder extends BaseQueryBuilder implements BoostableQ
         return this;
     }
 
-    @Override
     public GeoShapeQueryBuilder boost(float boost) {
         this.boost = boost;
         return this;

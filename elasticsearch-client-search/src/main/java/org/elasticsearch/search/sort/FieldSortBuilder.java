@@ -73,7 +73,6 @@ public class FieldSortBuilder extends SortBuilder {
         return this;
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(fieldName);
         if (order != null) {

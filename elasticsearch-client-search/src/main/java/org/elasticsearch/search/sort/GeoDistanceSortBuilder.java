@@ -104,7 +104,6 @@ public class GeoDistanceSortBuilder extends SortBuilder {
         return this;
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject("_geo_distance");
 

@@ -23,3 +23,6 @@
 /elasticsearch-client-admin-http/target/
 /elasticsearch-client-search-http/target/
 /elasticsearch-client-jdk5/target/
+/elasticsearch-client-ingest-http/target/
+/elasticsearch-client-jts-jdk5/target/
+/elasticsearch-client-spatial4j-jdk5/target/

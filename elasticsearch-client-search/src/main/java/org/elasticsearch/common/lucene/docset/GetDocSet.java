@@ -39,7 +39,6 @@ public abstract class GetDocSet extends DocSet {
         return 0;
     }
 
-    @Override
     public int length() {
         return maxDoc;
     }

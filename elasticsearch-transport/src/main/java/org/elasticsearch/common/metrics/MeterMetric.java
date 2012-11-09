@@ -48,7 +48,6 @@ public class MeterMetric implements Metric {
     public MeterMetric(ScheduledExecutorService tickThread, TimeUnit rateUnit) {
         this.rateUnit = rateUnit;
         this.future = tickThread.scheduleAtFixedRate(new Runnable() {
-            @Override
             public void run() {
                 tick();
             }

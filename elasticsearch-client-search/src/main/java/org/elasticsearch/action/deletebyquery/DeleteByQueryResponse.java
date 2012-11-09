@@ -41,7 +41,6 @@ public class DeleteByQueryResponse extends ActionResponse implements Iterable<In
 
     }
 
-    @Override
     public Iterator<IndexDeleteByQueryResponse> iterator() {
         return indices.values().iterator();
     }

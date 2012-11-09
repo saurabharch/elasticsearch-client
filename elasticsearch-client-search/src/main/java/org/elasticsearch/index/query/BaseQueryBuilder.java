@@ -43,12 +43,10 @@ public abstract class BaseQueryBuilder implements QueryBuilder {
         }
     }
 
-    @Override
     public BytesReference buildAsBytes() throws QueryBuilderException {
         return buildAsBytes(XContentType.JSON);
     }
 
-    @Override
     public BytesReference buildAsBytes(XContentType contentType) throws QueryBuilderException {
         try {
             XContentBuilder builder = XContentFactory.contentBuilder(contentType);
@@ -59,7 +57,6 @@ public abstract class BaseQueryBuilder implements QueryBuilder {
         }
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
         doXContent(builder, params);

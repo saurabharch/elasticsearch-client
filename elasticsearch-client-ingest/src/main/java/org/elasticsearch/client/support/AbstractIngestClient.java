@@ -59,138 +59,138 @@ import org.elasticsearch.common.Nullable;
 
 public abstract class AbstractIngestClient implements IngestClient {
     
-    @Override
+    
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, IngestClient extends GenericClient> 
             RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder, IngestClient> action) {
         return action.newRequestBuilder((IngestClient)this);
     }
 
-    @Override
+    
     public ActionFuture<IndexResponse> index(final IndexRequest request) {
         return execute(IndexAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void index(final IndexRequest request, final ActionListener<IndexResponse> listener) {
         execute(IndexAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public IndexRequestBuilder prepareIndex() {
         return new IndexRequestBuilder(this, null);
     }
 
-    @Override
+    
     public IndexRequestBuilder prepareIndex(String index, String type) {
         return prepareIndex(index, type, null);
     }
 
-    @Override
+    
     public IndexRequestBuilder prepareIndex(String index, String type, @Nullable String id) {
         return prepareIndex().setIndex(index).setType(type).setId(id);
     }
     
-    @Override
+    
     public ActionFuture<UpdateResponse> update(final UpdateRequest request) {
         return execute(UpdateAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void update(final UpdateRequest request, final ActionListener<UpdateResponse> listener) {
         execute(UpdateAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public UpdateRequestBuilder prepareUpdate() {
         return new UpdateRequestBuilder(this, null, null, null);
     }
 
-    @Override
+    
     public UpdateRequestBuilder prepareUpdate(String index, String type, String id) {
         return new UpdateRequestBuilder(this, index, type, id);
     }
 
-    @Override
+    
     public ActionFuture<DeleteResponse> delete(final DeleteRequest request) {
         return execute(DeleteAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void delete(final DeleteRequest request, final ActionListener<DeleteResponse> listener) {
         execute(DeleteAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public DeleteRequestBuilder prepareDelete() {
         return new DeleteRequestBuilder(this, null);
     }
 
-    @Override
+    
     public DeleteRequestBuilder prepareDelete(String index, String type, String id) {
         return prepareDelete().setIndex(index).setType(type).setId(id);
     }
 
-    @Override
+    
     public ActionFuture<BulkResponse> bulk(final BulkRequest request) {
         return execute(BulkAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void bulk(final BulkRequest request, final ActionListener<BulkResponse> listener) {
         execute(BulkAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public BulkRequestBuilder prepareBulk() {
         return new BulkRequestBuilder(this);
     }
 
-    @Override
+    
     public ActionFuture<GetResponse> get(final GetRequest request) {
         return execute(GetAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void get(final GetRequest request, final ActionListener<GetResponse> listener) {
         execute(GetAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public GetRequestBuilder prepareGet() {
         return new GetRequestBuilder(this, null);
     }
 
-    @Override
+    
     public GetRequestBuilder prepareGet(String index, String type, String id) {
         return prepareGet().setIndex(index).setType(type).setId(id);
     }
 
-    @Override
+    
     public ActionFuture<MultiGetResponse> multiGet(final MultiGetRequest request) {
         return execute(MultiGetAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void multiGet(final MultiGetRequest request, final ActionListener<MultiGetResponse> listener) {
         execute(MultiGetAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public MultiGetRequestBuilder prepareMultiGet() {
         return new MultiGetRequestBuilder(this);
     }
 
-    @Override
+    
     public ActionFuture<PercolateResponse> percolate(final PercolateRequest request) {
         return execute(PercolateAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void percolate(final PercolateRequest request, final ActionListener<PercolateResponse> listener) {
         execute(PercolateAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public PercolateRequestBuilder preparePercolate(String index, String type) {
         return new PercolateRequestBuilder(this, index, type);
     }

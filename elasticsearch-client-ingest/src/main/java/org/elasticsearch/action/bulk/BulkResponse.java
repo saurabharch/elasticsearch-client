@@ -107,7 +107,6 @@ public class BulkResponse extends ActionResponse implements Iterable<BulkItemRes
         return responses;
     }
 
-    @Override
     public Iterator<BulkItemResponse> iterator() {
         return Iterators.forArray(responses);
     }

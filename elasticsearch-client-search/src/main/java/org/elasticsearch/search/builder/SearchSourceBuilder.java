@@ -561,7 +561,6 @@ public class SearchSourceBuilder implements ToXContent {
     }
 
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
 

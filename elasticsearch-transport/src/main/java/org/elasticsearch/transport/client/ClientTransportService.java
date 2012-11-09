@@ -223,7 +223,6 @@ public class ClientTransportService {
             // want handlers to worry about stack overflows
             final SendRequestTransportException sendRequestException = new SendRequestTransportException(node, action, e);
             threadPool.executor(ThreadPool.Names.GENERIC).execute(new Runnable() {
-                @Override
                 public void run() {
                     handler.handleException(sendRequestException);
                 }
@@ -260,22 +259,18 @@ public class ClientTransportService {
         final MeanMetric rxMetric = new MeanMetric();
         final MeanMetric txMetric = new MeanMetric();
 
-        @Override
         public void received(long size) {
             rxMetric.inc(size);
         }
 
-        @Override
         public void sent(long size) {
             txMetric.inc(size);
         }
 
-        @Override
         public TransportRequestHandler handler(String action) {
             return serverHandlers.get(action);
         }
 
-        @Override
         public TransportResponseHandler remove(long requestId) {
             RequestHolder holder = clientHandlers.remove(requestId);
             if (holder == null) {
@@ -293,10 +288,8 @@ public class ClientTransportService {
             return holder.handler();
         }
 
-        @Override
         public void raiseNodeConnected(final DiscoveryNode node) {
             threadPool.generic().execute(new Runnable() {
-                @Override
                 public void run() {
                     for (TransportConnectionListener connectionListener : connectionListeners) {
                         connectionListener.onNodeConnected(node);
@@ -305,13 +298,11 @@ public class ClientTransportService {
             });
         }
 
-        @Override
         public void raiseNodeDisconnected(final DiscoveryNode node) {
             if (stoppedOrClosed) {
                 return;
             }
             threadPool.generic().execute(new Runnable() {
-                @Override
                 public void run() {
                     for (TransportConnectionListener connectionListener : connectionListeners) {
                         connectionListener.onNodeDisconnected(node);
@@ -325,7 +316,6 @@ public class ClientTransportService {
                                 // callback that an exception happened, but on a different thread since we don't
                                 // want handlers to worry about stack overflows
                                 threadPool.generic().execute(new Runnable() {
-                                    @Override
                                     public void run() {
                                         holderToNotify.handler().handleException(new NodeDisconnectedException(node, holderToNotify.action()));
                                     }
@@ -354,7 +344,6 @@ public class ClientTransportService {
             return sentTime;
         }
 
-        @Override
         public void run() {
             if (future.isCancelled()) {
                 return;

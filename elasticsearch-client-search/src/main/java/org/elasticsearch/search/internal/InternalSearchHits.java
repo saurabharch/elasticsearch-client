@@ -81,7 +81,7 @@ public class InternalSearchHits implements SearchHits {
     }
 
     private static final ThreadLocal<ThreadLocals.CleanableValue<StreamContext>> cache = new ThreadLocal<ThreadLocals.CleanableValue<StreamContext>>() {
-        @Override
+        
         protected ThreadLocals.CleanableValue<StreamContext> initialValue() {
             return new ThreadLocals.CleanableValue<StreamContext>(new StreamContext());
         }
@@ -120,17 +120,17 @@ public class InternalSearchHits implements SearchHits {
         return totalHits;
     }
 
-    @Override
+    
     public long getTotalHits() {
         return totalHits();
     }
 
-    @Override
+    
     public float maxScore() {
         return this.maxScore;
     }
 
-    @Override
+    
     public float getMaxScore() {
         return maxScore();
     }
@@ -139,17 +139,17 @@ public class InternalSearchHits implements SearchHits {
         return this.hits;
     }
 
-    @Override
+    
     public SearchHit getAt(int position) {
         return hits[position];
     }
 
-    @Override
+    
     public SearchHit[] getHits() {
         return hits();
     }
 
-    @Override
+    
     public Iterator<SearchHit> iterator() {
         return Iterators.forArray(hits());
     }
@@ -164,7 +164,7 @@ public class InternalSearchHits implements SearchHits {
         static final XContentBuilderString MAX_SCORE = new XContentBuilderString("max_score");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.HITS);
         builder.field(Fields.TOTAL, totalHits);
@@ -195,7 +195,7 @@ public class InternalSearchHits implements SearchHits {
         return hits;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         readFrom(in, streamContext().streamShardTarget(StreamContext.ShardTargetType.LOOKUP));
     }
@@ -222,7 +222,7 @@ public class InternalSearchHits implements SearchHits {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         writeTo(out, streamContext().streamShardTarget(StreamContext.ShardTargetType.LOOKUP));
     }

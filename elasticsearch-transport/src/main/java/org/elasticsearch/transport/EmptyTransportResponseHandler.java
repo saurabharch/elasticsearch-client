@@ -34,20 +34,16 @@ public class EmptyTransportResponseHandler implements TransportResponseHandler<T
         this.executor = executor;
     }
 
-    @Override
     public TransportResponse.Empty newInstance() {
         return TransportResponse.Empty.INSTANCE;
     }
 
-    @Override
     public void handleResponse(TransportResponse.Empty response) {
     }
 
-    @Override
     public void handleException(TransportException exp) {
     }
 
-    @Override
     public String executor() {
         return executor;
     }

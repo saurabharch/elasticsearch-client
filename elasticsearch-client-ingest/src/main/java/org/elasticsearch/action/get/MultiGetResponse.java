@@ -115,7 +115,6 @@ public class MultiGetResponse extends ActionResponse implements Iterable<MultiGe
             return failure;
         }
 
-        @Override
         public void readFrom(StreamInput in) throws IOException {
             index = in.readString();
             type = in.readOptionalString();
@@ -123,7 +122,6 @@ public class MultiGetResponse extends ActionResponse implements Iterable<MultiGe
             message = in.readString();
         }
 
-        @Override
         public void writeTo(StreamOutput out) throws IOException {
             out.writeString(index);
             out.writeOptionalString(type);
@@ -145,12 +143,10 @@ public class MultiGetResponse extends ActionResponse implements Iterable<MultiGe
         return this.responses;
     }
 
-    @Override
     public Iterator<MultiGetItemResponse> iterator() {
         return Iterators.forArray(responses);
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
         builder.startArray(Fields.DOCS);

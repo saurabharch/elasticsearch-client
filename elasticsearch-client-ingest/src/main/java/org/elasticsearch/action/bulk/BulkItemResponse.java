@@ -287,7 +287,6 @@ public class BulkItemResponse implements Streamable {
         return response;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         id = in.readVInt();
         opType = in.readUTF();
@@ -306,7 +305,6 @@ public class BulkItemResponse implements Streamable {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(id);
         out.writeUTF(opType);

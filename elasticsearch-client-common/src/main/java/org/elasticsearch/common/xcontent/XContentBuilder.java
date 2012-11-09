@@ -19,7 +19,6 @@
 
 package org.elasticsearch.common.xcontent;
 
-import com.google.common.base.Charsets;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -1145,7 +1144,6 @@ public final class XContentBuilder implements BytesStream {
         return this.bos;
     }
 
-    @Override
     public BytesReference bytes() {
         close();
         return ((BytesStream) bos).bytes();
@@ -1167,6 +1165,6 @@ public final class XContentBuilder implements BytesStream {
     public String string() throws IOException {
         close();
         BytesArray bytesArray = bytes().toBytesArray();
-        return new String(bytesArray.array(), bytesArray.arrayOffset(), bytesArray.length(), Charsets.UTF_8);
+        return new String(bytesArray.array(), bytesArray.arrayOffset(), bytesArray.length(), "UTF-8");
     }
 }

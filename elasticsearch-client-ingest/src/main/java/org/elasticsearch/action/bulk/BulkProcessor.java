@@ -274,7 +274,6 @@ public class BulkProcessor {
             }
             listener.beforeBulk(executionId, bulkRequest);
             client.bulk(bulkRequest, new ActionListener<BulkResponse>() {
-                @Override
                 public void onResponse(BulkResponse response) {
                     try {
                         listener.afterBulk(executionId, bulkRequest, response);
@@ -283,7 +282,6 @@ public class BulkProcessor {
                     }
                 }
 
-                @Override
                 public void onFailure(Throwable e) {
                     try {
                         listener.afterBulk(executionId, bulkRequest, e);
@@ -307,7 +305,6 @@ public class BulkProcessor {
 
     class Flush implements Runnable {
 
-        @Override
         public void run() {
             synchronized (BulkProcessor.this) {
                 if (closed) {

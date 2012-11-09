@@ -59,7 +59,7 @@ public class InternalFacets implements Facets, Streamable, ToXContent, Iterable<
     /**
      * Iterates over the {@link Facet}s.
      */
-    @Override
+    
     public Iterator<Facet> iterator() {
         return facets.iterator();
     }
@@ -96,7 +96,7 @@ public class InternalFacets implements Facets, Streamable, ToXContent, Iterable<
     /**
      * Returns the facet by name already casted to the specified type.
      */
-    @Override
+    
     public <T extends Facet> T facet(Class<T> facetType, String name) {
         return facetType.cast(facet(name));
     }
@@ -105,7 +105,7 @@ public class InternalFacets implements Facets, Streamable, ToXContent, Iterable<
      * A facet of the specified name.
      */
     @SuppressWarnings({"unchecked"})
-    @Override
+    
     public <T extends Facet> T facet(String name) {
         return (T) facetsAsMap().get(name);
     }
@@ -114,7 +114,7 @@ public class InternalFacets implements Facets, Streamable, ToXContent, Iterable<
         static final XContentBuilderString FACETS = new XContentBuilderString("facets");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.FACETS);
         for (Facet facet : facets) {
@@ -130,7 +130,7 @@ public class InternalFacets implements Facets, Streamable, ToXContent, Iterable<
         return result;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         int size = in.readVInt();
         if (size == 0) {
@@ -146,7 +146,7 @@ public class InternalFacets implements Facets, Streamable, ToXContent, Iterable<
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(facets.size());
         for (Facet facet : facets) {

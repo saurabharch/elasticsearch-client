@@ -28,7 +28,6 @@ import java.io.IOException;
  */
 public abstract class BaseFilterBuilder implements FilterBuilder {
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject();
         doXContent(builder, params);

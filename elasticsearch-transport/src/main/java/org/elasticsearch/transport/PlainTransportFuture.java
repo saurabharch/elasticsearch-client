@@ -39,7 +39,6 @@ public class PlainTransportFuture<V extends TransportResponse> extends BaseFutur
         this.handler = handler;
     }
 
-    @Override
     public V txGet() throws ElasticSearchException {
         try {
             return get();
@@ -54,7 +53,6 @@ public class PlainTransportFuture<V extends TransportResponse> extends BaseFutur
         }
     }
 
-    @Override
     public V txGet(long timeout, TimeUnit unit) throws ElasticSearchException {
         try {
             return get(timeout, unit);
@@ -71,23 +69,19 @@ public class PlainTransportFuture<V extends TransportResponse> extends BaseFutur
         }
     }
 
-    @Override
     public V newInstance() {
         return handler.newInstance();
     }
 
-    @Override
     public String executor() {
         return handler.executor();
     }
 
-    @Override
     public void handleResponse(V response) {
         handler.handleResponse(response);
         set(response);
     }
 
-    @Override
     public void handleException(TransportException exp) {
         handler.handleException(exp);
         setException(exp);

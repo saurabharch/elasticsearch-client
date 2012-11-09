@@ -29,6 +29,7 @@ import com.google.common.base.Charsets;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * A Query builder which allows building a query thanks to a JSON string or binary data. This is useful when you want
@@ -56,11 +57,18 @@ public class WrapperQueryBuilder extends BaseQueryBuilder {
      * Builds a JSONQueryBuilder using the provided JSON query string.
      */
     public WrapperQueryBuilder(String source) {
-        this.source = source.getBytes(Charsets.UTF_8);
+        this.source = createSource(source);
         this.offset = 0;
         this.length = this.source.length;
     }
 
+    private static byte[] createSource(String source) {
+        try {
+            return source.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            return null;
+        }        
+    }     
     public WrapperQueryBuilder(byte[] source, int offset, int length) {
         this.source = source;
         this.offset = offset;

@@ -141,7 +141,6 @@ public class MultiGetItemResponse implements Streamable {
         return response;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             failure = MultiGetResponse.Failure.readFailure(in);
@@ -151,7 +150,6 @@ public class MultiGetItemResponse implements Streamable {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         if (failure != null) {
             out.writeBoolean(true);

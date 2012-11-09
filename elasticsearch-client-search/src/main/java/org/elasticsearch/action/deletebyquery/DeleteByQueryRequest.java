@@ -19,7 +19,6 @@
 
 package org.elasticsearch.action.deletebyquery;
 
-import com.google.common.base.Charsets;
 import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.support.replication.IndicesReplicationOperationRequest;
@@ -38,6 +37,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -113,7 +113,11 @@ public class DeleteByQueryRequest extends IndicesReplicationOperationRequest<Del
      */
     @Required
     public DeleteByQueryRequest query(String querySource) {
-        this.querySource = new BytesArray(querySource.getBytes(Charsets.UTF_8));
+        try {
+            this.querySource = new BytesArray(querySource.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException ex) {
+            // ignore
+        }
         this.querySourceUnsafe = false;
         return this;
     }

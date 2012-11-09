@@ -44,7 +44,6 @@ public class AndDocSet extends DocSet {
         return true;
     }
 
-    @Override
     public int length() {
         if (sets.isEmpty()) {
             return 0;

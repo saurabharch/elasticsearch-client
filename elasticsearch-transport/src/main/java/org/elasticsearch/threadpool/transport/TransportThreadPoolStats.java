@@ -44,7 +44,6 @@ public class TransportThreadPoolStats implements ThreadPoolStats {
         this.stats = stats;
     }
 
-    @Override
     public Iterator<ThreadPoolStatsElement> iterator() {
         return stats.iterator();
     }
@@ -55,7 +54,6 @@ public class TransportThreadPoolStats implements ThreadPoolStats {
         return stats;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         int size = in.readVInt();
         stats = new ArrayList<ThreadPoolStatsElement>(size);
@@ -66,7 +64,6 @@ public class TransportThreadPoolStats implements ThreadPoolStats {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(stats.size());
         for (ThreadPoolStatsElement stat : stats) {
@@ -75,7 +72,6 @@ public class TransportThreadPoolStats implements ThreadPoolStats {
     }
 
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, ToXContent.Params params) throws IOException {
         builder.startObject(ThreadPoolStatsElement.Fields.THREAD_POOL);
         for (ThreadPoolStatsElement stat : stats) {

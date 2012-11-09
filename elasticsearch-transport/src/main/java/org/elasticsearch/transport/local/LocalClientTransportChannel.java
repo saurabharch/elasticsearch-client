@@ -56,17 +56,14 @@ public class LocalClientTransportChannel implements TransportChannel {
         this.requestId = requestId;
     }
 
-    @Override
     public String action() {
         return action;
     }
 
-    @Override
     public void sendResponse(TransportResponse message) throws IOException {
         sendResponse(message, TransportResponseOptions.EMPTY);
     }
 
-    @Override
     public void sendResponse(TransportResponse message, TransportResponseOptions options) throws IOException {
         BasicCachedStreamOutput.Entry cachedEntry = BasicCachedStreamOutput.popEntry();
         try {
@@ -79,7 +76,6 @@ public class LocalClientTransportChannel implements TransportChannel {
             stream.close();
             final byte[] data = cachedEntry.bytes().bytes().copyBytesArray().toBytes();
             targetTransport.threadPool().generic().execute(new Runnable() {
-                @Override
                 public void run() {
                     targetTransport.messageReceived(data, action, sourceTransport, null);
                 }
@@ -89,7 +85,6 @@ public class LocalClientTransportChannel implements TransportChannel {
         }
     }
 
-    @Override
     public void sendResponse(Throwable error) throws IOException {
         BasicCachedStreamOutput.Entry cachedEntry = BasicCachedStreamOutput.popEntry();
         try {
@@ -112,7 +107,6 @@ public class LocalClientTransportChannel implements TransportChannel {
             }
             final byte[] data = stream.bytes().copyBytesArray().toBytes();
             targetTransport.threadPool().generic().execute(new Runnable() {
-                @Override
                 public void run() {
                     targetTransport.messageReceived(data, action, sourceTransport, null);
                 }

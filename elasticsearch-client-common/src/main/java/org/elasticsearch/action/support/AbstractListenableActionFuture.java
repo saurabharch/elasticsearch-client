@@ -111,7 +111,6 @@ public abstract class AbstractListenableActionFuture<T, L> extends AdapterAction
                 threadPool.generic().execute((Runnable) listener);
             } else {
                 threadPool.generic().execute(new Runnable() {
-                    @Override
                     public void run() {
                         ActionListener<T> lst = (ActionListener<T>) listener;
                         try {

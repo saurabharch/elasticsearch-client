@@ -76,17 +76,17 @@ public class LocalClientTransport implements Transport {
         this.threadPool = threadPool;
     }
 
-    @Override
+    
     public TransportAddress[] addressesFromString(String address) {
         return new TransportAddress[]{new LocalTransportAddress(address)};
     }
 
-    @Override
+    
     public boolean addressSupported(Class<? extends TransportAddress> address) {
         return LocalTransportAddress.class.equals(address);
     }
 
-//    @Override
+//    
     public LocalClientTransport start() throws ElasticSearchException {
         localAddress = new LocalTransportAddress(Long.toString(transportAddressIdGenerator.incrementAndGet()));
         transports.put(localAddress, this);
@@ -94,7 +94,7 @@ public class LocalClientTransport implements Transport {
         return this;
     }
 
- //   @Override
+ //   
     public LocalClientTransport stop() throws ElasticSearchException {
         transports.remove(localAddress);
         // now, go over all the transports connected to me, and raise disconnected event
@@ -108,31 +108,31 @@ public class LocalClientTransport implements Transport {
         return this;
     }
 
-    //@Override
+    //
     public void close() throws ElasticSearchException {
     }
 
-    @Override
+    
     public void transportServiceAdapter(TransportServiceAdapter transportServiceAdapter) {
         this.transportServiceAdapter = transportServiceAdapter;
     }
 
-    @Override
+    
     public BoundTransportAddress boundAddress() {
         return boundAddress;
     }
 
-    @Override
+    
     public boolean nodeConnected(DiscoveryNode node) {
         return connectedNodes.containsKey(node);
     }
 
-    @Override
+    
     public void connectToNodeLight(DiscoveryNode node) throws ConnectTransportException {
         connectToNode(node);
     }
 
-    @Override
+    
     public void connectToNode(DiscoveryNode node) throws ConnectTransportException {
         synchronized (this) {
             if (connectedNodes.containsKey(node)) {
@@ -147,7 +147,7 @@ public class LocalClientTransport implements Transport {
         }
     }
 
-    @Override
+    
     public void disconnectFromNode(DiscoveryNode node) {
         synchronized (this) {
             LocalClientTransport removed = connectedNodes.remove(node);
@@ -157,12 +157,12 @@ public class LocalClientTransport implements Transport {
         }
     }
 
-    @Override
+    
     public long serverOpen() {
         return 0;
     }
 
-    @Override
+    
     public void sendRequest(final DiscoveryNode node, final long requestId, final String action, final TransportRequest message, TransportRequestOptions options) throws IOException, TransportException {
         BasicCachedStreamOutput.Entry cachedEntry = BasicCachedStreamOutput.popEntry();
         try {
@@ -188,7 +188,7 @@ public class LocalClientTransport implements Transport {
             transportServiceAdapter.sent(data.length);
 
             threadPool.generic().execute(new Runnable() {
-                @Override
+                
                 public void run() {
                     targetTransport.messageReceived(data, action, LocalClientTransport.this, requestId);
                 }
@@ -269,7 +269,7 @@ public class LocalClientTransport implements Transport {
         }
         threadPool.executor(handler.executor()).execute(new Runnable() {
             @SuppressWarnings({"unchecked"})
-            @Override
+            
             public void run() {
                 try {
                     handler.handleResponse(streamable);

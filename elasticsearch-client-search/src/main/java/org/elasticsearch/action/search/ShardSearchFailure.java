@@ -86,7 +86,6 @@ public class ShardSearchFailure implements ShardOperationFailedException {
     /**
      * The index the search failed on.
      */
-    @Override
     public String index() {
         if (shardTarget != null) {
             return shardTarget.index();
@@ -97,7 +96,6 @@ public class ShardSearchFailure implements ShardOperationFailedException {
     /**
      * The shard id the search failed on.
      */
-    @Override
     public int shardId() {
         if (shardTarget != null) {
             return shardTarget.shardId();
@@ -123,7 +121,6 @@ public class ShardSearchFailure implements ShardOperationFailedException {
         return shardSearchFailure;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             shardTarget = readSearchShardTarget(in);
@@ -132,7 +129,6 @@ public class ShardSearchFailure implements ShardOperationFailedException {
         status = RestStatus.readFrom(in);
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         if (shardTarget == null) {
             out.writeBoolean(false);

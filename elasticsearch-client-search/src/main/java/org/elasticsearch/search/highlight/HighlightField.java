@@ -84,7 +84,6 @@ public class HighlightField implements Streamable {
         return field;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         name = in.readUTF();
         if (in.readBoolean()) {
@@ -100,7 +99,6 @@ public class HighlightField implements Streamable {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(name);
         if (fragments == null) {

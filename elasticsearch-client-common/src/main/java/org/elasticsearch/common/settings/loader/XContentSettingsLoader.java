@@ -38,7 +38,6 @@ public abstract class XContentSettingsLoader implements SettingsLoader {
 
     public abstract XContentType contentType();
 
-    @Override
     public Map<String, String> load(String source) throws IOException {
         XContentParser parser = XContentFactory.xContent(contentType()).createParser(source);
         try {
@@ -48,7 +47,6 @@ public abstract class XContentSettingsLoader implements SettingsLoader {
         }
     }
 
-    @Override
     public Map<String, String> load(byte[] source) throws IOException {
         XContentParser parser = XContentFactory.xContent(contentType()).createParser(source);
         try {

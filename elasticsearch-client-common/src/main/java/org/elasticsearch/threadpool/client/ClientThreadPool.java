@@ -32,16 +32,16 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.threadpool.ThreadPoolInfo;
 import org.elasticsearch.threadpool.ThreadPoolInfoElement;
 import org.elasticsearch.threadpool.ThreadPoolStats;
 import org.elasticsearch.threadpool.ThreadPoolStatsElement;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMinutes;
@@ -221,7 +221,6 @@ public class ClientThreadPool implements ThreadPool {
             this.runnable = runnable;
         }
 
-        @Override
         public void run() {
             try {
                 runnable.run();
@@ -257,7 +256,6 @@ public class ClientThreadPool implements ThreadPool {
             this.executor = executor;
         }
 
-        @Override
         public void run() {
             executor.execute(runnable);
         }

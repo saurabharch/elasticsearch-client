@@ -45,7 +45,6 @@ public class FixedBitDocSet extends DocSet {
         return true;
     }
 
-    @Override
     public int length() {
         return set.length();
     }
@@ -54,7 +53,6 @@ public class FixedBitDocSet extends DocSet {
         return set;
     }
 
-    @Override
     public boolean get(int doc) {
         return set.get(doc);
     }
@@ -64,7 +62,6 @@ public class FixedBitDocSet extends DocSet {
         return set.iterator();
     }
 
-    @Override
     public long sizeInBytes() {
         return set.getBits().length * RamUsage.NUM_BYTES_LONG + RamUsage.NUM_BYTES_ARRAY_HEADER + RamUsage.NUM_BYTES_INT /* wlen */;
     }

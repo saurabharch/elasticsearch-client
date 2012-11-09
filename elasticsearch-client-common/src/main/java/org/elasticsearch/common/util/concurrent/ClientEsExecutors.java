@@ -74,7 +74,6 @@ public class ClientEsExecutors {
                     Thread.currentThread().getThreadGroup();
         }
 
-        @Override
         public Thread newThread(Runnable r) {
             Thread t = new Thread(group, r,
                     namePrefix + "[T#" + threadNumber.getAndIncrement() + "]",

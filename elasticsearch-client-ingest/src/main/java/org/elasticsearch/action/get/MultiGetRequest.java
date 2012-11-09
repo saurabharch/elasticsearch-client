@@ -109,7 +109,6 @@ public class MultiGetRequest extends ActionRequest<MultiGetRequest> {
             return item;
         }
 
-        @Override
         public void readFrom(StreamInput in) throws IOException {
             index = in.readUTF();
             if (in.readBoolean()) {
@@ -128,7 +127,6 @@ public class MultiGetRequest extends ActionRequest<MultiGetRequest> {
             }
         }
 
-        @Override
         public void writeTo(StreamOutput out) throws IOException {
             out.writeUTF(index);
             if (type == null) {

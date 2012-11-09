@@ -50,7 +50,7 @@ public class DateMathParser {
             }
         }
 
-        if (mathString.isEmpty()) {
+        if (mathString.length() == 0) {
             return time;
         }
 

@@ -74,7 +74,7 @@ public abstract class TransportAddressSerializers {
         try {
             address = constructor.newInstance();
         } catch (Exception e) {
-            throw new IOException("Failed to create class with constructor [" + constructor + "]", e);
+            throw new IOException("Failed to create class with constructor [" + constructor + "]");
         }
         address.readFrom(input);
         return address;

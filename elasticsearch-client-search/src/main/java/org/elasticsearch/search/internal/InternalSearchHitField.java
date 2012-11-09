@@ -50,12 +50,12 @@ public class InternalSearchHitField implements SearchHitField {
         return name;
     }
 
-    @Override
+    
     public String getName() {
         return name();
     }
 
-    @Override
+    
     public Object value() {
         if (values == null || values.isEmpty()) {
             return null;
@@ -63,7 +63,7 @@ public class InternalSearchHitField implements SearchHitField {
         return values.get(0);
     }
 
-    @Override
+    
     public Object getValue() {
         return value();
     }
@@ -72,13 +72,13 @@ public class InternalSearchHitField implements SearchHitField {
         return values;
     }
 
-    @Override
+    
     public List<Object> getValues() {
         return values();
     }
 
 
-    @Override
+    
     public Iterator<Object> iterator() {
         return values.iterator();
     }
@@ -89,7 +89,7 @@ public class InternalSearchHitField implements SearchHitField {
         return result;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         name = in.readUTF();
         int size = in.readVInt();
@@ -99,7 +99,7 @@ public class InternalSearchHitField implements SearchHitField {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(name);
         out.writeVInt(values.size());

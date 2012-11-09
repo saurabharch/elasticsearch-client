@@ -241,7 +241,6 @@ public class SearchResponse extends ActionResponse implements ToXContent {
         static final XContentBuilderString TIMED_OUT = new XContentBuilderString("timed_out");
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         if (scrollId != null) {
             builder.field(Fields._SCROLL_ID, scrollId);

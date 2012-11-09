@@ -42,7 +42,6 @@ public class AllDocSet extends DocSet {
         return true;
     }
 
-    @Override
     public int length() {
         return maxDoc;
     }

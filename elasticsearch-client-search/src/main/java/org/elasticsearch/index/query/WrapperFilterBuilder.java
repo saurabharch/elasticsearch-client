@@ -25,10 +25,10 @@ package org.elasticsearch.index.query;
  * Time: 11:30
  */
 
-import com.google.common.base.Charsets;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /**
  * A Filter builder which allows building a filter thanks to a JSON string or binary data. This is useful when you want
@@ -43,10 +43,18 @@ public class WrapperFilterBuilder extends BaseFilterBuilder {
     private final int length;
 
     public WrapperFilterBuilder(String source) {
-        this.source = source.getBytes(Charsets.UTF_8);
+        this.source = createSource(source);
         this.offset = 0;
         this.length = this.source.length;
     }
+    
+    private static byte[] createSource(String source) {
+        try {
+            return source.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+            return null;
+        }        
+    } 
 
     public WrapperFilterBuilder(byte[] source, int offset, int length) {
         this.source = source;

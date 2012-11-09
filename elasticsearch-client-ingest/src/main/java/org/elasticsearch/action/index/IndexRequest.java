@@ -19,17 +19,13 @@
 
 package org.elasticsearch.action.index;
 
-import com.google.common.base.Charsets;
-import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
-import org.elasticsearch.ElasticSearchParseException;
 import org.elasticsearch.action.ActionRequestValidationException;
 import org.elasticsearch.action.support.replication.ShardReplicationOperationRequest;
 import org.elasticsearch.client.IngestRequests;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.Required;
-import org.elasticsearch.common.UUID;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.StreamInput;
@@ -38,9 +34,11 @@ import org.elasticsearch.common.xcontent.*;
 import org.elasticsearch.index.VersionType;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import static org.elasticsearch.action.ValidateActions.addValidationError;
+
 
 /**
  * Index request to index a typed JSON document into a specific index and make it searchable. Best
@@ -330,7 +328,11 @@ public class IndexRequest extends ShardReplicationOperationRequest<IndexRequest>
      */
     @Required
     public IndexRequest source(String source) {
-        this.source = new BytesArray(source.getBytes(Charsets.UTF_8));
+        try {
+            this.source = new BytesArray(source.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException ex) {
+            // ignore
+        }
         this.sourceUnsafe = false;
         return this;
     }

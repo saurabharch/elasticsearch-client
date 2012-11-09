@@ -104,7 +104,7 @@ public class Regex {
     public static int flagsFromString(String flags) {
         int pFlags = 0;
         for (String s : Strings.delimitedListToStringArray(flags, "|")) {
-            if (s.isEmpty()) {
+            if (s.length() == 0) {
                 continue;
             }
             if ("CASE_INSENSITIVE".equalsIgnoreCase(s)) {

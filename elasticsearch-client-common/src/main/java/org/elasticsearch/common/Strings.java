@@ -913,20 +913,6 @@ public class Strings {
     }
 
     /**
-     * Turn given source String array into sorted array.
-     *
-     * @param array the source array
-     * @return the sorted array (never <code>null</code>)
-     */
-    public static String[] sortStringArray(String[] array) {
-        if (isEmpty(array)) {
-            return new String[0];
-        }
-        Arrays.sort(array);
-        return array;
-    }
-
-    /**
      * Copy the given Collection into a String array.
      * The Collection must contain String elements only.
      *

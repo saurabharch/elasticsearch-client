@@ -95,7 +95,6 @@ public class TransportStats implements Streamable, ToXContent {
         return stats;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         serverOpen = in.readVLong();
         rxCount = in.readVLong();
@@ -104,7 +103,6 @@ public class TransportStats implements Streamable, ToXContent {
         txSize = in.readVLong();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(serverOpen);
         out.writeVLong(rxCount);
@@ -113,7 +111,6 @@ public class TransportStats implements Streamable, ToXContent {
         out.writeVLong(txSize);
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.TRANSPORT);
         builder.field(Fields.SERVER_OPEN, serverOpen);

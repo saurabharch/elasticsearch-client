@@ -44,7 +44,6 @@ public class OrDocSet extends DocSet {
         return false;
     }
 
-    @Override
     public int length() {
         if (sets.isEmpty()) {
             return 0;

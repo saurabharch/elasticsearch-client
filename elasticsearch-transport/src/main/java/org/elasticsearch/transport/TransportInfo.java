@@ -50,7 +50,6 @@ public class TransportInfo implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString PUBLISH_ADDRESS = new XContentBuilderString("publish_address");
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.TRANSPORT);
         builder.field(Fields.BOUND_ADDRESS, address.boundAddress().toString());
@@ -65,12 +64,10 @@ public class TransportInfo implements Streamable, Serializable, ToXContent {
         return info;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         address = BoundTransportAddress.readBoundTransportAddress(in);
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         address.writeTo(out);
     }

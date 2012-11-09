@@ -82,7 +82,6 @@ public class SearchShardTarget implements Streamable, Serializable, Comparable<S
         return result;
     }
 
-    @Override
     public int compareTo(SearchShardTarget o) {
         int i = index.compareTo(o.index());
         if (i == 0) {
@@ -91,7 +90,6 @@ public class SearchShardTarget implements Streamable, Serializable, Comparable<S
         return i;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             nodeId = in.readUTF();
@@ -100,7 +98,6 @@ public class SearchShardTarget implements Streamable, Serializable, Comparable<S
         shardId = in.readVInt();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         if (nodeId == null) {
             out.writeBoolean(false);

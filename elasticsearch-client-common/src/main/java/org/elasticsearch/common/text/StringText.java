@@ -19,7 +19,7 @@
 
 package org.elasticsearch.common.text;
 
-import com.google.common.base.Charsets;
+import java.io.UnsupportedEncodingException;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 
@@ -47,22 +47,22 @@ public class StringText implements Text {
         this.text = text;
     }
 
-    @Override
     public boolean hasBytes() {
         return false;
     }
 
-    @Override
     public BytesReference bytes() {
-        return new BytesArray(text.getBytes(Charsets.UTF_8));
+        try {
+            return new BytesArray(text.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException ex) {
+            return null; // never ever
+        }
     }
 
-    @Override
     public boolean hasString() {
         return true;
     }
 
-    @Override
     public String string() {
         return text;
     }

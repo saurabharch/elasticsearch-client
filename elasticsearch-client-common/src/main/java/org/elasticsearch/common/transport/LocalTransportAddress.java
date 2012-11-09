@@ -42,27 +42,27 @@ public class LocalTransportAddress implements TransportAddress {
         return this.id;
     }
 
-    @Override
+    
     public short uniqueAddressTypeId() {
         return 2;
     }
 
-    @Override
+    
     public boolean match(String otherAddress) {
         return id.equals(otherAddress);
     }
 
-    @Override
+    
     public boolean sameHost(TransportAddress other) {
         return true;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         id = in.readString();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeString(id);
     }
@@ -79,11 +79,13 @@ public class LocalTransportAddress implements TransportAddress {
         return true;
     }
 
+    
     @Override
     public int hashCode() {
         return id != null ? id.hashCode() : 0;
     }
 
+    
     @Override
     public String toString() {
         return "local[" + id + "]";

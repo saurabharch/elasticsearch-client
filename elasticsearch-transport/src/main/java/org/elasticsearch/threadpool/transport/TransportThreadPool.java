@@ -90,7 +90,6 @@ public class TransportThreadPool implements ThreadPool {
         return estimatedTimeThread.estimatedTimeInMillis();
     }
 
-    @Override
     public TransportThreadPoolInfo info() {
         List<ThreadPoolInfoElement> infos = new ArrayList();
         for (ExecutorHolder holder : executors.values()) {
@@ -104,7 +103,6 @@ public class TransportThreadPool implements ThreadPool {
         return new TransportThreadPoolInfo(infos);
     }
 
-    @Override
     public TransportThreadPoolStats stats() {
         List<ThreadPoolStatsElement> stats = new ArrayList();
         for (ExecutorHolder holder : executors.values()) {
@@ -223,7 +221,6 @@ public class TransportThreadPool implements ThreadPool {
             this.runnable = runnable;
         }
 
-        @Override
         public void run() {
             try {
                 runnable.run();
@@ -259,7 +256,6 @@ public class TransportThreadPool implements ThreadPool {
             this.executor = executor;
         }
 
-        @Override
         public void run() {
             executor.execute(runnable);
         }

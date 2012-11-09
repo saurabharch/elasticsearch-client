@@ -56,113 +56,113 @@ import org.elasticsearch.client.SearchClient;
 
 public abstract class AbstractSearchClient implements SearchClient {
 
-    @Override
+    
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             RequestBuilder prepareExecute(final Action<Request, Response, RequestBuilder, SearchClient> action) {
         return action.newRequestBuilder((SearchClient)this);
     }
 
-    @Override
+    
     public ActionFuture<DeleteByQueryResponse> deleteByQuery(final DeleteByQueryRequest request) {
         return execute(DeleteByQueryAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void deleteByQuery(final DeleteByQueryRequest request, final ActionListener<DeleteByQueryResponse> listener) {
         execute(DeleteByQueryAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public DeleteByQueryRequestBuilder prepareDeleteByQuery(String... indices) {
         return new DeleteByQueryRequestBuilder(this).setIndices(indices);
     }
 
-    @Override
+    
     public ActionFuture<SearchResponse> search(final SearchRequest request) {
         return execute(SearchAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void search(final SearchRequest request, final ActionListener<SearchResponse> listener) {
         execute(SearchAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public SearchRequestBuilder prepareSearch(String... indices) {
         return new SearchRequestBuilder(this).setIndices(indices);
     }
 
-    @Override
+    
     public ActionFuture<SearchResponse> searchScroll(final SearchScrollRequest request) {
         return execute(SearchScrollAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void searchScroll(final SearchScrollRequest request, final ActionListener<SearchResponse> listener) {
         execute(SearchScrollAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public SearchScrollRequestBuilder prepareSearchScroll(String scrollId) {
         return new SearchScrollRequestBuilder(this, scrollId);
     }
 
-    @Override
+    
     public ActionFuture<MultiSearchResponse> multiSearch(MultiSearchRequest request) {
         return execute(MultiSearchAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void multiSearch(MultiSearchRequest request, ActionListener<MultiSearchResponse> listener) {
         execute(MultiSearchAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public MultiSearchRequestBuilder prepareMultiSearch() {
         return new MultiSearchRequestBuilder(this);
     }
 
-    @Override
+    
     public ActionFuture<CountResponse> count(final CountRequest request) {
         return execute(CountAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void count(final CountRequest request, final ActionListener<CountResponse> listener) {
         execute(CountAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public CountRequestBuilder prepareCount(String... indices) {
         return new CountRequestBuilder(this).setIndices(indices);
     }
 
-    @Override
+    
     public ActionFuture<SearchResponse> moreLikeThis(final MoreLikeThisRequest request) {
         return execute(MoreLikeThisAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void moreLikeThis(final MoreLikeThisRequest request, final ActionListener<SearchResponse> listener) {
         execute(MoreLikeThisAction.INSTANCE, request, listener);
     }
 
-    @Override
+    
     public MoreLikeThisRequestBuilder prepareMoreLikeThis(String index, String type, String id) {
         return new MoreLikeThisRequestBuilder(this, index, type, id);
     }
 
-    @Override
+    
     public ExplainRequestBuilder prepareExplain(String index, String type, String id) {
         return new ExplainRequestBuilder(this, index, type, id);
     }
 
-    @Override
+    
     public ActionFuture<ExplainResponse> explain(ExplainRequest request) {
         return execute(ExplainAction.INSTANCE, request);
     }
 
-    @Override
+    
     public void explain(ExplainRequest request, ActionListener<ExplainResponse> listener) {
         execute(ExplainAction.INSTANCE, request, listener);
     }

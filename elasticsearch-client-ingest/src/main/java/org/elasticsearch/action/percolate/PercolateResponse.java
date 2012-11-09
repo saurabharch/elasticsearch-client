@@ -47,12 +47,10 @@ public class PercolateResponse extends ActionResponse implements Iterable<String
         return this.matches;
     }
 
-    @Override
     public Iterator<String> iterator() {
         return matches.iterator();
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         super.readFrom(in);
         int size = in.readVInt();
@@ -62,7 +60,6 @@ public class PercolateResponse extends ActionResponse implements Iterable<String
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         super.writeTo(out);
         out.writeVInt(matches.size());

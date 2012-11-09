@@ -47,12 +47,10 @@ public class BasicLZFCompressor implements BasicCompressor {
         Loggers.getLogger(BasicLZFCompressor.class).debug("using [{}] decoder", this.decoder.getClass().getSimpleName());
     }
 
-    @Override
     public String type() {
         return TYPE;
     }
 
-    @Override
     public void configure(Settings settings) {
         String decoderType = settings.get("compress.lzf.decoder", null);
         if (decoderType != null) {
@@ -68,7 +66,6 @@ public class BasicLZFCompressor implements BasicCompressor {
         }
     }
 
-    @Override
     public boolean isCompressed(BytesReference bytes) {
         return bytes.length() >= 3 &&
                 bytes.get(0) == LZFChunk.BYTE_Z &&
@@ -76,7 +73,6 @@ public class BasicLZFCompressor implements BasicCompressor {
                 (bytes.get(2) == LZFChunk.BLOCK_TYPE_COMPRESSED || bytes.get(2) == LZFChunk.BLOCK_TYPE_NON_COMPRESSED);
     }
 
-    @Override
     public boolean isCompressed(byte[] data, int offset, int length) {
         return length >= 3 &&
                 data[offset] == LZFChunk.BYTE_Z &&
@@ -84,22 +80,18 @@ public class BasicLZFCompressor implements BasicCompressor {
                 (data[offset + 2] == LZFChunk.BLOCK_TYPE_COMPRESSED || data[offset + 2] == LZFChunk.BLOCK_TYPE_NON_COMPRESSED);
     }
 
-    @Override
     public byte[] uncompress(byte[] data, int offset, int length) throws IOException {
         return decoder.decode(data, offset, length);
     }
 
-    @Override
     public byte[] compress(byte[] data, int offset, int length) throws IOException {
         return LZFEncoder.encode(data, offset, length);
     }
 
-    @Override
     public CompressedStreamInput streamInput(StreamInput in) throws IOException {
         return new LZFCompressedStreamInput(in, decoder);
     }
 
-    @Override
     public CompressedStreamOutput streamOutput(StreamOutput out) throws IOException {
         return new LZFCompressedStreamOutput(out);
     }

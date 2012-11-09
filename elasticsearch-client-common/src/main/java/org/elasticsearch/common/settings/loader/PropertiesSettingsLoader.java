@@ -37,6 +37,8 @@ import static com.google.common.collect.Maps.newHashMap;
 public class PropertiesSettingsLoader implements SettingsLoader {
 
     public Map<String, String> load(String source) throws IOException {
+        return load(source.getBytes("UTF-8"));
+        /*
         Properties props = new Properties();
         FastStringReader reader = new FastStringReader(source);
         try {
@@ -48,7 +50,7 @@ public class PropertiesSettingsLoader implements SettingsLoader {
             return result;
         } finally {
             Closeables.closeQuietly(reader);
-        }
+        }*/
     }
 
     public Map<String, String> load(byte[] source) throws IOException {

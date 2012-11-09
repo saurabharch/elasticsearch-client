@@ -51,7 +51,6 @@ public abstract class DocSet extends DocIdSet implements Bits {
             return 0;
         }
 
-        @Override
         public int length() {
             return 0;
         }

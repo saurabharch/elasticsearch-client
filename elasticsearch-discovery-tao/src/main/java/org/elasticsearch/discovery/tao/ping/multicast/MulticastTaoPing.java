@@ -85,7 +85,7 @@ public class MulticastTaoPing implements TaoPing {
         this.clusterName = clusterName;
         this.networkService = new TransportNetworkService(settings);
 
-        this.address = settings.get("address", "127.0.0.1");
+        this.address = settings.get("address");
         this.port = settings.getAsInt("port", 54328);
         this.group = settings.get("group", "224.2.2.4");
         this.bufferSize = settings.getAsInt("buffer_size", 2048);
@@ -119,6 +119,9 @@ public class MulticastTaoPing implements TaoPing {
 
             // set the send interface
             multicastInterface = networkService.resolvePublishHostAddress(address);
+            if (logger.isTraceEnabled()) {
+                logger.trace("multicast interface for address {} is {}", address, multicastInterface);
+            }
             multicastSocket.setInterface(multicastInterface);
             multicastSocket.joinGroup(InetAddress.getByName(group));
 

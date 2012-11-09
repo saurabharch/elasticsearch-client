@@ -66,7 +66,6 @@ public class InternalSearchResponse implements Streamable, ToXContent {
         return facets;
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         hits.toXContent(builder, params);
         if (facets != null) {
@@ -81,7 +80,6 @@ public class InternalSearchResponse implements Streamable, ToXContent {
         return response;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         hits = readSearchHits(in);
         if (in.readBoolean()) {
@@ -90,7 +88,6 @@ public class InternalSearchResponse implements Streamable, ToXContent {
         timedOut = in.readBoolean();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         hits.writeTo(out);
         if (facets == null) {

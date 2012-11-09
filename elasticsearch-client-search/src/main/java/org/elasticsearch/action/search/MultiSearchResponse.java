@@ -79,7 +79,6 @@ public class MultiSearchResponse extends ActionResponse implements Iterable<Mult
             return item;
         }
 
-        @Override
         public void readFrom(StreamInput in) throws IOException {
             if (in.readBoolean()) {
                 this.response = new SearchResponse();
@@ -89,7 +88,6 @@ public class MultiSearchResponse extends ActionResponse implements Iterable<Mult
             }
         }
 
-        @Override
         public void writeTo(StreamOutput out) throws IOException {
             if (response != null) {
                 out.writeBoolean(true);
@@ -109,7 +107,6 @@ public class MultiSearchResponse extends ActionResponse implements Iterable<Mult
         this.items = items;
     }
 
-    @Override
     public Iterator<Item> iterator() {
         return Iterators.forArray(items);
     }
@@ -146,7 +143,6 @@ public class MultiSearchResponse extends ActionResponse implements Iterable<Mult
         }
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startArray(Fields.RESPONSES);
         for (Item item : items) {

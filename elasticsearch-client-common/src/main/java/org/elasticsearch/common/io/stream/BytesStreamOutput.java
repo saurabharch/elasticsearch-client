@@ -68,7 +68,6 @@ public class BytesStreamOutput extends StreamOutput implements BytesStream {
         count = (int) position;
     }
 
-    @Override
     public void writeByte(byte b) throws IOException {
         int newcount = count + 1;
         if (newcount > buf.length) {
@@ -117,7 +116,6 @@ public class BytesStreamOutput extends StreamOutput implements BytesStream {
         // nothing to do here
     }
 
-    @Override
     public BytesReference bytes() {
         return new BytesArray(buf, 0, count);
     }
