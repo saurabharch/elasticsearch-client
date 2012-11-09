@@ -24,7 +24,6 @@ public class JDKAsyncHttpProviderConfig implements AsyncHttpProviderConfig<Strin
 
     private final ConcurrentHashMap<String, String> properties = new ConcurrentHashMap<String, String>();
 
-    @Override
     public JDKAsyncHttpProviderConfig addProperty(String name, String value) {
         properties.put(name, value);
         return this;

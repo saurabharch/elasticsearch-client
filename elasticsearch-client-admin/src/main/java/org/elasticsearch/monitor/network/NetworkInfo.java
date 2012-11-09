@@ -65,7 +65,7 @@ public class NetworkInfo implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString MAC_ADDRESS = new XContentBuilderString("mac_address");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.NETWORK);
         builder.field(Fields.REFRESH_INTERVAL, refreshInterval);
@@ -86,13 +86,13 @@ public class NetworkInfo implements Streamable, Serializable, ToXContent {
         return info;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         refreshInterval = in.readLong();
         primary = Interface.readNetworkInterface(in);
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeLong(refreshInterval);
         primary.writeTo(out);
@@ -143,14 +143,14 @@ public class NetworkInfo implements Streamable, Serializable, ToXContent {
             return inf;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             name = in.readUTF();
             address = in.readUTF();
             macAddress = in.readUTF();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeUTF(name);
             out.writeUTF(address);

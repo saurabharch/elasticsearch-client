@@ -181,7 +181,6 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
             handler.handleException(rtx);
         } else {
             threadPool.executor(handler.executor()).execute(new Runnable() {
-                @Override
                 public void run() {
                     try {
                         handler.handleException(rtx);
@@ -236,8 +235,6 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
             this.response = response;
         }
 
-        @SuppressWarnings({"unchecked"})
-        @Override
         public void run() {
             try {
                 handler.handleResponse(response);
@@ -260,8 +257,6 @@ public class MessageChannelHandler extends SimpleChannelUpstreamHandler {
             this.action = action;
         }
 
-        @SuppressWarnings({"unchecked"})
-        @Override
         public void run() {
             try {
                 handler.messageReceived(request, transportChannel);

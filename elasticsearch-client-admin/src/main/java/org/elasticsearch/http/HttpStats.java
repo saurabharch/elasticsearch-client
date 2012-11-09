@@ -64,13 +64,13 @@ public class HttpStats implements Streamable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         serverOpen = in.readVLong();
         totalOpen = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(serverOpen);
         out.writeVLong(totalOpen);
@@ -82,7 +82,7 @@ public class HttpStats implements Streamable, ToXContent {
         static final XContentBuilderString TOTAL_OPENED = new XContentBuilderString("total_opened");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.HTTP);
         builder.field(Fields.CURRENT_OPEN, serverOpen);

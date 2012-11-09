@@ -57,7 +57,6 @@ public class RoutingTable implements Iterable<IndexRoutingTable> {
         return this.version;
     }
 
-    @Override
     public UnmodifiableIterator<IndexRoutingTable> iterator() {
         return indicesRouting.values().iterator();
     }

@@ -46,7 +46,7 @@ public abstract class ClientSnappyCompressor implements BasicCompressor {
         this.compressorContext = new SnappyCompressorContext(DEFAULT_CHUNK_SIZE, maxCompressedLength(DEFAULT_CHUNK_SIZE));
     }
 
-    @Override
+    
     public void configure(Settings settings) {
         int chunkLength = (int) settings.getAsBytesSize("compress.snappy.chunk_size", new ByteSizeValue(compressorContext.compressChunkLength())).bytes();
         int maxCompressedChunkLength = maxCompressedLength(chunkLength);
@@ -55,7 +55,7 @@ public abstract class ClientSnappyCompressor implements BasicCompressor {
 
     protected abstract int maxCompressedLength(int length);
 
-    @Override
+    
     public boolean isCompressed(byte[] data, int offset, int length) {
         if (length < HEADER.length) {
             return false;
@@ -68,7 +68,7 @@ public abstract class ClientSnappyCompressor implements BasicCompressor {
         return true;
     }
 
-    @Override
+    
     public boolean isCompressed(BytesReference bytes) {
         if (bytes.length() < HEADER.length) {
             return false;
@@ -82,7 +82,7 @@ public abstract class ClientSnappyCompressor implements BasicCompressor {
     }
 
 
-    @Override
+    
     public byte[] compress(byte[] data, int offset, int length) throws IOException {
         // this needs to be the same format as regular streams reading from it!
         BasicCachedStreamOutput.Entry entry = BasicCachedStreamOutput.popEntry();
@@ -96,7 +96,7 @@ public abstract class ClientSnappyCompressor implements BasicCompressor {
         }
     }
 
-    @Override
+    
     public byte[] uncompress(byte[] data, int offset, int length) throws IOException {
         StreamInput compressed = streamInput(new BytesStreamInput(data, offset, length, false));
         BasicCachedStreamOutput.Entry entry = BasicCachedStreamOutput.popEntry();

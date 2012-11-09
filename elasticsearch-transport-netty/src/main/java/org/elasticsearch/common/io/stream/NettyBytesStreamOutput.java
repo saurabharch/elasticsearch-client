@@ -68,7 +68,6 @@ public class NettyBytesStreamOutput extends StreamOutput implements BytesStream 
         count = (int) position;
     }
 
-    @Override
     public void writeByte(byte b) throws IOException {
         int newcount = count + 1;
         if (newcount > buf.length) {
@@ -86,7 +85,6 @@ public class NettyBytesStreamOutput extends StreamOutput implements BytesStream 
         count = newcount;
     }
 
-    @Override
     public void writeBytes(byte[] b, int offset, int length) throws IOException {
         if (length == 0) {
             return;
@@ -107,17 +105,14 @@ public class NettyBytesStreamOutput extends StreamOutput implements BytesStream 
         count = 0;
     }
 
-    @Override
     public void flush() throws IOException {
         // nothing to do there
     }
 
-    @Override
     public void close() throws IOException {
         // nothing to do here
     }
 
-    @Override
     public BytesReference bytes() {
         return new NettyBytesArray(buf, 0, count);
     }

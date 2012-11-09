@@ -43,7 +43,6 @@ public class AllocationDeciders implements AllocationDecider {
         }
     }
 
-    @Override
     public boolean canRebalance(ShardRouting shardRouting, RoutingAllocation allocation) {
         for (AllocationDecider allocation1 : allocationDeciders) {
             if (!allocation1.canRebalance(shardRouting, allocation)) {
@@ -53,7 +52,6 @@ public class AllocationDeciders implements AllocationDecider {
         return true;
     }
 
-    @Override
     public Decision canAllocate(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         Decision ret = Decision.YES;
         // first, check if its in the ignored, if so, return NO
@@ -72,7 +70,6 @@ public class AllocationDeciders implements AllocationDecider {
         return ret;
     }
 
-    @Override
     public boolean canRemain(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         if (allocation.shouldIgnoreShardForNode(shardRouting.shardId(), node.nodeId())) {
             return false;

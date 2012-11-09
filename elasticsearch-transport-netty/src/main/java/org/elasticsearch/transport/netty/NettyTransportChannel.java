@@ -58,17 +58,14 @@ public class NettyTransportChannel implements TransportChannel {
         this.requestId = requestId;
     }
 
-    @Override
     public String action() {
         return this.action;
     }
 
-    @Override
     public void sendResponse(TransportResponse response) throws IOException {
         sendResponse(response, TransportResponseOptions.EMPTY);
     }
 
-    @Override
     public void sendResponse(TransportResponse response, TransportResponseOptions options) throws IOException {
         if (transport.compress()) {
             options.withCompress(true);
@@ -98,7 +95,6 @@ public class NettyTransportChannel implements TransportChannel {
         future.addListener(new ClientNettyTransport.CacheFutureListener(cachedEntry));
     }
 
-    @Override
     public void sendResponse(Throwable error) throws IOException {
         NettyCachedStreamOutput.Entry cachedEntry = NettyCachedStreamOutput.popEntry();
         NettyBytesStreamOutput stream;

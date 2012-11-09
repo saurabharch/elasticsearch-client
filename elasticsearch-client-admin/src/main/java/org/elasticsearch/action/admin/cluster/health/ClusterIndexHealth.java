@@ -157,7 +157,6 @@ public class ClusterIndexHealth implements Iterable<ClusterShardHealth>, Streama
         return shards();
     }
 
-    @Override
     public Iterator<ClusterShardHealth> iterator() {
         return shards.values().iterator();
     }
@@ -168,7 +167,6 @@ public class ClusterIndexHealth implements Iterable<ClusterShardHealth>, Streama
         return indexHealth;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         index = in.readUTF();
         numberOfShards = in.readVInt();
@@ -195,7 +193,6 @@ public class ClusterIndexHealth implements Iterable<ClusterShardHealth>, Streama
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(index);
         out.writeVInt(numberOfShards);

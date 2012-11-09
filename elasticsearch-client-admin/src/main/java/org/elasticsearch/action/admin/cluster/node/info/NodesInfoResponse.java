@@ -68,7 +68,6 @@ public class NodesInfoResponse extends NodesOperationResponse<NodeInfo> implemen
         return this;
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.field("cluster_name", clusterName().value());
 

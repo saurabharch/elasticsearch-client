@@ -52,18 +52,18 @@ public class PlainShardsIterator implements ShardsIterator {
         this.limit = this.index + size;
     }
 
-    @Override
+    
     public ShardsIterator reset() {
         this.counter = this.index;
         return this;
     }
 
-    @Override
+    
     public int remaining() {
         return limit - counter;
     }
 
-    @Override
+    
     public ShardRouting firstOrNull() {
         if (size == 0) {
             return null;
@@ -71,7 +71,7 @@ public class PlainShardsIterator implements ShardsIterator {
         return shards.get(index);
     }
 
-    @Override
+    
     public ShardRouting nextOrNull() {
         if (size == 0) {
             return null;
@@ -89,12 +89,12 @@ public class PlainShardsIterator implements ShardsIterator {
         }
     }
 
-    @Override
+    
     public int size() {
         return size;
     }
 
-    @Override
+    
     public int sizeActive() {
         int count = 0;
         for (int i = 0; i < size; i++) {
@@ -105,7 +105,7 @@ public class PlainShardsIterator implements ShardsIterator {
         return count;
     }
 
-    @Override
+    
     public int assignedReplicasIncludingRelocating() {
         int count = 0;
         for (int i = 0; i < size; i++) {
@@ -132,7 +132,7 @@ public class PlainShardsIterator implements ShardsIterator {
         return count;
     }
 
-    @Override
+    
     public Iterable<ShardRouting> asUnordered() {
         return shards;
     }

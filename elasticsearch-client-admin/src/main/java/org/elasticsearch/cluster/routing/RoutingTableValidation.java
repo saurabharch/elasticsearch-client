@@ -117,7 +117,6 @@ public class RoutingTableValidation implements Serializable, Streamable {
         return allFailures().toString();
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         valid = in.readBoolean();
         int size = in.readVInt();
@@ -146,7 +145,6 @@ public class RoutingTableValidation implements Serializable, Streamable {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeBoolean(valid);
         if (failures == null) {

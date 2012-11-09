@@ -86,7 +86,7 @@ public class ProcessInfo implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString MAX_FILE_DESCRIPTORS = new XContentBuilderString("max_file_descriptors");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.PROCESS);
         builder.field(Fields.REFRESH_INTERVAL, refreshInterval);
@@ -102,14 +102,14 @@ public class ProcessInfo implements Streamable, Serializable, ToXContent {
         return info;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         refreshInterval = in.readLong();
         id = in.readLong();
         maxFileDescriptors = in.readLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeLong(refreshInterval);
         out.writeLong(id);

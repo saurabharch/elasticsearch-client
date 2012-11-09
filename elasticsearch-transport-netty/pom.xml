@@ -20,34 +20,114 @@
         Netty-based implementation for Elasticsearch Transport
     </description>
 
-    <dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- declare netty version -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty</artifactId>
+                <version>3.5.8.Final</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
+    <profiles>
+        <profile>
+            <!-- build and test core modules -->
+            <id>default</id>
 
-        <dependency>
-            <groupId>org.elasticsearch.client</groupId>
-            <artifactId>elasticsearch-transport</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-            <scope>compile</scope>
-        </dependency>        
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <dependencies>
+
+                <dependency>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </dependency>
+
+                <dependency>            
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-transport</artifactId>
+                    <version>${project.version}</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>        
                 
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-            <version>3.5.8.Final</version>
-            <scope>compile</scope>
-        </dependency>
        
-    </dependencies>
+            </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>                
-            </plugin>
-        </plugins>
-    </build>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>                
+                    </plugin>
+                </plugins>
+            </build>
+    
+        </profile>
+
+        <profile>
+            <!-- build and test with jdk5 -->
+            <id>jdk5</id>
+            
+            <activation>
+                <jdk>1.5</jdk>
+            </activation>
+            
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                    </plugin>                   
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                    </plugin>                   
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemProperties>
+                                <property>
+                                    <name>java.endorsed.dirs</name>
+                                    <value>${project.build.directory}/endorsed</value>
+                                </property>
+                            </systemProperties>
+                            <argLine>-Xbootclasspath/p:${project.build.directory}/endorsed/elasticsearch-client-jdk5-${project.version}-compat.jar</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            
+            <dependencies>
+                
+                <dependency>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-client-jdk5</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>compat</classifier>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>
+                
+                <dependency>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty</artifactId>
+                </dependency>
+
+                <dependency>            
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>elasticsearch-transport</artifactId>
+                    <version>${project.version}</version>
+                    <type>jar</type>
+                    <scope>compile</scope>
+                </dependency>                
+
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>

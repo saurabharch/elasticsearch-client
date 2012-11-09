@@ -223,27 +223,27 @@ public class ClientNettyTransport implements NettyTransport {
                 workerCount, port, bindHost, publishHost, compress, connectTimeout, connectionsPerNodeLow, connectionsPerNodeMed, connectionsPerNodeHigh, receivePredictorMin, receivePredictorMax);
     }
 
-    @Override
+    
     public Settings settings() {
         return this.settings;
     }
 
-    @Override
+    
     public boolean compress() {
         return compress;
     }
     
-    @Override
+    
     public void transportServiceAdapter(TransportServiceAdapter service) {
         this.transportServiceAdapter = service;
     }
 
-    @Override
+    
     public TransportServiceAdapter transportServiceAdapter() {
         return transportServiceAdapter;
     }
 
-    @Override
+    
     public ThreadPool threadPool() {
         return threadPool;
     }
@@ -259,7 +259,7 @@ public class ClientNettyTransport implements NettyTransport {
                     new HashedWheelTimer(daemonThreadFactory(settings, "transport_client_timer"))));
         }
         ChannelPipelineFactory clientPipelineFactory = new ChannelPipelineFactory() {
-            @Override
+            
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
                 SizeHeaderFrameDecoder sizeHeader = new SizeHeaderFrameDecoder();
@@ -314,7 +314,7 @@ public class ClientNettyTransport implements NettyTransport {
                     workerCount));
         }
         ChannelPipelineFactory serverPipelineFactory = new ChannelPipelineFactory() {
-            @Override
+            
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = Channels.pipeline();
                 pipeline.addLast("openChannels", serverOpenChannels);
@@ -366,7 +366,7 @@ public class ClientNettyTransport implements NettyTransport {
         PortsRange portsRange = new PortsRange(port);
         final AtomicReference<Exception> lastException = new AtomicReference<Exception>();
         boolean success = portsRange.iterate(new PortsRange.PortCallback() {
-            @Override
+            
             public boolean onPortNumber(int portNumber) {
                 try {
                     serverChannel = serverBootstrap.bind(new InetSocketAddress(hostAddress, portNumber));
@@ -394,12 +394,11 @@ public class ClientNettyTransport implements NettyTransport {
         return this;
     }
 
-   // @Override
     public ClientNettyTransport stop() throws ElasticSearchException {
         final CountDownLatch latch = new CountDownLatch(1);
         // make sure we run it on another thread than a possible IO handler thread
         threadPool.generic().execute(new Runnable() {
-            @Override
+            
             public void run() {
                 globalLock.writeLock().lock();
                 try {
@@ -455,7 +454,7 @@ public class ClientNettyTransport implements NettyTransport {
     public void close() throws ElasticSearchException {
     }
 
-    @Override
+    
     public TransportAddress[] addressesFromString(String address) throws Exception {
         int index = address.indexOf('[');
         if (index != -1) {
@@ -486,12 +485,12 @@ public class ClientNettyTransport implements NettyTransport {
         }
     }
 
-    @Override
+    
     public boolean addressSupported(Class<? extends TransportAddress> address) {
         return InetSocketTransportAddress.class.equals(address);
     }
 
-    @Override
+    
     public BoundTransportAddress boundAddress() {
         return this.boundAddress;
     }
@@ -514,19 +513,19 @@ public class ClientNettyTransport implements NettyTransport {
         }
     }
 
-    @Override
+    
     public TransportAddress wrapAddress(SocketAddress socketAddress) {
         return new InetSocketTransportAddress((InetSocketAddress) socketAddress);
     }
 
-    @Override
+    
     public long serverOpen() {
         OpenChannelsHandler channels = serverOpenChannels;
         return channels == null ? 0 : channels.numberOfOpenChannels();
     }
 
 
-    @Override
+    
     public void sendRequest(final DiscoveryNode node, final long requestId, final String action, final TransportRequest request, TransportRequestOptions options) throws IOException, TransportException {
         Channel targetChannel = nodeChannel(node, options);
 
@@ -562,17 +561,17 @@ public class ClientNettyTransport implements NettyTransport {
         future.addListener(new CacheFutureListener(cachedEntry));
     }
 
-    @Override
+    
     public boolean nodeConnected(DiscoveryNode node) {
         return connectedNodes.containsKey(node);
     }
 
-    @Override
+    
     public void connectToNodeLight(DiscoveryNode node) throws ConnectTransportException {
         connectToNode(node, true);
     }
 
-    @Override
+    
     public void connectToNode(DiscoveryNode node) {
         connectToNode(node, false);
     }
@@ -717,7 +716,7 @@ public class ClientNettyTransport implements NettyTransport {
         }
     }
 
-    @Override
+    
     public void disconnectFromNode(DiscoveryNode node) {
         synchronized (connectLock(node.id())) {
             NodeChannels nodeChannels = connectedNodes.remove(node);
@@ -757,7 +756,7 @@ public class ClientNettyTransport implements NettyTransport {
             this.node = node;
         }
 
-        @Override
+        
         public void operationComplete(ChannelFuture future) throws Exception {
             disconnectFromNode(node);
         }
@@ -832,7 +831,7 @@ public class ClientNettyTransport implements NettyTransport {
             this.cachedEntry = cachedEntry;
         }
 
-        @Override
+        
         public void operationComplete(ChannelFuture channelFuture) throws Exception {
             NettyCachedStreamOutput.pushEntry(cachedEntry);
         }

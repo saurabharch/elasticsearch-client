@@ -66,7 +66,6 @@ public abstract class NodesOperationResponse<NodeResponse extends NodeOperationR
         return nodes[position];
     }
 
-    @Override
     public Iterator<NodeResponse> iterator() {
         return nodesMap().values().iterator();
     }

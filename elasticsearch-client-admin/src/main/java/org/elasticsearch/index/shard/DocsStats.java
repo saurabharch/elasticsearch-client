@@ -74,19 +74,19 @@ public class DocsStats implements Streamable, ToXContent {
         return docsStats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         count = in.readVLong();
         deleted = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(count);
         out.writeVLong(deleted);
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.DOCS);
         builder.field(Fields.COUNT, count);

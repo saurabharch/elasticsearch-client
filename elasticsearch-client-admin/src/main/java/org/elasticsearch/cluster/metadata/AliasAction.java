@@ -178,7 +178,6 @@ public class AliasAction implements Streamable {
         return aliasAction;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         actionType = Type.fromValue(in.readByte());
         index = in.readUTF();
@@ -194,7 +193,6 @@ public class AliasAction implements Streamable {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeByte(actionType.value());
         out.writeUTF(index);

@@ -37,37 +37,37 @@ public class ChannelBufferBytesReference implements BytesReference {
         this.buffer = buffer;
     }
 
-    @Override
+    
     public byte get(int index) {
         return buffer.getByte(buffer.readerIndex() + index);
     }
 
-    @Override
+    
     public int length() {
         return buffer.readableBytes();
     }
 
-    @Override
+    
     public BytesReference slice(int from, int length) {
         return new ChannelBufferBytesReference(buffer.slice(from, length));
     }
 
-    @Override
+    
     public StreamInput streamInput() {
         return ChannelBufferStreamInputFactory.create(buffer.duplicate());
     }
 
-    @Override
+    
     public void writeTo(OutputStream os) throws IOException {
         buffer.getBytes(buffer.readerIndex(), os, length());
     }
 
-    @Override
+    
     public byte[] toBytes() {
         return copyBytesArray().toBytes();
     }
 
-    @Override
+    
     public BytesArray toBytesArray() {
         if (buffer.hasArray()) {
             return new NettyBytesArray(buffer.array(), buffer.arrayOffset() + buffer.readerIndex(), buffer.readableBytes());
@@ -75,7 +75,7 @@ public class ChannelBufferBytesReference implements BytesReference {
         return copyBytesArray();
     }
 
-    @Override
+    
     public BytesArray copyBytesArray() {
         byte[] copy = new byte[buffer.readableBytes()];
         buffer.getBytes(buffer.readerIndex(), copy);
@@ -86,22 +86,22 @@ public class ChannelBufferBytesReference implements BytesReference {
         return buffer.duplicate();
     }
 
-    @Override
+    
     public boolean hasArray() {
         return buffer.hasArray();
     }
 
-    @Override
+    
     public byte[] array() {
         return buffer.array();
     }
 
-    @Override
+    
     public int arrayOffset() {
         return buffer.arrayOffset() + buffer.readerIndex();
     }
 
-    @Override
+    
     public String toUtf8() {
         return buffer.toString(Charsets.UTF_8);
     }

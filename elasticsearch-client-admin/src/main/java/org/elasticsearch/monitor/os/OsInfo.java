@@ -97,7 +97,7 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString TOTAL_IN_BYTES = new XContentBuilderString("total_in_bytes");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.OS);
         builder.field(Fields.REFRESH_INTERVAL, refreshInterval);
@@ -135,7 +135,7 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
         return info;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         refreshInterval = in.readLong();
         if (in.readBoolean()) {
@@ -149,7 +149,7 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeLong(refreshInterval);
         if (cpu == null) {
@@ -186,12 +186,12 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
             return swap;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             total = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeLong(total);
         }
@@ -220,12 +220,12 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
             return mem;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             total = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeLong(total);
         }
@@ -316,7 +316,7 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
             return cpu;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             vendor = in.readUTF();
             model = in.readUTF();
@@ -327,7 +327,7 @@ public class OsInfo implements Streamable, Serializable, ToXContent {
             cacheSize = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeUTF(vendor);
             out.writeUTF(model);

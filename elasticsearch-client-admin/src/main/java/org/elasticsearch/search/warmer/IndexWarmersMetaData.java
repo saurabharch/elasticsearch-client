@@ -83,19 +83,19 @@ public class IndexWarmersMetaData implements IndexMetaData.Custom {
         return this.entries;
     }
 
-    @Override
+    
     public String type() {
         return TYPE;
     }
 
     public static class Factory implements IndexMetaData.Custom.Factory<IndexWarmersMetaData> {
 
-        @Override
+        
         public String type() {
             return TYPE;
         }
 
-        @Override
+        
         public IndexWarmersMetaData readFrom(StreamInput in) throws IOException {
             Entry[] entries = new Entry[in.readVInt()];
             for (int i = 0; i < entries.length; i++) {
@@ -104,7 +104,7 @@ public class IndexWarmersMetaData implements IndexMetaData.Custom {
             return new IndexWarmersMetaData(entries);
         }
 
-        @Override
+        
         public void writeTo(IndexWarmersMetaData warmers, StreamOutput out) throws IOException {
             out.writeVInt(warmers.entries().size());
             for (Entry entry : warmers.entries()) {
@@ -119,7 +119,7 @@ public class IndexWarmersMetaData implements IndexMetaData.Custom {
             }
         }
 
-        @Override
+        
         public IndexWarmersMetaData fromMap(Map<String, Object> map) throws IOException {
             // if it starts with the type, remove it
             if (map.size() == 1 && map.containsKey(TYPE)) {
@@ -136,7 +136,7 @@ public class IndexWarmersMetaData implements IndexMetaData.Custom {
             }
         }
 
-        @Override
+        
         public IndexWarmersMetaData fromXContent(XContentParser parser) throws IOException {
             // we get here after we are at warmers token
             String currentFieldName = null;
@@ -175,7 +175,7 @@ public class IndexWarmersMetaData implements IndexMetaData.Custom {
             return new IndexWarmersMetaData(entries.toArray(new Entry[entries.size()]));
         }
 
-        @Override
+        
         public void toXContent(IndexWarmersMetaData warmers, XContentBuilder builder, ToXContent.Params params) throws IOException {
             //No need, IndexMetaData already writes it
             //builder.startObject(TYPE, XContentBuilder.FieldCaseConversion.NONE);
@@ -200,7 +200,7 @@ public class IndexWarmersMetaData implements IndexMetaData.Custom {
             builder.endObject();
         }
 
-        @Override
+        
         public IndexWarmersMetaData merge(IndexWarmersMetaData first, IndexWarmersMetaData second) {
             List<Entry> entries = Lists.newArrayList();
             entries.addAll(first.entries());

@@ -159,7 +159,7 @@ public class UnicastTaoPing implements TaoPing {
         final AtomicReference<PingResponse[]> response = new AtomicReference<PingResponse[]>();
         final CountDownLatch latch = new CountDownLatch(1);
         ping(new PingListener() {
-            @Override
+            
             public void onPing(PingResponse[] pings) {
                 response.set(pings);
                 latch.countDown();
@@ -173,17 +173,17 @@ public class UnicastTaoPing implements TaoPing {
         }
     }
 
-    @Override
+    
     public void ping(final PingListener listener, final TimeValue timeout) throws ElasticSearchException {
         final SendPingsHandler sendPingsHandler = new SendPingsHandler(pingIdGenerator.incrementAndGet());
         receivedResponses.put(sendPingsHandler.id(), ConcurrentCollections.<DiscoveryNode, PingResponse>newConcurrentMap());
         sendPings(timeout, null, sendPingsHandler);
         threadPool.schedule(TimeValue.timeValueMillis(timeout.millis() / 2), TransportThreadPool.Names.GENERIC, new Runnable() {
-            @Override
+            
             public void run() {
                 sendPings(timeout, null, sendPingsHandler);
                 threadPool.schedule(TimeValue.timeValueMillis(timeout.millis() / 2), TransportThreadPool.Names.GENERIC, new Runnable() {
-                    @Override
+                    
                     public void run() {
                         sendPings(timeout, TimeValue.timeValueMillis(timeout.millis() / 2), sendPingsHandler);
                         ConcurrentMap<DiscoveryNode, PingResponse> responses = receivedResponses.remove(sendPingsHandler.id());
@@ -273,7 +273,7 @@ public class UnicastTaoPing implements TaoPing {
                 sendPingsHandler.nodeToDisconnect.add(nodeToSend);
                 // fork the connection to another thread
                 sendPingsHandler.executor().execute(new Runnable() {
-                    @Override
+                    
                     public void run() {
                         try {
                             // connect to the node, see if we manage to do it, if not, bail
@@ -317,17 +317,17 @@ public class UnicastTaoPing implements TaoPing {
         logger.trace("[{}] sending to {}", id, nodeToSend);
         transportService.sendRequest(nodeToSend, UnicastPingRequestHandler.ACTION, pingRequest, TransportRequestOptions.options().withTimeout((long) (timeout.millis() * 1.25)), new BaseTransportResponseHandler<UnicastPingResponse>() {
 
-            @Override
+            
             public UnicastPingResponse newInstance() {
                 return new UnicastPingResponse();
             }
 
-            @Override
+            
             public String executor() {
                 return TransportThreadPool.Names.SAME;
             }
 
-            @Override
+            
             public void handleResponse(UnicastPingResponse response) {
                 logger.trace("[{}] received response from {}: {}", id, nodeToSend, Arrays.toString(response.pingResponses));
                 try {
@@ -354,7 +354,7 @@ public class UnicastTaoPing implements TaoPing {
                 }
             }
 
-            @Override
+            
             public void handleException(TransportException exp) {
                 latch.countDown();
                 if (exp instanceof ConnectTransportException) {
@@ -373,7 +373,7 @@ public class UnicastTaoPing implements TaoPing {
         //}
         temporalResponses.add(request.pingResponse);
         threadPool.schedule(TimeValue.timeValueMillis(request.timeout.millis() * 2), TransportThreadPool.Names.SAME, new Runnable() {
-            @Override
+            
             public void run() {
                 temporalResponses.remove(request.pingResponse);
             }
@@ -395,17 +395,17 @@ public class UnicastTaoPing implements TaoPing {
 
         static final String ACTION = "discovery/zen/unicast";
 
-        @Override
+        
         public UnicastPingRequest newInstance() {
             return new UnicastPingRequest();
         }
 
-        @Override
+        
         public String executor() {
             return TransportThreadPool.Names.SAME;
         }
 
-        @Override
+        
         public void messageReceived(UnicastPingRequest request, TransportChannel channel) throws Exception {
             channel.sendResponse(handlePingRequest(request));
         }
@@ -422,7 +422,7 @@ public class UnicastTaoPing implements TaoPing {
         UnicastPingRequest() {
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             super.readFrom(in);
             id = in.readInt();
@@ -430,7 +430,7 @@ public class UnicastTaoPing implements TaoPing {
             pingResponse = readPingResponse(in);
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             super.writeTo(out);
             out.writeInt(id);
@@ -448,7 +448,7 @@ public class UnicastTaoPing implements TaoPing {
         UnicastPingResponse() {
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             super.readFrom(in);
             id = in.readInt();
@@ -458,7 +458,7 @@ public class UnicastTaoPing implements TaoPing {
             }
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             super.writeTo(out);
             out.writeInt(id);

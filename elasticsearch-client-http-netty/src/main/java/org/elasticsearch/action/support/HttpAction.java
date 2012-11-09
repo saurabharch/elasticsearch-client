@@ -97,7 +97,6 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
             this.body = new BytesStreamOutput();
         }
 
-        @Override
         public STATE onStatusReceived(HttpResponseStatus hrs) throws Exception {
             if (logger.isDebugEnabled()) {
                 logger.debug("onStatusReceived {}", hrs);
@@ -106,7 +105,6 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
             return STATE.CONTINUE;
         }
 
-        @Override
         public STATE onHeadersReceived(HttpResponseHeaders hrh) throws Exception {
             if (logger.isDebugEnabled()) {
                 logger.debug("onHeadersReceived {}", hrh);
@@ -116,7 +114,6 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
             return STATE.CONTINUE;
         }
 
-        @Override
         public STATE onBodyPartReceived(HttpResponseBodyPart hrbp) throws Exception {
             if (logger.isDebugEnabled()) {
                 logger.debug("onBodyPartReceived {}", new String(hrbp.getBodyPartBytes()));
@@ -125,13 +122,11 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
             return STATE.CONTINUE;
         }
 
-        @Override
         public void onThrowable(Throwable t) {
             logger.error(t.getMessage(), t);
             listener.onFailure(t);
         }
 
-        @Override
         public HttpResponse onCompleted() {
             HttpResponse response = new HttpResponse(
                     statuscode != null ? statuscode.getStatusCode() : -1,

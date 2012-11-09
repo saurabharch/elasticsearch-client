@@ -19,7 +19,6 @@
 
 package org.elasticsearch.action.admin.indices.create;
 
-import com.google.common.base.Charsets;
 import org.elasticsearch.ElasticSearchGenerationException;
 import org.elasticsearch.ElasticSearchIllegalArgumentException;
 import org.elasticsearch.ElasticSearchParseException;
@@ -39,6 +38,7 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -233,7 +233,11 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
      * Sets the settings and mappings as a single source.
      */
     public CreateIndexRequest source(String source) {
-        return source(source.getBytes(Charsets.UTF_8));
+        try {
+            return source(source.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException ex) {
+           return null; // not thrown 
+        }
     }
 
     /**
@@ -266,7 +270,11 @@ public class CreateIndexRequest extends MasterNodeOperationRequest<CreateIndexRe
                 throw new ElasticSearchParseException("failed to parse source for create index", e);
             }
         } else {
-            settings(new String(source.toBytes(), Charsets.UTF_8));
+            try {
+                settings(new String(source.toBytes(), "UTF-8"));
+            } catch (UnsupportedEncodingException ex) {
+                // ignore
+            }
         }
         return this;
     }

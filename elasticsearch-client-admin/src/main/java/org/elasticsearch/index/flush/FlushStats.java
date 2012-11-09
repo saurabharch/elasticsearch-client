@@ -84,7 +84,7 @@ public class FlushStats implements Streamable, ToXContent {
         return flushStats;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.FLUSH);
         builder.field(Fields.TOTAL, total);
@@ -101,13 +101,13 @@ public class FlushStats implements Streamable, ToXContent {
         static final XContentBuilderString TOTAL_TIME_IN_MILLIS = new XContentBuilderString("total_time_in_millis");
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         total = in.readVLong();
         totalTimeInMillis = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(total);
         out.writeVLong(totalTimeInMillis);

@@ -122,7 +122,6 @@ public class IndicesStatusResponse extends BroadcastOperationResponse implements
         }
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         return toXContent(builder, params, null);
     }

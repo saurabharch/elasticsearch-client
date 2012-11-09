@@ -102,7 +102,7 @@ public class ProcessStats implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString TOTAL_VIRTUAL_IN_BYTES = new XContentBuilderString("total_virtual_in_bytes");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.PROCESS);
         builder.field(Fields.TIMESTAMP, timestamp);
@@ -138,7 +138,7 @@ public class ProcessStats implements Streamable, Serializable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         timestamp = in.readVLong();
         openFileDescriptors = in.readLong();
@@ -150,7 +150,7 @@ public class ProcessStats implements Streamable, Serializable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(timestamp);
         out.writeLong(openFileDescriptors);
@@ -183,14 +183,14 @@ public class ProcessStats implements Streamable, Serializable, ToXContent {
             return mem;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             totalVirtual = in.readLong();
             resident = in.readLong();
             share = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeLong(totalVirtual);
             out.writeLong(resident);
@@ -239,7 +239,7 @@ public class ProcessStats implements Streamable, Serializable, ToXContent {
             return cpu;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             percent = in.readShort();
             sys = in.readLong();
@@ -247,7 +247,7 @@ public class ProcessStats implements Streamable, Serializable, ToXContent {
             total = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeShort(percent);
             out.writeLong(sys);

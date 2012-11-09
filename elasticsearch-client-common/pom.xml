@@ -24,23 +24,34 @@
         <profile>
             <!-- build and test core modules -->
             <id>default</id>
+
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>                
+                    </plugin>          
+                </plugins>
+            </build>
+            
             <dependencies>
 
                 <dependency>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
-                    <version>13.0.1</version>
                     <type>jar</type>
                     <scope>compile</scope>
-                </dependency>        
+                </dependency>
         
                 <dependency>
                     <groupId>net.sf.trove4j</groupId>
                     <artifactId>trove4j</artifactId>
-                    <version>3.0.3</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -48,7 +59,6 @@
                 <dependency>
                     <groupId>joda-time</groupId>
                     <artifactId>joda-time</artifactId>
-                    <version>2.1</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>        
@@ -56,7 +66,6 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.1.0</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -64,7 +73,6 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.dataformat</groupId>
                     <artifactId>jackson-dataformat-smile</artifactId>
-                    <version>2.1.0</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -72,7 +80,6 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.dataformat</groupId>
                     <artifactId>jackson-dataformat-yaml</artifactId>
-                    <version>2.1.0</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -80,7 +87,6 @@
                 <dependency>
                     <groupId>com.ning</groupId>
                     <artifactId>compress-lzf</artifactId>
-                    <version>0.9.5</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -88,21 +94,18 @@
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
-                    <version>1.7.2</version>
                     <optional>true</optional>
                 </dependency>
         
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
-                    <version>1.7.2</version>
                     <optional>true</optional>
                 </dependency>
         
                 <dependency>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
-                    <version>1.2.17</version>
                     <optional>true</optional>
                 </dependency>
         
@@ -111,30 +114,33 @@
         </profile>
 
         <profile>
-            <!-- build and test core modules with jdk5 -->
+            <!-- build and test with jdk5 -->
             <id>jdk5</id>
             
             <activation>
                 <jdk>1.5</jdk>
             </activation>
-            
+
             <build>
                 <plugins>
                     <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                    </plugin>                   
+                    <plugin>
                         <artifactId>maven-dependency-plugin</artifactId>
                     </plugin>                   
-                        <plugin>
-                            <artifactId>maven-surefire-plugin</artifactId>
-                            <configuration>
-                                <systemProperties>
-                                    <property>
-                                        <name>java.endorsed.dirs</name>
-                                        <value>${project.build.directory}/endorsed</value>
-                                    </property>
-                                </systemProperties>
-                                <argLine>-Xbootclasspath/p:${project.build.directory}/endorsed/elasticsearch-client-jdk5-${project.version}-compat.jar</argLine>
-                            </configuration>
-                        </plugin>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemProperties>
+                                <property>
+                                    <name>java.endorsed.dirs</name>
+                                    <value>${project.build.directory}/endorsed</value>
+                                </property>
+                            </systemProperties>
+                            <argLine>-Xbootclasspath/p:${project.build.directory}/endorsed/elasticsearch-client-jdk5-${project.version}-compat.jar</argLine>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
             
@@ -160,7 +166,6 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.core</groupId>
                     <artifactId>jackson-core</artifactId>
-                    <version>2.0.6</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -168,7 +173,6 @@
                 <dependency>
                     <groupId>com.fasterxml.jackson.dataformat</groupId>
                     <artifactId>jackson-dataformat-smile</artifactId>
-                    <version>2.0.6</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -186,7 +190,6 @@
                 <dependency>
                     <groupId>net.sf.trove4j</groupId>
                     <artifactId>trove4j</artifactId>
-                    <version>3.0.3</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -194,7 +197,6 @@
                 <dependency>
                     <groupId>joda-time</groupId>
                     <artifactId>joda-time</artifactId>
-                    <version>2.1</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>        
@@ -202,7 +204,6 @@
                 <dependency>
                     <groupId>com.ning</groupId>
                     <artifactId>compress-lzf</artifactId>
-                    <version>0.9.5</version>
                     <type>jar</type>
                     <scope>compile</scope>
                 </dependency>
@@ -210,21 +211,18 @@
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
-                    <version>1.7.2</version>
                     <optional>true</optional>
                 </dependency>
         
                 <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-log4j12</artifactId>
-                    <version>1.7.2</version>
                     <optional>true</optional>
                 </dependency>
         
                 <dependency>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
-                    <version>1.2.17</version>
                     <optional>true</optional>
                 </dependency>
                
@@ -234,17 +232,4 @@
 
     </profiles>
 
-    <build>
-        <plugins>
-            
-            <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-            
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>                
-            </plugin>          
-            
-        </plugins>
-    </build>
 </project>

@@ -131,7 +131,6 @@ public class Segment implements Streamable {
         return segment;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         name = in.readUTF();
         generation = Long.parseLong(name.substring(1), Character.MAX_RADIX);
@@ -142,7 +141,6 @@ public class Segment implements Streamable {
         sizeInBytes = in.readLong();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(name);
         out.writeBoolean(committed);

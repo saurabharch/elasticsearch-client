@@ -100,7 +100,6 @@ public class AnalyzeResponse extends ActionResponse implements Iterable<AnalyzeR
             return analyzeToken;
         }
 
-        @Override
         public void readFrom(StreamInput in) throws IOException {
             term = in.readString();
             startOffset = in.readInt();
@@ -109,7 +108,6 @@ public class AnalyzeResponse extends ActionResponse implements Iterable<AnalyzeR
             type = in.readOptionalString();
         }
 
-        @Override
         public void writeTo(StreamOutput out) throws IOException {
             out.writeString(term);
             out.writeInt(startOffset);
@@ -136,12 +134,10 @@ public class AnalyzeResponse extends ActionResponse implements Iterable<AnalyzeR
         return tokens();
     }
 
-    @Override
     public Iterator<AnalyzeToken> iterator() {
         return tokens.iterator();
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         String format = params.param("format", "detailed");
         if ("detailed".equals(format)) {

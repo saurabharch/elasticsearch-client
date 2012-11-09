@@ -81,7 +81,6 @@ public class QueryExplanation  implements Streamable {
         return explanation();
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         index = in.readUTF();
         valid = in.readBoolean();
@@ -89,7 +88,6 @@ public class QueryExplanation  implements Streamable {
         error = in.readOptionalUTF();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(index);
         out.writeBoolean(valid);

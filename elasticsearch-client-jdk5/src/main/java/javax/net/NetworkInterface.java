@@ -368,7 +368,8 @@ public final class NetworkInterface {
      */
 
     public boolean isUp() throws SocketException {
-        return isUp0(name, index);
+        return true; 
+        // return isUp0(name, index);
     }
 
     /**
@@ -380,7 +381,8 @@ public final class NetworkInterface {
      */
 
     public boolean isLoopback() throws SocketException {
-        return isLoopback0(name, index);
+        return false;
+        //return isLoopback0(name, index);
     }
 
     /**
@@ -395,7 +397,8 @@ public final class NetworkInterface {
      */
 
     public boolean isPointToPoint() throws SocketException {
-        return isP2P0(name, index);
+        return false;
+        // return isP2P0(name, index);
     }
 
     /**

@@ -19,15 +19,4 @@
         Elasticsearch Client - Geographical JTS Topology Suite for JDK5
     </description>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>                
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

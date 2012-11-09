@@ -75,7 +75,6 @@ public interface TaoPing {
             return response;
         }
 
-        @Override
         public void readFrom(StreamInput in) throws IOException {
             clusterName = readClusterName(in);
             target = readNode(in);
@@ -84,7 +83,6 @@ public interface TaoPing {
             }
         }
 
-        @Override
         public void writeTo(StreamOutput out) throws IOException {
             clusterName.writeTo(out);
             target.writeTo(out);

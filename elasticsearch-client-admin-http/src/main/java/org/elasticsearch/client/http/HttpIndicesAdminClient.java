@@ -28,11 +28,9 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.ActionResponse;
-import org.elasticsearch.action.HttpClusterAdminActionModule;
 import org.elasticsearch.action.admin.indices.IndicesAction;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpClient;
-import org.elasticsearch.client.http.support.InternalHttpClusterAdminClient;
 import org.elasticsearch.client.internal.InternalClientSettingsPreparer;
 import org.elasticsearch.client.support.AbstractIndicesAdminClient;
 import org.elasticsearch.common.collect.Tuple;
@@ -116,12 +114,10 @@ public class HttpIndicesAdminClient extends AbstractIndicesAdminClient {
         return this;
     }
 
-    @Override
     public ThreadPool threadPool() {
         return threadPool;
     }
     
-    @Override
     public void close() {
         internalClient.close();
         threadPool.shutdown();
@@ -139,19 +135,16 @@ public class HttpIndicesAdminClient extends AbstractIndicesAdminClient {
         ThreadLocals.clearReferencesThreadLocals();
     }
 
-    @Override
     public Settings settings() {
         return this.settings;
     }
 
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             ActionFuture<Response> execute(IndicesAction<Request, Response, RequestBuilder> action, Request request) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());
         return httpAction.execute(internalClient, request);
     }
 
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             void execute(IndicesAction<Request, Response, RequestBuilder> action, Request request, ActionListener<Response> listener) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());

@@ -132,7 +132,7 @@ public class SearchStats implements Streamable, ToXContent {
             return stats;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             queryCount = in.readVLong();
             queryTimeInMillis = in.readVLong();
@@ -143,7 +143,7 @@ public class SearchStats implements Streamable, ToXContent {
             fetchCurrent = in.readVLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeVLong(queryCount);
             out.writeVLong(queryTimeInMillis);
@@ -154,7 +154,7 @@ public class SearchStats implements Streamable, ToXContent {
             out.writeVLong(fetchCurrent);
         }
 
-        @Override
+        
         public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
             builder.field(Fields.QUERY_TOTAL, queryCount);
             builder.field(Fields.QUERY_TIME, queryTime().toString());
@@ -217,7 +217,7 @@ public class SearchStats implements Streamable, ToXContent {
         return this.groupStats;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, ToXContent.Params params) throws IOException {
         builder.startObject(Fields.SEARCH);
         totalStats.toXContent(builder, params);
@@ -253,7 +253,7 @@ public class SearchStats implements Streamable, ToXContent {
         return searchStats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         totalStats = Stats.readStats(in);
         if (in.readBoolean()) {
@@ -265,7 +265,7 @@ public class SearchStats implements Streamable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         totalStats.writeTo(out);
         if (groupStats == null || groupStats.isEmpty()) {

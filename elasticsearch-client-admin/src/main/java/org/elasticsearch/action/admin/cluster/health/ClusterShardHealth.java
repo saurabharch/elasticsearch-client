@@ -114,7 +114,6 @@ public class ClusterShardHealth implements Streamable {
         return ret;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         shardId = in.readVInt();
         status = ClusterHealthStatus.fromValue(in.readByte());
@@ -125,7 +124,6 @@ public class ClusterShardHealth implements Streamable {
         primaryActive = in.readBoolean();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(shardId);
         out.writeByte(status.value());

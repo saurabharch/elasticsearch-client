@@ -65,7 +65,6 @@ public class DiscoveryNodes implements Iterable<DiscoveryNode> {
         this.localNodeId = localNodeId;
     }
 
-    @Override
     public UnmodifiableIterator<DiscoveryNode> iterator() {
         return nodes.values().iterator();
     }

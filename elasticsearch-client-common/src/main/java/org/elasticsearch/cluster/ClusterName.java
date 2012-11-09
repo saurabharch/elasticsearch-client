@@ -59,12 +59,10 @@ public class ClusterName implements Streamable {
         return clusterName;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         value = in.readString().intern();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeString(value);
     }

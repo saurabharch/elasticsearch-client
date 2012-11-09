@@ -1,16 +1,24 @@
+/*
+ * Licensed to ElasticSearch and Shay Banon under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. ElasticSearch licenses this
+ * file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.elasticsearch.discovery.tao.ping.multicast;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketAddress;
-import java.net.SocketTimeoutException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import org.elasticsearch.ElasticSearchException;
 import org.elasticsearch.ElasticSearchIllegalStateException;
 import org.elasticsearch.ExceptionsHelper;
@@ -30,8 +38,6 @@ import org.elasticsearch.common.network.TransportNetworkService;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.ConcurrentCollections;
-import static org.elasticsearch.common.util.concurrent.ConcurrentCollections.newConcurrentMap;
-import static org.elasticsearch.common.util.concurrent.ClientEsExecutors.daemonThreadFactory;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -46,6 +52,22 @@ import org.elasticsearch.transport.TransportRequest;
 import org.elasticsearch.transport.TransportResponse;
 import org.elasticsearch.transport.TransportResponseHandler;
 import org.elasticsearch.transport.client.ClientTransportService;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.elasticsearch.common.util.concurrent.ConcurrentCollections.newConcurrentMap;
+import static org.elasticsearch.common.util.concurrent.ClientEsExecutors.daemonThreadFactory;
+
 
 public class MulticastTaoPing implements TaoPing {
 
@@ -165,7 +187,7 @@ public class MulticastTaoPing implements TaoPing {
         final AtomicReference<PingResponse[]> response = new AtomicReference<PingResponse[]>();
         final CountDownLatch latch = new CountDownLatch(1);
         ping(new PingListener() {
-            @Override
+            
             public void onPing(PingResponse[] pings) {
                 response.set(pings);
                 latch.countDown();
@@ -179,11 +201,11 @@ public class MulticastTaoPing implements TaoPing {
         }
     }
 
-    @Override
+    
     public void ping(final PingListener listener, final TimeValue timeout) {
         if (!pingEnabled) {
             threadPool.generic().execute(new Runnable() {
-                @Override
+                
                 public void run() {
                     listener.onPing(new PingResponse[0]);
                 }
@@ -196,7 +218,7 @@ public class MulticastTaoPing implements TaoPing {
         // try and send another ping request halfway through (just in case someone woke up during it...)
         // this can be a good trade-off to nailing the initial lookup or un-delivered messages
         threadPool.schedule(TimeValue.timeValueMillis(timeout.millis() / 2), TransportThreadPool.Names.GENERIC, new Runnable() {
-            @Override
+            
             public void run() {
                 try {
                     sendPingRequest(id);
@@ -206,7 +228,7 @@ public class MulticastTaoPing implements TaoPing {
             }
         });
         threadPool.schedule(timeout, TransportThreadPool.Names.GENERIC, new Runnable() {
-            @Override
+            
             public void run() {
                 ConcurrentMap<DiscoveryNode, PingResponse> responses = receivedResponses.remove(id);
                 listener.onPing(responses.values().toArray(new PingResponse[responses.size()]));
@@ -249,12 +271,12 @@ public class MulticastTaoPing implements TaoPing {
 
         public static final String ACTION = "discovery/tao/multicast";
 
-        @Override
+        
         public MulticastPingResponse newInstance() {
             return new MulticastPingResponse();
         }
 
-        @Override
+        
         public void messageReceived(MulticastPingResponse request, TransportChannel channel) throws Exception {
             if (logger.isTraceEnabled()) {
                 logger.trace("[{}] received {}", request.id, request.pingResponse);
@@ -268,7 +290,7 @@ public class MulticastTaoPing implements TaoPing {
             channel.sendResponse(TransportResponse.Empty.INSTANCE);
         }
 
-        @Override
+        
         public String executor() {
             return TransportThreadPool.Names.SAME;
         }
@@ -282,13 +304,13 @@ public class MulticastTaoPing implements TaoPing {
         MulticastPingResponse() {
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             id = in.readInt();
             pingResponse = PingResponse.readPingResponse(in);
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeInt(id);
             pingResponse.writeTo(out);
@@ -303,7 +325,7 @@ public class MulticastTaoPing implements TaoPing {
             running = false;
         }
 
-        @Override
+        
         public void run() {
             while (running) {
                 try {
@@ -464,13 +486,13 @@ public class MulticastTaoPing implements TaoPing {
             if (!transportService.nodeConnected(requestingNode)) {
                 // do the connect and send on a thread pool
                 threadPool.generic().execute(new Runnable() {
-                    @Override
+                    
                     public void run() {
                         // connect to the node if possible
                         try {
                             transportService.connectToNode(requestingNode);
                             transportService.sendRequest(requestingNode, MulticastTaoPingResponseRequestHandler.ACTION, multicastPingResponse, new EmptyTransportResponseHandler(TransportThreadPool.Names.SAME) {
-                                @Override
+                                
                                 public void handleException(TransportException exp) {
                                     logger.warn("failed to receive confirmation on sent ping response to [{}]", exp, requestingNode);
                                 }
@@ -482,7 +504,7 @@ public class MulticastTaoPing implements TaoPing {
                 });
             } else {
                 transportService.sendRequest(requestingNode, MulticastTaoPingResponseRequestHandler.ACTION, multicastPingResponse, new EmptyTransportResponseHandler(TransportThreadPool.Names.SAME) {
-                    @Override
+                    
                     public void handleException(TransportException exp) {
                         logger.warn("failed to receive confirmation on sent ping response to [{}]", exp, requestingNode);
                     }

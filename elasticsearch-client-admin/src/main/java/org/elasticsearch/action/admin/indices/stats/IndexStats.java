@@ -69,7 +69,6 @@ public class IndexStats implements Iterable<IndexShardStats> {
         return indexShards;
     }
 
-    @Override
     public Iterator<IndexShardStats> iterator() {
         return indexShards().values().iterator();
     }

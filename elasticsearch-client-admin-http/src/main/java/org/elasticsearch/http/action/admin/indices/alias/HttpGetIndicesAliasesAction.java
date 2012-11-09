@@ -37,7 +37,6 @@ public class HttpGetIndicesAliasesAction extends HttpAction<ClusterStateRequest,
     private static final String METHOD = "GET";
     private static final String ENDPOINT = "_aliases";
     
-    @Override
     protected void doExecute(HttpClient client, ClusterStateRequest request, ActionListener<ClusterStateResponse> listener) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.filteredIndices())
@@ -46,7 +45,6 @@ public class HttpGetIndicesAliasesAction extends HttpAction<ClusterStateRequest,
         submit(client, httpRequest, listener);        
     }
 
-    @Override
     protected ClusterStateResponse toResponse(HttpResponse response) throws IOException {
         Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
         logger.info("response = {}", map);

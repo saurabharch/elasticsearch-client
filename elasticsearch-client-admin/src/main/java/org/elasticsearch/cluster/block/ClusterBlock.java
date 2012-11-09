@@ -100,7 +100,6 @@ public class ClusterBlock implements Serializable, Streamable, ToXContent {
         return this.disableStatePersistence;
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Integer.toString(id));
         builder.field("description", description);
@@ -123,7 +122,6 @@ public class ClusterBlock implements Serializable, Streamable, ToXContent {
         return block;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         id = in.readVInt();
         description = in.readUTF();
@@ -136,7 +134,6 @@ public class ClusterBlock implements Serializable, Streamable, ToXContent {
         status = RestStatus.readFrom(in);
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(id);
         out.writeUTF(description);

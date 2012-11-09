@@ -128,7 +128,7 @@ public class MergeStats implements Streamable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.MERGES);
         builder.field(Fields.CURRENT, current);
@@ -159,7 +159,7 @@ public class MergeStats implements Streamable, ToXContent {
         static final XContentBuilderString TOTAL_SIZE_IN_BYTES = new XContentBuilderString("total_size_in_bytes");
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         total = in.readVLong();
         totalTimeInMillis = in.readVLong();
@@ -170,7 +170,7 @@ public class MergeStats implements Streamable, ToXContent {
         currentSizeInBytes = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(total);
         out.writeVLong(totalTimeInMillis);

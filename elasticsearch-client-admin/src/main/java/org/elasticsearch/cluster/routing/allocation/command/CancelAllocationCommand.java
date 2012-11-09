@@ -51,19 +51,19 @@ public class CancelAllocationCommand implements AllocationCommand {
 
     public static class Factory implements AllocationCommandFactory<CancelAllocationCommand> {
 
-        @Override
+        
         public CancelAllocationCommand readFrom(StreamInput in) throws IOException {
             return new CancelAllocationCommand(ShardId.readShardId(in), in.readString(), in.readBoolean());
         }
 
-        @Override
+        
         public void writeTo(CancelAllocationCommand command, StreamOutput out) throws IOException {
             command.shardId().writeTo(out);
             out.writeString(command.node());
             out.writeBoolean(command.allowPrimary());
         }
 
-        @Override
+        
         public CancelAllocationCommand fromXContent(XContentParser parser) throws IOException {
             String index = null;
             int shardId = -1;
@@ -103,7 +103,7 @@ public class CancelAllocationCommand implements AllocationCommand {
             return new CancelAllocationCommand(new ShardId(index, shardId), nodeId, allowPrimary);
         }
 
-        @Override
+        
         public void toXContent(CancelAllocationCommand command, XContentBuilder builder, ToXContent.Params params) throws IOException {
             builder.startObject();
             builder.field("index", command.shardId().index());
@@ -129,12 +129,12 @@ public class CancelAllocationCommand implements AllocationCommand {
         this.allowPrimary = allowPrimary;
     }
 
-    @Override
+    
     public String name() {
         return NAME;
     }
 
-    @Override
+    
     public AllocationCommandFactory factory() {
         return FACTORY;
     }
@@ -151,7 +151,7 @@ public class CancelAllocationCommand implements AllocationCommand {
         return this.allowPrimary;
     }
 
-    @Override
+    
     public void execute(RoutingAllocation allocation) throws ElasticSearchException {
         DiscoveryNode discoNode = allocation.nodes().resolveNode(node);
 

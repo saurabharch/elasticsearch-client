@@ -49,19 +49,16 @@ public class AllocateAllocationCommand implements AllocationCommand {
 
     public static class Factory implements AllocationCommandFactory<AllocateAllocationCommand> {
 
-        @Override
         public AllocateAllocationCommand readFrom(StreamInput in) throws IOException {
             return new AllocateAllocationCommand(ShardId.readShardId(in), in.readString(), in.readBoolean());
         }
 
-        @Override
         public void writeTo(AllocateAllocationCommand command, StreamOutput out) throws IOException {
             command.shardId().writeTo(out);
             out.writeString(command.node());
             out.writeBoolean(command.allowPrimary());
         }
 
-        @Override
         public AllocateAllocationCommand fromXContent(XContentParser parser) throws IOException {
             String index = null;
             int shardId = -1;
@@ -101,7 +98,6 @@ public class AllocateAllocationCommand implements AllocationCommand {
             return new AllocateAllocationCommand(new ShardId(index, shardId), nodeId, allowPrimary);
         }
 
-        @Override
         public void toXContent(AllocateAllocationCommand command, XContentBuilder builder, ToXContent.Params params) throws IOException {
             builder.startObject();
             builder.field("index", command.shardId().index());
@@ -126,12 +122,10 @@ public class AllocateAllocationCommand implements AllocationCommand {
         this.allowPrimary = allowPrimary;
     }
 
-    @Override
     public String name() {
         return NAME;
     }
 
-    @Override
     public AllocationCommandFactory factory() {
         return FACTORY;
     }
@@ -148,7 +142,6 @@ public class AllocateAllocationCommand implements AllocationCommand {
         return this.allowPrimary;
     }
 
-    @Override
     public void execute(RoutingAllocation allocation) throws ElasticSearchException {
         DiscoveryNode discoNode = allocation.nodes().resolveNode(node);
 

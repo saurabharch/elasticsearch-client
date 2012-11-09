@@ -48,7 +48,6 @@ public class ShardSegments extends BroadcastShardOperationResponse implements It
         this.segments = segments;
     }
 
-    @Override
     public Iterator<Segment> iterator() {
         return segments.iterator();
     }

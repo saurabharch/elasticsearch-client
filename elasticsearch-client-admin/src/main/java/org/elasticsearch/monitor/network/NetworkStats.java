@@ -57,7 +57,7 @@ public class NetworkStats implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString OUT_RSTS = new XContentBuilderString("out_rsts");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.NETWORK);
         if (tcp != null) {
@@ -84,7 +84,7 @@ public class NetworkStats implements Streamable, Serializable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         timestamp = in.readVLong();
         if (in.readBoolean()) {
@@ -92,7 +92,7 @@ public class NetworkStats implements Streamable, Serializable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(timestamp);
         if (tcp == null) {
@@ -138,7 +138,7 @@ public class NetworkStats implements Streamable, Serializable, ToXContent {
             return tcp;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             activeOpens = in.readLong();
             passiveOpens = in.readLong();
@@ -152,7 +152,7 @@ public class NetworkStats implements Streamable, Serializable, ToXContent {
             outRsts = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeLong(activeOpens);
             out.writeLong(passiveOpens);

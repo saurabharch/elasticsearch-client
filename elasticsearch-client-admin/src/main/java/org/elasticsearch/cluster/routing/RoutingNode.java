@@ -48,7 +48,6 @@ public class RoutingNode implements Iterable<MutableShardRouting> {
         this.shards = shards;
     }
 
-    @Override
     public Iterator<MutableShardRouting> iterator() {
         return shards.iterator();
     }

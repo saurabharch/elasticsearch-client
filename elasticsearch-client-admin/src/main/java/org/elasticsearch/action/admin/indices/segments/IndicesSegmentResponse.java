@@ -99,7 +99,6 @@ public class IndicesSegmentResponse extends BroadcastOperationResponse implement
         }
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.INDICES);
 

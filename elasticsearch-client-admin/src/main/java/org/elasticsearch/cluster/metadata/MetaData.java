@@ -751,7 +751,6 @@ public class MetaData implements Iterable<IndexMetaData> {
     }
 
 
-    @Override
     public UnmodifiableIterator<IndexMetaData> iterator() {
         return indices.values().iterator();
     }

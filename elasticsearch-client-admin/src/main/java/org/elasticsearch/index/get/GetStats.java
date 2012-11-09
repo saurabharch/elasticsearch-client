@@ -141,7 +141,7 @@ public class GetStats implements Streamable, ToXContent {
         return this.current;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.GET);
         builder.field(Fields.TOTAL, count());
@@ -178,7 +178,7 @@ public class GetStats implements Streamable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         existsCount = in.readVLong();
         existsTimeInMillis = in.readVLong();
@@ -187,7 +187,7 @@ public class GetStats implements Streamable, ToXContent {
         current = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(existsCount);
         out.writeVLong(existsTimeInMillis);

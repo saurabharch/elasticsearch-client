@@ -79,7 +79,6 @@ public class AllocationExplanation implements Streamable {
         return e;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         int size = in.readVInt();
         for (int i = 0; i < size; i++) {
@@ -97,7 +96,6 @@ public class AllocationExplanation implements Streamable {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVInt(explanations.size());
         for (Map.Entry<ShardId, List<NodeExplanation>> entry : explanations.entrySet()) {

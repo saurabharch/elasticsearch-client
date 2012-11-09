@@ -70,7 +70,6 @@ public class IndexSegments implements Iterable<IndexShardSegments> {
         return shards();
     }
 
-    @Override
     public Iterator<IndexShardSegments> iterator() {
         return indexShards.values().iterator();
     }

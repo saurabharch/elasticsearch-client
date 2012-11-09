@@ -21,21 +21,18 @@ public class InternalHttpClusterAdminClient extends HttpClient {
         this.actions = actions;
     }
     
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
             ActionFuture<Response> execute(Action<Request, Response, RequestBuilder, Client> action, Request request) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());
         return httpAction.execute(this, request);
     }
 
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
             void execute(Action<Request, Response, RequestBuilder, Client> action, Request request, ActionListener<Response> listener) {
         HttpAction<Request, Response> httpAction = actions.getAction(action.name());
         httpAction.execute(this, request, listener);
     }
 
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
             RequestBuilder prepareExecute(Action<Request, Response, RequestBuilder, Client> action) {
         return action.newRequestBuilder((Client)this);

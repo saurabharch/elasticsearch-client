@@ -33,7 +33,6 @@ public class FeedableBodyGenerator implements BodyGenerator {
     private final AtomicInteger queueSize = new AtomicInteger();
     private FeedListener listener;
 
-    @Override
     public Body createBody() throws IOException {
         return new PushBody();
     }
@@ -61,12 +60,10 @@ public class FeedableBodyGenerator implements BodyGenerator {
 
         private int finishState = 0;
 
-        @Override
         public long getContentLength() {
             return -1;
         }
 
-        @Override
         public long read(final ByteBuffer buffer) throws IOException {
             BodyPart nextPart = queue.peek();
             if (nextPart == null) {
@@ -101,7 +98,6 @@ public class FeedableBodyGenerator implements BodyGenerator {
             return size;
         }
 
-        @Override
         public void close() throws IOException {
         }
 

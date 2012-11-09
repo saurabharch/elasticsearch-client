@@ -492,7 +492,7 @@ public class NettyAsyncHttpProvider extends SimpleChannelUpstreamHandler impleme
                             BodyGenerator bg = future.getRequest().getBodyGenerator();
                                 if (bg instanceof FeedableBodyGenerator) {
                                     ((FeedableBodyGenerator)bg).setListener(new FeedListener() {
-                                        @Override public void onContentAdded() {
+                                        public void onContentAdded() {
                                             channel.getPipeline().get(ChunkedWriteHandler.class).resumeTransfer();
                                         }
                                     });

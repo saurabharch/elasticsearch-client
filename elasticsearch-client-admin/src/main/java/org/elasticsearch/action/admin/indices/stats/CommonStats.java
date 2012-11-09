@@ -239,7 +239,6 @@ public class CommonStats implements Streamable, ToXContent {
         return stats;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         if (in.readBoolean()) {
             docs = DocsStats.readDocStats(in);
@@ -270,7 +269,6 @@ public class CommonStats implements Streamable, ToXContent {
         }
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         if (docs == null) {
             out.writeBoolean(false);
@@ -329,7 +327,6 @@ public class CommonStats implements Streamable, ToXContent {
     }
 
     // note, requires a wrapping object
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         if (docs != null) {
             docs.toXContent(builder, params);

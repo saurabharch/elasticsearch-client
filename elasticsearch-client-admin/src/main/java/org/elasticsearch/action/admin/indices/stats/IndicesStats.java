@@ -153,7 +153,6 @@ public class IndicesStats extends BroadcastOperationResponse implements ToXConte
         }
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject("_all");
 

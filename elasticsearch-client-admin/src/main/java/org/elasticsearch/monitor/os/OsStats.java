@@ -131,7 +131,7 @@ public class OsStats implements Streamable, Serializable, ToXContent {
         static final XContentBuilderString ACTUAL_USED_IN_BYTES = new XContentBuilderString("actual_used_in_bytes");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.OS);
         builder.field(Fields.TIMESTAMP, timestamp);
@@ -194,7 +194,7 @@ public class OsStats implements Streamable, Serializable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         timestamp = in.readVLong();
         loadAverage = new double[in.readVInt()];
@@ -213,7 +213,7 @@ public class OsStats implements Streamable, Serializable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(timestamp);
         out.writeVInt(loadAverage.length);
@@ -268,13 +268,13 @@ public class OsStats implements Streamable, Serializable, ToXContent {
             return swap;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             free = in.readLong();
             used = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeLong(free);
             out.writeLong(used);
@@ -296,7 +296,7 @@ public class OsStats implements Streamable, Serializable, ToXContent {
             return mem;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             free = in.readLong();
             freePercent = in.readShort();
@@ -306,7 +306,7 @@ public class OsStats implements Streamable, Serializable, ToXContent {
             actualUsed = in.readLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeLong(free);
             out.writeShort(freePercent);
@@ -381,14 +381,14 @@ public class OsStats implements Streamable, Serializable, ToXContent {
             return cpu;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             sys = in.readShort();
             user = in.readShort();
             idle = in.readShort();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeShort(sys);
             out.writeShort(user);

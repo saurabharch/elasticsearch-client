@@ -39,7 +39,6 @@ public class NettyBytesArray extends BytesArray implements NettyBytesReference {
         super(bytes, offset, length);
     }
 
-    @Override
     public ChannelBuffer toChannelBuffer() {
         return ChannelBuffers.wrappedBuffer(bytes, offset, length);
     }

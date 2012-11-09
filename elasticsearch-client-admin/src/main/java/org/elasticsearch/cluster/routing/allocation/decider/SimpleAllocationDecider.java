@@ -41,12 +41,12 @@ public abstract class SimpleAllocationDecider implements AllocationDecider {
         this.settings = settings;
     }
     
-    @Override
+    
     public boolean canRebalance(ShardRouting shardRouting, RoutingAllocation allocation) {
         return true;
     }
 
-    @Override
+    
     public Decision canAllocate(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         return Decision.YES;
     }
@@ -54,7 +54,7 @@ public abstract class SimpleAllocationDecider implements AllocationDecider {
     /**
      * Can the provided shard routing remain on the node?
      */
-    @Override
+    
     public boolean canRemain(ShardRouting shardRouting, RoutingNode node, RoutingAllocation allocation) {
         return true;
     }

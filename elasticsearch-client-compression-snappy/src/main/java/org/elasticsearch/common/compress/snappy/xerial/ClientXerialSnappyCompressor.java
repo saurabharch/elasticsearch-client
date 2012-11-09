@@ -32,22 +32,22 @@ import java.io.IOException;
  */
 public class ClientXerialSnappyCompressor extends ClientSnappyCompressor {
 
-    @Override
+    
     public String type() {
         return "snappy";
     }
 
-    @Override
+    
     protected int maxCompressedLength(int length) {
         return Snappy.maxCompressedLength(length);
     }
 
-    @Override
+    
     public CompressedStreamInput streamInput(StreamInput in) throws IOException {
         return new XerialSnappyCompressedStreamInput(in, compressorContext);
     }
 
-    @Override
+    
     public CompressedStreamOutput streamOutput(StreamOutput out) throws IOException {
         return new XerialSnappyCompressedStreamOutput(out, compressorContext);
     }

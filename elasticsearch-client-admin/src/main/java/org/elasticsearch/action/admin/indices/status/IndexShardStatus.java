@@ -207,7 +207,6 @@ public class IndexShardStatus implements Iterable<ShardStatus> {
         return flushStats();
     }
 
-    @Override
     public Iterator<ShardStatus> iterator() {
         return Iterators.forArray(shards);
     }

@@ -115,12 +115,10 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient {
         return this;
     }
 
-    @Override
     public ThreadPool threadPool() {
         return threadPool;
     }
     
-    @Override
     public void close() {
         internalClient.close();
         threadPool.shutdown();
@@ -138,19 +136,16 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient {
         ThreadLocals.clearReferencesThreadLocals();
     }
 
-    @Override
     public Settings settings() {
         return this.settings;
     }
 
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             ActionFuture<Response> execute(ClusterAction<Request, Response, RequestBuilder> action, Request request) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());
         return httpAction.execute(internalClient, request);
     }
 
-    @Override
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             void execute(ClusterAction<Request, Response, RequestBuilder> action, Request request, ActionListener<Response> listener) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());

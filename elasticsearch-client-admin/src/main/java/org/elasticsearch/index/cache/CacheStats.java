@@ -161,7 +161,6 @@ public class CacheStats implements Streamable, ToXContent {
         return bloomSize();
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.CACHE);
         builder.field(Fields.FIELD_EVICTIONS, fieldEvictions);
@@ -200,7 +199,6 @@ public class CacheStats implements Streamable, ToXContent {
         return stats;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         fieldEvictions = in.readVLong();
         filterEvictions = in.readVLong();
@@ -211,7 +209,6 @@ public class CacheStats implements Streamable, ToXContent {
         idCacheSize = in.readVLong();
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(fieldEvictions);
         out.writeVLong(filterEvictions);

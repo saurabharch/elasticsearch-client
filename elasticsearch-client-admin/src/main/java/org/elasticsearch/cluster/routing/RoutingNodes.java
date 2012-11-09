@@ -94,7 +94,6 @@ public class RoutingNodes implements Iterable<RoutingNode> {
         }
     }
 
-    @Override
     public Iterator<RoutingNode> iterator() {
         return nodesToShards.values().iterator();
     }

@@ -55,7 +55,6 @@ public class IndexShardSegments implements Iterable<ShardSegments> {
         return this.shards;
     }
 
-    @Override
     public Iterator<ShardSegments> iterator() {
         return Iterators.forArray(shards);
     }

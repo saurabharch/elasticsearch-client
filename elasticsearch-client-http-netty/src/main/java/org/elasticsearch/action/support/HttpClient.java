@@ -39,12 +39,10 @@ public abstract class HttpClient extends AsyncHttpClient implements GenericClien
         this.settings = settings;
     }
     
-    @Override
     public Settings settings() {
         return settings;
     }
     
-    @Override
     public ThreadPool threadPool() {
         throw new UnsupportedOperationException("Not supported");
     }

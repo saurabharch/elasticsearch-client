@@ -132,7 +132,7 @@ public class IndexingStats implements Streamable, ToXContent {
             return stats;
         }
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             indexCount = in.readVLong();
             indexTimeInMillis = in.readVLong();
@@ -143,7 +143,7 @@ public class IndexingStats implements Streamable, ToXContent {
             deleteCurrent = in.readVLong();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeVLong(indexCount);
             out.writeVLong(indexTimeInMillis);
@@ -154,7 +154,7 @@ public class IndexingStats implements Streamable, ToXContent {
             out.writeVLong(deleteCurrent);
         }
 
-        @Override
+        
         public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
             builder.field(Fields.INDEX_TOTAL, indexCount);
             builder.field(Fields.INDEX_TIME, indexTime().toString());
@@ -217,7 +217,7 @@ public class IndexingStats implements Streamable, ToXContent {
         return this.typeStats;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, ToXContent.Params params) throws IOException {
         builder.startObject(Fields.INDEXING);
         totalStats.toXContent(builder, params);
@@ -253,7 +253,7 @@ public class IndexingStats implements Streamable, ToXContent {
         return indexingStats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         totalStats = Stats.readStats(in);
         if (in.readBoolean()) {
@@ -265,7 +265,7 @@ public class IndexingStats implements Streamable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         totalStats.writeTo(out);
         if (typeStats == null || typeStats.isEmpty()) {

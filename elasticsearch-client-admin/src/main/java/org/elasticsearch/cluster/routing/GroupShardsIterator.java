@@ -62,7 +62,6 @@ public class GroupShardsIterator implements Iterable<ShardIterator> {
         return iterators;
     }
 
-    @Override
     public Iterator<ShardIterator> iterator() {
         return iterators.iterator();
     }

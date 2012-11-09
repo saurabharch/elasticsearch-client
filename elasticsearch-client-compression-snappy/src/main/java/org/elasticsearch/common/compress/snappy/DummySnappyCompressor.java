@@ -31,32 +31,32 @@ import java.io.IOException;
  */
 public class DummySnappyCompressor extends ClientSnappyCompressor {
 
-    @Override
+    
     public String type() {
         return "snappy";
     }
 
-    @Override
+    
     protected int maxCompressedLength(int length) {
         return length;
     }
 
-    @Override
+    
     public byte[] uncompress(byte[] data, int offset, int length) throws IOException {
         throw new ElasticSearchIllegalStateException("snappy unavailable");
     }
 
-    @Override
+    
     public byte[] compress(byte[] data, int offset, int length) throws IOException {
         throw new ElasticSearchIllegalStateException("snappy unavailable");
     }
 
-    @Override
+    
     public CompressedStreamInput streamInput(StreamInput in) throws IOException {
         throw new ElasticSearchIllegalStateException("snappy unavailable");
     }
 
-    @Override
+    
     public CompressedStreamOutput streamOutput(StreamOutput out) throws IOException {
         throw new ElasticSearchIllegalStateException("snappy unavailable");
     }

@@ -57,7 +57,6 @@ public class IndexShardStats implements Iterable<ShardStats> {
         return shards[position];
     }
 
-    @Override
     public Iterator<ShardStats> iterator() {
         return Iterators.forArray(shards);
     }

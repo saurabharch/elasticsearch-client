@@ -93,7 +93,7 @@ public class WarmerStats implements Streamable, ToXContent {
         return refreshStats;
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.WARMER);
         builder.field(Fields.CURRENT, current);
@@ -112,14 +112,14 @@ public class WarmerStats implements Streamable, ToXContent {
         static final XContentBuilderString TOTAL_TIME_IN_MILLIS = new XContentBuilderString("total_time_in_millis");
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         current = in.readVLong();
         total = in.readVLong();
         totalTimeInMillis = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(current);
         out.writeVLong(total);

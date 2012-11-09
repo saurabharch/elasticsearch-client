@@ -49,19 +49,19 @@ public class MoveAllocationCommand implements AllocationCommand {
 
     public static class Factory implements AllocationCommandFactory<MoveAllocationCommand> {
 
-        @Override
+        
         public MoveAllocationCommand readFrom(StreamInput in) throws IOException {
             return new MoveAllocationCommand(ShardId.readShardId(in), in.readString(), in.readString());
         }
 
-        @Override
+        
         public void writeTo(MoveAllocationCommand command, StreamOutput out) throws IOException {
             command.shardId().writeTo(out);
             out.writeString(command.fromNode());
             out.writeString(command.toNode());
         }
 
-        @Override
+        
         public MoveAllocationCommand fromXContent(XContentParser parser) throws IOException {
             String index = null;
             int shardId = -1;
@@ -104,7 +104,7 @@ public class MoveAllocationCommand implements AllocationCommand {
             return new MoveAllocationCommand(new ShardId(index, shardId), fromNode, toNode);
         }
 
-        @Override
+        
         public void toXContent(MoveAllocationCommand command, XContentBuilder builder, ToXContent.Params params) throws IOException {
             builder.startObject();
             builder.field("index", command.shardId().index());
@@ -129,12 +129,12 @@ public class MoveAllocationCommand implements AllocationCommand {
         this.toNode = toNode;
     }
 
-    @Override
+    
     public String name() {
         return NAME;
     }
 
-    @Override
+    
     public AllocationCommandFactory factory() {
         return FACTORY;
     }
@@ -151,7 +151,7 @@ public class MoveAllocationCommand implements AllocationCommand {
         return this.toNode;
     }
 
-    @Override
+    
     public void execute(RoutingAllocation allocation) throws ElasticSearchException {
         DiscoveryNode fromDiscoNode = allocation.nodes().resolveNode(fromNode);
         DiscoveryNode toDiscoNode = allocation.nodes().resolveNode(toNode);

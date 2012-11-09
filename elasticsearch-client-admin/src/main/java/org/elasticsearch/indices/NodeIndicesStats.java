@@ -159,7 +159,6 @@ public class NodeIndicesStats implements Streamable, Serializable, ToXContent {
         return stats;
     }
 
-    @Override
     public void readFrom(StreamInput in) throws IOException {
         storeStats = StoreStats.readStoreStats(in);
         docsStats = DocsStats.readDocStats(in);
@@ -172,7 +171,6 @@ public class NodeIndicesStats implements Streamable, Serializable, ToXContent {
         flushStats = FlushStats.readFlushStats(in);
     }
 
-    @Override
     public void writeTo(StreamOutput out) throws IOException {
         storeStats.writeTo(out);
         docsStats.writeTo(out);
@@ -185,7 +183,6 @@ public class NodeIndicesStats implements Streamable, Serializable, ToXContent {
         flushStats.writeTo(out);
     }
 
-    @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.INDICES);
 

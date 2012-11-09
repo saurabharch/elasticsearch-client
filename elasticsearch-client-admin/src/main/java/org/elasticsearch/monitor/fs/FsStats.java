@@ -54,7 +54,7 @@ public class FsStats implements Iterable<FsStats.Info>, Streamable, ToXContent {
         double diskQueue = -1;
         double diskServiceTime = -1;
 
-        @Override
+        
         public void readFrom(StreamInput in) throws IOException {
             path = in.readUTF();
             mount = in.readOptionalUTF();
@@ -70,7 +70,7 @@ public class FsStats implements Iterable<FsStats.Info>, Streamable, ToXContent {
             diskServiceTime = in.readDouble();
         }
 
-        @Override
+        
         public void writeTo(StreamOutput out) throws IOException {
             out.writeUTF(path);
             out.writeOptionalUTF(mount);
@@ -195,7 +195,7 @@ public class FsStats implements Iterable<FsStats.Info>, Streamable, ToXContent {
         return timestamp();
     }
 
-    @Override
+    
     public Iterator<Info> iterator() {
         return Iterators.forArray(infos);
     }
@@ -206,7 +206,7 @@ public class FsStats implements Iterable<FsStats.Info>, Streamable, ToXContent {
         return stats;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         timestamp = in.readVLong();
         infos = new Info[in.readVInt()];
@@ -216,7 +216,7 @@ public class FsStats implements Iterable<FsStats.Info>, Streamable, ToXContent {
         }
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(timestamp);
         out.writeVInt(infos.length);
@@ -248,7 +248,7 @@ public class FsStats implements Iterable<FsStats.Info>, Streamable, ToXContent {
         static final XContentBuilderString DISK_SERVICE_TIME = new XContentBuilderString("disk_service_time");
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.FS);
         builder.field(Fields.TIMESTAMP, timestamp);

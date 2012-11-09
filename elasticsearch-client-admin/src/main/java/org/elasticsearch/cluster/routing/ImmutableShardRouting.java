@@ -83,82 +83,79 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         this.version = version;
     }
 
-    @Override
     public String index() {
         return this.index;
     }
 
-    @Override
     public String getIndex() {
         return index();
     }
 
-    @Override
     public int id() {
         return this.shardId;
     }
 
-    @Override
+    
     public int getId() {
         return id();
     }
 
-    @Override
+    
     public long version() {
         return this.version;
     }
 
-    @Override
+    
     public boolean unassigned() {
         return state == ShardRoutingState.UNASSIGNED;
     }
 
-    @Override
+    
     public boolean initializing() {
         return state == ShardRoutingState.INITIALIZING;
     }
 
-    @Override
+    
     public boolean active() {
         return started() || relocating();
     }
 
-    @Override
+    
     public boolean started() {
         return state == ShardRoutingState.STARTED;
     }
 
-    @Override
+    
     public boolean relocating() {
         return state == ShardRoutingState.RELOCATING;
     }
 
-    @Override
+    
     public boolean assignedToNode() {
         return currentNodeId != null;
     }
 
-    @Override
+    
     public String currentNodeId() {
         return this.currentNodeId;
     }
 
-    @Override
+    
     public String relocatingNodeId() {
         return this.relocatingNodeId;
     }
 
-    @Override
+    
     public boolean primary() {
         return this.primary;
     }
 
-    @Override
+    
     public ShardRoutingState state() {
         return this.state;
     }
 
-    @Override
+    
     public ShardId shardId() {
         if (shardIdentifier != null) {
             return shardIdentifier;
@@ -167,7 +164,7 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         return shardIdentifier;
     }
 
-    @Override
+    
     public ShardIterator shardsIt() {
         return new PlainShardIterator(shardId(), asList);
     }
@@ -190,7 +187,7 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         readFromThin(in);
     }
 
-    @Override
+    
     public void readFromThin(StreamInput in) throws IOException {
         version = in.readLong();
         if (in.readBoolean()) {
@@ -205,7 +202,7 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         state = ShardRoutingState.fromValue(in.readByte());
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         readFrom(in, in.readUTF(), in.readVInt());
     }
@@ -233,14 +230,14 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         out.writeByte(state.value());
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeUTF(index);
         out.writeVInt(shardId);
         writeToThin(out);
     }
 
-    @Override
+    
     public boolean equals(Object o) {
         if (this == o) return true;
         // we check on instanceof so we also handle the MutableShardRouting case as well
@@ -260,7 +257,7 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         int result = index != null ? index.hashCode() : 0;
         result = 31 * result + shardId;
@@ -271,12 +268,12 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         return result;
     }
 
-    @Override
+    
     public String toString() {
         return shortSummary();
     }
 
-    @Override
+    
     public String shortSummary() {
         StringBuilder sb = new StringBuilder();
         sb.append('[').append(index).append(']').append('[').append(shardId).append(']');
@@ -293,7 +290,7 @@ public class ImmutableShardRouting implements Streamable, Serializable, ShardRou
         return sb.toString();
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         return builder.startObject()
                 .field("state", state())

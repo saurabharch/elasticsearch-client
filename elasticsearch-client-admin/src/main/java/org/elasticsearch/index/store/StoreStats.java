@@ -86,19 +86,19 @@ public class StoreStats implements Streamable, ToXContent {
         return store;
     }
 
-    @Override
+    
     public void readFrom(StreamInput in) throws IOException {
         sizeInBytes = in.readVLong();
         throttleTimeInNanos = in.readVLong();
     }
 
-    @Override
+    
     public void writeTo(StreamOutput out) throws IOException {
         out.writeVLong(sizeInBytes);
         out.writeVLong(throttleTimeInNanos);
     }
 
-    @Override
+    
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(Fields.STORE);
         builder.field(Fields.SIZE, size().toString());

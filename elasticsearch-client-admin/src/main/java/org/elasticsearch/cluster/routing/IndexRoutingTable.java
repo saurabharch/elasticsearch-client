@@ -117,7 +117,6 @@ public class IndexRoutingTable implements Iterable<IndexShardRoutingTable> {
         }
     }
 
-    @Override
     public UnmodifiableIterator<IndexShardRoutingTable> iterator() {
         return shards.values().iterator();
     }

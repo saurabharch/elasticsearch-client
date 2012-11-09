@@ -183,7 +183,6 @@ public class ClusterHealthResponse extends ActionResponse implements Iterable<Cl
         return indices();
     }
 
-    @Override
     public Iterator<ClusterIndexHealth> iterator() {
         return indices.values().iterator();
     }

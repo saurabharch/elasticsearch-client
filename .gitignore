@@ -26,3 +26,4 @@
 /elasticsearch-client-ingest-http/target/
 /elasticsearch-client-jts-jdk5/target/
 /elasticsearch-client-spatial4j-jdk5/target/
+/elasticsearch-client-http-netty/target/
