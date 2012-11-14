@@ -179,16 +179,4 @@ public abstract class AbstractClusterAdminClient implements ClusterAdminClient {
     public NodesShutdownRequestBuilder prepareNodesShutdown(String... nodesIds) {
         return new NodesShutdownRequestBuilder(this).setNodesIds(nodesIds);
     }
-
-    public ActionFuture<IndicesGetAliasesResponse> getAliases(final IndicesGetAliasesRequest request) {
-        return execute(IndicesGetAliasesAction.INSTANCE, request);
-    }
-
-    public void getAliases(final IndicesGetAliasesRequest request, final ActionListener<IndicesGetAliasesResponse> listener) {
-        execute(IndicesGetAliasesAction.INSTANCE, request, listener);
-    }
-
-    public IndicesGetAliasesRequestBuilder prepareGetAliases() {
-        return new IndicesGetAliasesRequestBuilder(this);
-    }
 }

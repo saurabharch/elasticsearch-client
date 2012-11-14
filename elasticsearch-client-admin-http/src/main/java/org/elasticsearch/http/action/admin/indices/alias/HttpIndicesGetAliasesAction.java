@@ -20,10 +20,9 @@
 package org.elasticsearch.http.action.admin.indices.alias;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
-import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -31,21 +30,20 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpGetIndicesAliasesAction extends HttpAction<ClusterStateRequest, ClusterStateResponse>{
+public class HttpIndicesGetAliasesAction extends HttpAction<IndicesGetAliasesRequest, IndicesGetAliasesResponse>{
 
     public static final String NAME = "get_indices_aliases";
     private static final String METHOD = "GET";
     private static final String ENDPOINT = "_aliases";
     
-    protected HttpRequest toRequest(ClusterStateRequest request) {
+    protected HttpRequest toRequest(IndicesGetAliasesRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
-                .index(request.filteredIndices())
                 .param("filter_nodes", true)
                 .param("filter_routing_table", true);
         return httpRequest;
     }
 
-    protected ClusterStateResponse toResponse(HttpResponse response) throws IOException {
+    protected IndicesGetAliasesResponse toResponse(HttpResponse response) throws IOException {
         Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
         logger.info("response = {}", map);
         return null;

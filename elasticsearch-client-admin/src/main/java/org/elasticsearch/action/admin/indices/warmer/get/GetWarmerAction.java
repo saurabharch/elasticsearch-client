@@ -17,29 +17,29 @@
  * under the License.
  */
 
-package org.elasticsearch.action.admin.indices.alias;
+package org.elasticsearch.action.admin.indices.warmer.get;
 
 import org.elasticsearch.action.admin.indices.IndicesAction;
 import org.elasticsearch.client.IndicesAdminClient;
 
 /**
  */
-public class IndicesGetAliasesAction extends IndicesAction<IndicesGetAliasesRequest, IndicesGetAliasesResponse, IndicesGetAliasesRequestBuilder> {
+public class GetWarmerAction extends IndicesAction<GetWarmerRequest, GetWarmerResponse, GetWarmerRequestBuilder> {
 
-    public static final IndicesGetAliasesAction INSTANCE = new IndicesGetAliasesAction();
-    public static final String NAME = "indices/aliases/get";
+    public static final GetWarmerAction INSTANCE = new GetWarmerAction();
+    public static final String NAME = "indices/warmer/get";
 
-    private IndicesGetAliasesAction() {
+    private GetWarmerAction() {
         super(NAME);
     }
 
     @Override
-    public IndicesGetAliasesResponse newResponse() {
-        return new IndicesGetAliasesResponse();
+    public GetWarmerResponse newResponse() {
+        return new GetWarmerResponse();
     }
 
     @Override
-    public IndicesGetAliasesRequestBuilder newRequestBuilder(IndicesAdminClient client) {
-        return new IndicesGetAliasesRequestBuilder(client);
+    public GetWarmerRequestBuilder newRequestBuilder(IndicesAdminClient client) {
+        return new GetWarmerRequestBuilder(client);
     }
 }

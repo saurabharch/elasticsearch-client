@@ -16,7 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.elasticsearch.action.admin.indices.alias;
+
+package org.elasticsearch.action.admin.indices.warmer.get;
 
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.master.MasterNodeOperationRequestBuilder;
@@ -26,14 +27,28 @@ import org.elasticsearch.client.internal.InternalIndicesAdminClient;
 /**
  *
  */
-public class IndicesGetAliasesRequestBuilder extends MasterNodeOperationRequestBuilder<IndicesGetAliasesRequest, IndicesGetAliasesResponse, IndicesGetAliasesRequestBuilder> {
+public class GetWarmerRequestBuilder extends MasterNodeOperationRequestBuilder<GetWarmerRequest, GetWarmerResponse, GetWarmerRequestBuilder> {
 
-    public IndicesGetAliasesRequestBuilder(IndicesAdminClient indicesClient) {
-         super((InternalIndicesAdminClient) indicesClient, new IndicesGetAliasesRequest());
+    public GetWarmerRequestBuilder(IndicesAdminClient indicesClient) {
+        super((InternalIndicesAdminClient) indicesClient, new GetWarmerRequest());
     }
-    
+
+    public GetWarmerRequestBuilder setIndices(String... indices) {
+        request.indices(indices);
+        return this;
+    }
+
+    /**
+     * The name (or wildcard expression) of the index warmer to get, or null
+     * to get all warmers.
+     */
+    public GetWarmerRequestBuilder setName(String name) {
+        request.name(name);
+        return this;
+    }
+
     @Override
-    protected void doExecute(ActionListener<IndicesGetAliasesResponse> listener) {
-        ((IndicesAdminClient) client).getAliases(request, listener);
-    }    
+    protected void doExecute(ActionListener<GetWarmerResponse> listener) {
+        ((IndicesAdminClient) client).getWarmer(request, listener);
+    }
 }

@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class HttpIndicesStatsAction extends HttpAction<IndicesStatsRequest, IndicesStats> {
 
-    public static final String NAME = "indices_status";
+    public static final String NAME = "indices_stats";
     private static final String METHOD = "GET";
     private static final String ENDPOINT = "_stats";
 

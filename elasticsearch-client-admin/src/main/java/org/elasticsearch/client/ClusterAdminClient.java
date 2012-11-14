@@ -48,9 +48,6 @@ import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsResp
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequestBuilder;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
-import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
-import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequestBuilder;
-import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.client.internal.InternalClusterAdminClient;
 
 /**
@@ -243,12 +240,4 @@ public interface ClusterAdminClient extends InternalClusterAdminClient {
      */
     ClusterRerouteRequestBuilder prepareReroute();
     
-    /**
-     * Get aliases
-     */
-    ActionFuture<IndicesGetAliasesResponse> getAliases(IndicesGetAliasesRequest request);
-    
-    void getAliases(IndicesGetAliasesRequest request, ActionListener<IndicesGetAliasesResponse> listener);
-    
-    IndicesGetAliasesRequestBuilder prepareGetAliases();
 }

@@ -17,29 +17,29 @@
  * under the License.
  */
 
-package org.elasticsearch.action.admin.indices.alias;
+package org.elasticsearch.action.admin.indices.template.get;
 
 import org.elasticsearch.action.admin.indices.IndicesAction;
 import org.elasticsearch.client.IndicesAdminClient;
 
 /**
  */
-public class IndicesGetAliasesAction extends IndicesAction<IndicesGetAliasesRequest, IndicesGetAliasesResponse, IndicesGetAliasesRequestBuilder> {
+public class GetIndexTemplateAction extends IndicesAction<GetIndexTemplateRequest, GetIndexTemplateResponse, GetIndexTemplateRequestBuilder> {
 
-    public static final IndicesGetAliasesAction INSTANCE = new IndicesGetAliasesAction();
-    public static final String NAME = "indices/aliases/get";
+    public static final GetIndexTemplateAction INSTANCE = new GetIndexTemplateAction();
+    public static final String NAME = "indices/template/get";
 
-    private IndicesGetAliasesAction() {
+    private GetIndexTemplateAction() {
         super(NAME);
     }
 
     @Override
-    public IndicesGetAliasesResponse newResponse() {
-        return new IndicesGetAliasesResponse();
+    public GetIndexTemplateResponse newResponse() {
+        return new GetIndexTemplateResponse();
     }
 
     @Override
-    public IndicesGetAliasesRequestBuilder newRequestBuilder(IndicesAdminClient client) {
-        return new IndicesGetAliasesRequestBuilder(client);
+    public GetIndexTemplateRequestBuilder newRequestBuilder(IndicesAdminClient client) {
+        return new GetIndexTemplateRequestBuilder(client);
     }
 }

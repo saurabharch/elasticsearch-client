@@ -24,6 +24,9 @@ import org.elasticsearch.action.admin.indices.IndicesAction;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequestBuilder;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
@@ -87,6 +90,9 @@ import org.elasticsearch.action.admin.indices.status.IndicesStatusResponse;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequestBuilder;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateResponse;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateResponse;
@@ -96,6 +102,9 @@ import org.elasticsearch.action.admin.indices.validate.query.ValidateQueryRespon
 import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerRequest;
 import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerRequestBuilder;
 import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerResponse;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerRequest;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerRequestBuilder;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerResponse;
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerRequest;
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerRequestBuilder;
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerResponse;
@@ -508,6 +517,21 @@ public interface IndicesAdminClient extends InternalIndicesAdminClient {
      * Allows to add/remove aliases from indices.
      */
     IndicesAliasesRequestBuilder prepareAliases();
+    
+    /**
+     * Get aliases
+     */
+    ActionFuture<IndicesGetAliasesResponse> getAliases(IndicesGetAliasesRequest request);
+    
+    /**
+     * Get aliases
+     */
+    void getAliases(IndicesGetAliasesRequest request, ActionListener<IndicesGetAliasesResponse> listener);
+    
+    /**
+     * Get aliases
+     */
+    IndicesGetAliasesRequestBuilder prepareGetAliases();
 
     /**
      * Clear indices cache.
@@ -617,6 +641,23 @@ public interface IndicesAdminClient extends InternalIndicesAdminClient {
     PutIndexTemplateRequestBuilder preparePutTemplate(String name);
 
     /**
+     * Get index template.
+     */
+    ActionFuture<GetIndexTemplateResponse> getTemplate(GetIndexTemplateRequest request);
+
+    /**
+     * Get an index template.
+     */
+    void getTemplate(GetIndexTemplateRequest request, ActionListener<GetIndexTemplateResponse> listener);
+
+    /**
+     * Get an index template.
+     *
+     * @param name The name of the template.
+     */
+    GetIndexTemplateRequestBuilder prepareGetTemplate(String name);
+
+    /**
      * Deletes index template.
      */
     ActionFuture<DeleteIndexTemplateResponse> deleteTemplate(DeleteIndexTemplateRequest request);
@@ -671,6 +712,21 @@ public interface IndicesAdminClient extends InternalIndicesAdminClient {
      */
     PutWarmerRequestBuilder preparePutWarmer(String name);
 
+    /**
+     * Get an index warmer.
+     */
+    ActionFuture<GetWarmerResponse> getWarmer(GetWarmerRequest request);
+
+    /**
+     * Get an index warmer.
+     */
+    void getWarmer(GetWarmerRequest request, ActionListener<GetWarmerResponse> listener);
+
+    /**
+     * Get an index warmer.
+     */
+    GetWarmerRequestBuilder prepareGetWarmer();
+    
     /**
      * Deletes an index warmer.
      */

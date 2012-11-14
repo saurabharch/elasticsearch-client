@@ -15,7 +15,7 @@ import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 
-public class IndestTests extends AbstractClientTest {
+public class IngestTests extends AbstractClientTest {
 
     protected void doTest() throws UncategorizedExecutionException {
         IndexResponse indexResponse = client

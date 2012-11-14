@@ -24,6 +24,10 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesAction;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesAction;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequestBuilder;
+import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeAction;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequestBuilder;
@@ -108,6 +112,10 @@ import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplat
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequestBuilder;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateResponse;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateAction;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateRequest;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateRequestBuilder;
+import org.elasticsearch.action.admin.indices.template.get.GetIndexTemplateResponse;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateAction;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest;
 import org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequestBuilder;
@@ -120,6 +128,10 @@ import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerAction;
 import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerRequest;
 import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerRequestBuilder;
 import org.elasticsearch.action.admin.indices.warmer.delete.DeleteWarmerResponse;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerAction;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerRequest;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerRequestBuilder;
+import org.elasticsearch.action.admin.indices.warmer.get.GetWarmerResponse;
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerAction;
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerRequest;
 import org.elasticsearch.action.admin.indices.warmer.put.PutWarmerRequestBuilder;
@@ -172,6 +184,18 @@ public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
         return new IndicesAliasesRequestBuilder(this);
     }
 
+    public ActionFuture<IndicesGetAliasesResponse> getAliases(final IndicesGetAliasesRequest request) {
+        return execute(IndicesGetAliasesAction.INSTANCE, request);
+    }
+
+    public void getAliases(final IndicesGetAliasesRequest request, final ActionListener<IndicesGetAliasesResponse> listener) {
+        execute(IndicesGetAliasesAction.INSTANCE, request, listener);
+    }
+
+    public IndicesGetAliasesRequestBuilder prepareGetAliases() {
+        return new IndicesGetAliasesRequestBuilder(this);
+    }
+    
     public ActionFuture<ClearIndicesCacheResponse> clearCache(final ClearIndicesCacheRequest request) {
         return execute(ClearIndicesCacheAction.INSTANCE, request);
     }
@@ -404,6 +428,18 @@ public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
         return new PutIndexTemplateRequestBuilder(this, name);
     }
 
+    public ActionFuture<GetIndexTemplateResponse> getTemplate(final GetIndexTemplateRequest request) {
+        return execute(GetIndexTemplateAction.INSTANCE, request);
+    }
+
+    public void getTemplate(final GetIndexTemplateRequest request, final ActionListener<GetIndexTemplateResponse> listener) {
+        execute(GetIndexTemplateAction.INSTANCE, request, listener);
+    }
+
+    public GetIndexTemplateRequestBuilder prepareGetTemplate(String name) {
+        return new GetIndexTemplateRequestBuilder(this, name);
+    }
+
     public ActionFuture<DeleteIndexTemplateResponse> deleteTemplate(final DeleteIndexTemplateRequest request) {
         return execute(DeleteIndexTemplateAction.INSTANCE, request);
     }
@@ -440,6 +476,18 @@ public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
         return new PutWarmerRequestBuilder(this, name);
     }
 
+    public ActionFuture<GetWarmerResponse> getWarmer(GetWarmerRequest request) {
+        return execute(GetWarmerAction.INSTANCE, request);
+    }
+
+    public void getWarmer(GetWarmerRequest request, ActionListener<GetWarmerResponse> listener) {
+        execute(GetWarmerAction.INSTANCE, request, listener);
+    }
+
+    public GetWarmerRequestBuilder prepareGetWarmer() {
+        return new GetWarmerRequestBuilder(this);
+    }
+
     public ActionFuture<DeleteWarmerResponse> deleteWarmer(DeleteWarmerRequest request) {
         return execute(DeleteWarmerAction.INSTANCE, request);
     }
@@ -451,4 +499,5 @@ public abstract class AbstractIndicesAdminClient implements IndicesAdminClient {
     public DeleteWarmerRequestBuilder prepareDeleteWarmer() {
         return new DeleteWarmerRequestBuilder(this);
     }
+
 }
