@@ -19,9 +19,7 @@
 
 package org.elasticsearch.http.action.update;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -37,7 +35,7 @@ public class HttpUpdateAction extends HttpAction<UpdateRequest, UpdateResponse> 
     private static final String ENDPOINT = "_update";
 
     @Override
-    protected void doExecute(final HttpClient client, final UpdateRequest request, final ActionListener<UpdateResponse> listener) {
+    protected HttpRequest toRequest(final UpdateRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .type(request.type())
@@ -62,7 +60,7 @@ public class HttpUpdateAction extends HttpAction<UpdateRequest, UpdateResponse> 
                 }
             }
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

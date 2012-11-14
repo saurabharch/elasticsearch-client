@@ -99,7 +99,7 @@ final class NettyConnectListener<T> implements ChannelFutureListener {
             if (cause != null) {
                 e.initCause(cause);
             }
-            future.abort(e);
+            future.abort(e);            
         }
     }
 

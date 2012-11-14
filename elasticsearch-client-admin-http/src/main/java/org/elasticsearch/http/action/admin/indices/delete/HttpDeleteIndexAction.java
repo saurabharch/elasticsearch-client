@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.indices.delete;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,11 +36,11 @@ public class HttpDeleteIndexAction extends HttpAction<DeleteIndexRequest, Delete
     private static final String METHOD = "DELETE";
     
     @Override
-    protected void doExecute(HttpClient client, DeleteIndexRequest request, ActionListener<DeleteIndexResponse> listener) {
+    protected HttpRequest toRequest(DeleteIndexRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .param("timeout", request.timeout().format());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

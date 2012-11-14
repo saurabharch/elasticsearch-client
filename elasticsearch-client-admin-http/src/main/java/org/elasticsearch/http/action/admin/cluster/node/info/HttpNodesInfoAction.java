@@ -38,7 +38,7 @@ public class HttpNodesInfoAction extends HttpAction<NodesInfoRequest, NodesInfoR
     private static final String ENDPOINT = "/_nodes";
 
     @Override
-    protected void doExecute(HttpClient client, NodesInfoRequest request, ActionListener<NodesInfoResponse> listener) {
+    protected HttpRequest toRequest(NodesInfoRequest request) {
         String endpoint = ENDPOINT;
         if (request.settings()) {
             endpoint += "/settings";
@@ -59,7 +59,7 @@ public class HttpNodesInfoAction extends HttpAction<NodesInfoRequest, NodesInfoR
         }
         HttpRequest httpRequest = new HttpRequest(METHOD, endpoint)
                 .param("nodeId", request.nodesIds());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

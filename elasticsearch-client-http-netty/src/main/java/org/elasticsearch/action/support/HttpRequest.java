@@ -149,12 +149,16 @@ public class HttpRequest {
     }
 
     public HttpRequest body(CharSequence body) {
-        builder.setBody(body.toString());
+        if (body != null) {
+            builder.setBody(body.toString());
+        }
         return this;
     }
 
     public HttpRequest body(BytesReference body) {
-        builder.setBody(body.toUtf8());
+        if (body != null) {
+            builder.setBody(body.toUtf8());
+        }
         return this;
     }
 
@@ -214,5 +218,4 @@ public class HttpRequest {
                 ? this.uri.toASCIIString() : settings.get("http.connection.url", "http://localhost:9200");
         return builder.setUrl(buildPath(url, index, type, id)).setRealm(realmBuilder.build()).build();
     }
-
 }

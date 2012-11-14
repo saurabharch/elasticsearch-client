@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.refresh;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,14 +35,14 @@ public class HttpRefreshAction extends HttpAction<RefreshRequest, RefreshRespons
     private static final String ENDPOINT = "_refresh";
 
     @Override
-    protected void doExecute(HttpClient client, RefreshRequest request, ActionListener<RefreshResponse> listener) {
+    protected HttpRequest toRequest(RefreshRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .param("operation_threading", request.operationThreading().name().toLowerCase());
         if (request.ignoreIndices() != null) {
             httpRequest.param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

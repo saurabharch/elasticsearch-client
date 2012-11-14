@@ -182,6 +182,7 @@
     </dependencyManagement>
 
     <!-- declare the versions of our plugins -->
+
     <build>
         <pluginManagement>
             <plugins>

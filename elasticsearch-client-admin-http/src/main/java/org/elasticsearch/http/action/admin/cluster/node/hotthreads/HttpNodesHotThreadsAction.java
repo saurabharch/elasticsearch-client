@@ -19,17 +19,15 @@
 
 package org.elasticsearch.http.action.admin.cluster.node.hotthreads;
 
-import java.io.IOException;
-import java.util.Map;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsRequest;
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
+import java.io.IOException;
+import java.util.Map;
 
 public class HttpNodesHotThreadsAction extends HttpAction<NodesHotThreadsRequest, NodesHotThreadsResponse>{
 
@@ -40,7 +38,7 @@ public class HttpNodesHotThreadsAction extends HttpAction<NodesHotThreadsRequest
     private static final String ENDPOINT = "/_cluster/nodes/hotthreads";
     
     @Override
-    protected void doExecute(HttpClient client, NodesHotThreadsRequest request, ActionListener<NodesHotThreadsResponse> listener) {
+    protected HttpRequest toRequest(NodesHotThreadsRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("threads", request.threads())
@@ -48,7 +46,7 @@ public class HttpNodesHotThreadsAction extends HttpAction<NodesHotThreadsRequest
                 .param("interval", request.interval())
                 .param("snapshots", request.snapshots())
                 ;
-        submit(client, httpRequest, listener);        
+        return httpRequest;
     }
 
     @Override

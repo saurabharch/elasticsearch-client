@@ -16,15 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.admin.indices.create;
 
-import org.elasticsearch.ElasticSearchGenerationException;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,17 +33,17 @@ import org.elasticsearch.common.xcontent.XContentType;
 import java.io.IOException;
 import java.util.Map;
 
-public class HttpCreateIndexAction extends HttpAction<CreateIndexRequest, CreateIndexResponse>{
+public class HttpCreateIndexAction extends HttpAction<CreateIndexRequest, CreateIndexResponse> {
 
     public static final String NAME = "index_create";
     private static final String METHOD = "PUT";
-    
+
     @Override
-    protected void doExecute(HttpClient client, CreateIndexRequest request, ActionListener<CreateIndexResponse> listener) {
+    protected HttpRequest toRequest(CreateIndexRequest request) throws IOException {
         HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(request.index())
                 .body(toBody(request.settings(), request.mappings()));
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override
@@ -57,27 +53,23 @@ public class HttpCreateIndexAction extends HttpAction<CreateIndexRequest, Create
         return null;
     }
 
-   private String toBody(Settings settings, Map<String, String> mappings) {
-        try {
-            XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
-            builder.startObject().startObject("settings");
-            for (Map.Entry<String, String> me : settings.getAsMap().entrySet()) {
-                builder.field(me.getKey(), me.getValue());
-            }
-            builder.endObject().startObject().field("mappings");
-            parseMappings(builder, mappings);
-            builder.endObject().endObject();
-            return builder.string();
-        } catch (IOException e) {
-            throw new ElasticSearchGenerationException("Failed to generate", e);
+    private String toBody(Settings settings, Map<String, String> mappings) throws IOException {
+        XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
+        builder.startObject().startObject("settings");
+        for (Map.Entry<String, String> me : settings.getAsMap().entrySet()) {
+            builder.field(me.getKey(), me.getValue());
+        }
+        builder.endObject().startObject().field("mappings");
+        parseMappings(builder, mappings);
+        builder.endObject().endObject();
+        return builder.string();
+    }
+
+    private void parseMappings(XContentBuilder builder, Map<String, String> mappings) throws IOException {
+        for (String type : mappings.keySet()) {
+            builder.field(type, parseSource(mappings.get(type)));
         }
     }
-   
-   private void parseMappings(XContentBuilder builder, Map<String,String> mappings) throws IOException {
-       for (String type : mappings.keySet()) {           
-           builder.field(type, parseSource(mappings.get(type)));
-       }
-   }
 
     private XContentBuilder parseSource(String s) throws IOException {
         XContentParser parser = null;
@@ -91,7 +83,6 @@ public class HttpCreateIndexAction extends HttpAction<CreateIndexRequest, Create
             if (parser != null) {
                 parser.close();
             }
-        }        
-    }    
-
+        }
+    }
 }

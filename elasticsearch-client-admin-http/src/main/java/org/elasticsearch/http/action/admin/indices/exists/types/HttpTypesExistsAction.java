@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.indices.exists.types;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.types.TypesExistsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,11 +36,11 @@ public class HttpTypesExistsAction extends HttpAction<TypesExistsRequest, TypesE
     private static final String METHOD = "HEAD";
     
     @Override
-    protected void doExecute(HttpClient client, TypesExistsRequest request, ActionListener<TypesExistsResponse> listener) {
+    protected HttpRequest toRequest(TypesExistsRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .type(Strings.arrayToCommaDelimitedString(request.types()));
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

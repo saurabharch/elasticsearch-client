@@ -19,18 +19,16 @@
 
 package org.elasticsearch.http.action.admin.indices.flush;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.Strings;
 
 import java.io.IOException;
 import java.util.Map;
-import org.elasticsearch.common.Strings;
 
 public class HttpFlushAction extends HttpAction<FlushRequest, FlushResponse>{
 
@@ -39,7 +37,7 @@ public class HttpFlushAction extends HttpAction<FlushRequest, FlushResponse>{
     private static final String ENDPOINT = "_flush";
     
     @Override
-    protected void doExecute(HttpClient client, FlushRequest request, ActionListener<FlushResponse> listener) {
+    protected HttpRequest toRequest(FlushRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .param("full", request.full())
@@ -48,7 +46,7 @@ public class HttpFlushAction extends HttpAction<FlushRequest, FlushResponse>{
         if (request.ignoreIndices() != null) {
             httpRequest.param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

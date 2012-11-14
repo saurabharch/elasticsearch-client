@@ -18,12 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.settings;
 
-import org.elasticsearch.ElasticSearchGenerationException;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.UpdateSettingsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.settings.Settings;
@@ -42,10 +39,10 @@ public class HttpUpdateSettingsAction extends HttpAction<UpdateSettingsRequest, 
     private static final String ENDPOINT = "_settings";
 
     @Override
-    protected void doExecute(HttpClient client, UpdateSettingsRequest request, ActionListener<UpdateSettingsResponse> listener) {
+    protected HttpRequest toRequest(UpdateSettingsRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override
@@ -55,17 +52,13 @@ public class HttpUpdateSettingsAction extends HttpAction<UpdateSettingsRequest, 
         return null;
     }
 
-    private String toBody(Settings settings, String mode) {
-        try {
-            XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
-            builder.startObject().startObject(mode);
-            for (Map.Entry<String, String> me : settings.getAsMap().entrySet()) {
-                builder.field(me.getKey(), me.getValue());
-            }
-            builder.endObject().endObject();
-            return builder.string();
-        } catch (IOException e) {
-            throw new ElasticSearchGenerationException("Failed to generate", e);
+    private String toBody(Settings settings, String mode) throws IOException {
+        XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
+        builder.startObject().startObject(mode);
+        for (Map.Entry<String, String> me : settings.getAsMap().entrySet()) {
+            builder.field(me.getKey(), me.getValue());
         }
+        builder.endObject().endObject();
+        return builder.string();
     }
 }

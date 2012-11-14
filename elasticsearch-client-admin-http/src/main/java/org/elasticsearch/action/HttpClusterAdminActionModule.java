@@ -21,7 +21,6 @@ package org.elasticsearch.action;
 
 import com.google.common.collect.Maps;
 import java.util.Map;
-//import org.elasticsearch.action.admin.cluster.HttpClusterAction;
 import org.elasticsearch.action.admin.cluster.ClusterAction;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthAction;
 import org.elasticsearch.action.admin.cluster.node.hotthreads.NodesHotThreadsAction;
@@ -55,14 +54,14 @@ public class HttpClusterAdminActionModule {
     static {
         registerAction(ClusterHealthAction.INSTANCE, new HttpClusterHealthAction());
         registerAction(NodesHotThreadsAction.INSTANCE, new HttpNodesHotThreadsAction());
-   /*     registerAction(NodesInfoAction.INSTANCE, new HttpNodesInfoAction());
+        registerAction(NodesInfoAction.INSTANCE, new HttpNodesInfoAction());
         registerAction(NodesRestartAction.INSTANCE, new HttpNodesRestartAction());
         registerAction(NodesShutdownAction.INSTANCE, new HttpNodesShutdownAction());
         registerAction(NodesStatsAction.INSTANCE, new HttpNodesStatsAction());
         registerAction(ClusterRerouteAction.INSTANCE, new HttpClusterRerouteAction());
         registerAction(ClusterGetSettingsAction.INSTANCE, new HttpClusterGetSettingsAction());
         registerAction(ClusterUpdateSettingsAction.INSTANCE, new HttpClusterUpdateSettingsAction());
-        registerAction(ClusterStateAction.INSTANCE, new HttpClusterStateAction());*/
+        registerAction(ClusterStateAction.INSTANCE, new HttpClusterStateAction());
     }
 
     /**

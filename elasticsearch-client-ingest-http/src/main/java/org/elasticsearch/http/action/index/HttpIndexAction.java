@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.index;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequest.OpType;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,7 +34,7 @@ public class HttpIndexAction extends HttpAction<IndexRequest, IndexResponse> {
     private static final String METHOD = "PUT";
 
     @Override
-    protected void doExecute(final HttpClient client, final IndexRequest request, final ActionListener<IndexResponse> listener) {
+    protected HttpRequest toRequest(final IndexRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, request.opType().equals(OpType.CREATE) ? "_create" : null)
                 .index(request.index())
                 .type(request.type())
@@ -54,13 +51,16 @@ public class HttpIndexAction extends HttpAction<IndexRequest, IndexResponse> {
                 .param("consistency", request.consistencyLevel().name().toLowerCase())
                 .body(request.source());
         if (request.ttl() > 0) {
-               httpRequest.param("ttl", request.ttl());
+            httpRequest.param("ttl", request.ttl());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override
     protected IndexResponse toResponse(HttpResponse response) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("toResponse = {}", response);
+        }
         Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
         IndexResponse indexResponse = new IndexResponse(
                 map.get("_index").toString(),

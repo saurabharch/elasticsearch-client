@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.mapping.get;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.Strings;
@@ -38,11 +36,11 @@ public class HttpGetMappingAction extends HttpAction<GetMappingRequest, GetMappi
     private static final String ENDPOINT = "_mapping";
 
     @Override
-    protected void doExecute(HttpClient client, GetMappingRequest request, ActionListener<GetMappingResponse> listener) {
+    protected HttpRequest toRequest(GetMappingRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .type(request.type());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

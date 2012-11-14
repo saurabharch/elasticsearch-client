@@ -19,10 +19,8 @@
 
 package org.elasticsearch.http.action.mlt;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.action.mlt.MoreLikeThisRequest;
@@ -38,7 +36,7 @@ public class HttpMoreLikeThisAction extends HttpAction<MoreLikeThisRequest, Sear
     private final static String ENDPOINT = "_mlt";
 
     @Override
-    protected void doExecute(HttpClient client, MoreLikeThisRequest request, ActionListener<SearchResponse> listener) {
+    protected HttpRequest toRequest(MoreLikeThisRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("mlt_fields", request.fields())
                 .param("percent_terms_to_match", request.percentTermsToMatch())
@@ -61,7 +59,7 @@ public class HttpMoreLikeThisAction extends HttpAction<MoreLikeThisRequest, Sear
         if (request.searchSource() != null) {
             httpRequest.param("search_source", request.searchSource().toUtf8());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

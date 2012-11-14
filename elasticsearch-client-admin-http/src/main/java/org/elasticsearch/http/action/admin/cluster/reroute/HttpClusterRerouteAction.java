@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.cluster.reroute;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteRequest;
 import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -40,11 +38,10 @@ public class HttpClusterRerouteAction extends HttpAction<ClusterRerouteRequest, 
     private static final String ENDPOINT = "_cluster/reroute";
     
     @Override
-    protected void doExecute(HttpClient client, ClusterRerouteRequest request, ActionListener<ClusterRerouteResponse> listener) {
+    protected HttpRequest toRequest(ClusterRerouteRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
-                .param("master_timeout", request.masterNodeTimeout())
-                ;
-        submit(client, httpRequest, listener);        
+                .param("master_timeout", request.masterNodeTimeout());
+        return httpRequest;
     }
 
     @Override

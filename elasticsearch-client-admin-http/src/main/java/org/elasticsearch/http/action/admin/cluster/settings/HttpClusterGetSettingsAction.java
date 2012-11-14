@@ -37,9 +37,9 @@ public class HttpClusterGetSettingsAction extends HttpAction<ClusterStateRequest
     private static final String ENDPOINT = "_cluster/settings";
 
     @Override
-    protected void doExecute(HttpClient client, ClusterStateRequest request, ActionListener<ClusterStateResponse> listener) {
+    protected HttpRequest toRequest(ClusterStateRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

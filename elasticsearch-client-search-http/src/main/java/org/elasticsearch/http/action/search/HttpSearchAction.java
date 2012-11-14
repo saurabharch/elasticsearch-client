@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.search;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,7 +36,7 @@ public class HttpSearchAction extends HttpAction<SearchRequest, SearchResponse> 
     private final static String ENDPOINT = "_search";
     
     @Override
-    protected void doExecute(HttpClient client, SearchRequest request, ActionListener<SearchResponse> listener) {
+    protected HttpRequest toRequest(SearchRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
@@ -47,7 +45,7 @@ public class HttpSearchAction extends HttpAction<SearchRequest, SearchResponse> 
                 .param("search_type", request.searchType().name().toLowerCase())
                 .param("scroll", request.scroll().keepAlive().format())
                 .body(request.source());
-        submit(client, httpRequest, listener);        
+        return httpRequest; 
     }
 
     @Override

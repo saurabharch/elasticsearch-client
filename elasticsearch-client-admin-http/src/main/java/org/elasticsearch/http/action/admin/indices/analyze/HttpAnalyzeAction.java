@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.indices.analyze;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeRequest;
 import org.elasticsearch.action.admin.indices.analyze.AnalyzeResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,7 +36,7 @@ public class HttpAnalyzeAction extends HttpAction<AnalyzeRequest, AnalyzeRespons
     private static final String ENDPOINT = "_analyze";
     
     @Override
-    protected void doExecute(HttpClient client, AnalyzeRequest request, ActionListener<AnalyzeResponse> listener) {
+    protected HttpRequest toRequest(AnalyzeRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .param("text", request.text())
@@ -47,7 +45,7 @@ public class HttpAnalyzeAction extends HttpAction<AnalyzeRequest, AnalyzeRespons
                 .param("field", request.field())
                 .param("tokenizer", request.tokenizer())                
                 .param("token_filters", request.tokenFilters());
-        submit(client, httpRequest, listener);        
+        return httpRequest;
     }
 
     @Override

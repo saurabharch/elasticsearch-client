@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.optimize;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.optimize.OptimizeRequest;
 import org.elasticsearch.action.admin.indices.optimize.OptimizeResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,7 +35,7 @@ public class HttpOptimizeAction extends HttpAction<OptimizeRequest, OptimizeResp
     private static final String ENDPOINT = "_optimize";
 
     @Override
-    protected void doExecute(HttpClient client, OptimizeRequest request, ActionListener<OptimizeResponse> listener) {
+    protected HttpRequest toRequest(OptimizeRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .param("flush", request.flush())
@@ -47,7 +45,7 @@ public class HttpOptimizeAction extends HttpAction<OptimizeRequest, OptimizeResp
         if (request.ignoreIndices() != null) {
             httpRequest.param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.open;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,11 +35,11 @@ public class HttpOpenIndexAction extends HttpAction<OpenIndexRequest, OpenIndexR
     private static final String ENDPOINT = "_open";
 
     @Override
-    protected void doExecute(HttpClient client, OpenIndexRequest request, ActionListener<OpenIndexResponse> listener) {
+    protected HttpRequest toRequest(OpenIndexRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .param("timeout", request.timeout());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

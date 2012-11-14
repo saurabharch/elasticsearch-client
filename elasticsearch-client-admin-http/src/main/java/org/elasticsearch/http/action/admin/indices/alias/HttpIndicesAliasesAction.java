@@ -16,14 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.admin.indices.alias;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.cluster.metadata.AliasAction;
@@ -46,27 +43,23 @@ public class HttpIndicesAliasesAction extends HttpAction<IndicesAliasesRequest, 
     private static final String ENDPOINT = "_aliases";
 
     @Override
-    protected void doExecute(HttpClient client, IndicesAliasesRequest request, ActionListener<IndicesAliasesResponse> listener) {
-        try {
-            HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
-                    .param("master_timeout", request.masterNodeTimeout());
-            XContentBuilder builder = jsonBuilder();
-            builder.startObject().startArray("aliases");
-            for (AliasAction action : request.aliasActions()) {
-                builder.startObject().startObject(action.actionType().name().toLowerCase())
-                        .field("index", action.index())
-                        .field("alias", action.alias());
-                if (action.filter() != null) {
-                        builder.field("filter", parse(action.filter()));
-                }
-                builder.endObject().endObject();
+    protected HttpRequest toRequest(IndicesAliasesRequest request) throws IOException {
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+                .param("master_timeout", request.masterNodeTimeout());
+        XContentBuilder builder = jsonBuilder();
+        builder.startObject().startArray("aliases");
+        for (AliasAction action : request.aliasActions()) {
+            builder.startObject().startObject(action.actionType().name().toLowerCase())
+                    .field("index", action.index())
+                    .field("alias", action.alias());
+            if (action.filter() != null) {
+                builder.field("filter", parse(action.filter()));
             }
-            builder.endArray().endObject();
-            httpRequest.body(builder.string());
-            submit(client, httpRequest, listener);
-        } catch (IOException e) {
-            throw new ElasticSearchGenerationException("Failed to generate", e);
+            builder.endObject().endObject();
         }
+        builder.endArray().endObject();
+        httpRequest.body(builder.string());
+        return httpRequest;
     }
 
     @Override
@@ -75,7 +68,7 @@ public class HttpIndicesAliasesAction extends HttpAction<IndicesAliasesRequest, 
         logger.info("response = {}", map);
         return null;
     }
-    
+
     private XContentBuilder parse(String s) throws IOException {
         XContentParser parser = null;
         try {
@@ -88,7 +81,6 @@ public class HttpIndicesAliasesAction extends HttpAction<IndicesAliasesRequest, 
             if (parser != null) {
                 parser.close();
             }
-        }        
-    }    
-
+        }
+    }
 }

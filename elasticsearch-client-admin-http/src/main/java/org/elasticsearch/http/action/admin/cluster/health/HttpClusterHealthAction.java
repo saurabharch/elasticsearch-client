@@ -43,7 +43,7 @@ public class HttpClusterHealthAction extends HttpAction<ClusterHealthRequest, Cl
     private static final String ENDPOINT = "_cluster/health";
     
     @Override
-    protected void doExecute(HttpClient client, ClusterHealthRequest request, ActionListener<ClusterHealthResponse> listener) {
+    protected HttpRequest toRequest(ClusterHealthRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .param("master_timeout", request.masterNodeTimeout())
@@ -54,7 +54,7 @@ public class HttpClusterHealthAction extends HttpAction<ClusterHealthRequest, Cl
                 ;
         if (request.waitForStatus() != null)
                 httpRequest.param("wait_for_status", request.waitForStatus().name().toLowerCase());
-        submit(client, httpRequest, listener);        
+        return httpRequest;
     }
 
     @Override

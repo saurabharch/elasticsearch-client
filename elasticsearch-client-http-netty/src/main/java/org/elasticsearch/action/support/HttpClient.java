@@ -55,16 +55,21 @@ public abstract class HttpClient extends AsyncHttpClient implements GenericClien
                 .setAsyncHttpClientProviderConfig(providerConfig)
                 .setExecutorService(Executors.newFixedThreadPool(settings.getAsInt("http.connection.poolsize", 4)))
                 .setAllowPoolingConnection(settings.getAsBoolean("http.connection.pooling", Boolean.TRUE))
-                .setConnectionTimeoutInMs(settings.getAsInt("http.connection.timeout", 3000))
+                .setConnectionTimeoutInMs(settings.getAsInt("http.connection.timeout", 5000))
                 .setMaximumConnectionsTotal(settings.getAsInt("http.connection.max", 4))
-                .setRequestTimeoutInMs((int) settings.getAsTime("http.request.timeout", TimeValue.timeValueSeconds(30L)).getMillis())
+                .setRequestTimeoutInMs((int) settings.getAsTime("http.request.timeout", TimeValue.timeValueSeconds(15L)).getMillis())
                 .setFollowRedirects(settings.getAsBoolean("http.connection.followredirect", Boolean.TRUE))
-                .setMaxRequestRetry(settings.getAsInt("http.request.maxretries", 3))
+                //.setMaxRequestRetry(settings.getAsInt("http.request.maxretries", 3))
                 .setCompressionEnabled(settings.getAsBoolean("http.compression.enabled", Boolean.TRUE));
         if (settings.get("http.proxy.host") != null && settings.getAsInt("http.proxy.port", -1) != -1) {
             config.setProxyServer(new ProxyServer(settings.get("http.proxy.host"), settings.getAsInt("http.proxy.port", -1)));
         }
         return new NettyAsyncHttpProvider(config.build());
+    }
+    
+    @Override
+    public void close() {        
+        super.closeAsynchronously();
     }
 
 }

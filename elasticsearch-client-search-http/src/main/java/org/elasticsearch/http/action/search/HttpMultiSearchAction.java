@@ -19,12 +19,10 @@
 package org.elasticsearch.http.action.search;
 
 import org.elasticsearch.ElasticSearchGenerationException;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.Strings;
@@ -43,7 +41,7 @@ public class HttpMultiSearchAction extends HttpAction<MultiSearchRequest, MultiS
     private final static String ENDPOINT = "_msearch";
 
     @Override
-    protected void doExecute(HttpClient client, MultiSearchRequest request, ActionListener<MultiSearchResponse> listener) {
+    protected HttpRequest toRequest(MultiSearchRequest request) throws IOException {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         StringBuilder sb = new StringBuilder();
@@ -51,7 +49,7 @@ public class HttpMultiSearchAction extends HttpAction<MultiSearchRequest, MultiS
             format(sb, sr);
         }
         httpRequest.body(sb);
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override
@@ -61,25 +59,21 @@ public class HttpMultiSearchAction extends HttpAction<MultiSearchRequest, MultiS
         return null;
     }
 
-    private void format(StringBuilder sb, SearchRequest sr) {
-        try {
-            XContentBuilder builder = jsonBuilder();
-            builder.startObject()
-                    .field("index", Strings.arrayToCommaDelimitedString(sr.indices()))
-                    .field("type", Strings.arrayToCommaDelimitedString(sr.types()))
-                    .field("search_type", sr.searchType().name().toLowerCase())
-                    .field("preference", sr.preference())
-                    .field("routing", sr.routing())
-                    .field("ignore_indices", sr.ignoreIndices())
-                    .field("query_hint", sr.queryHint())
-                    .field("operation_threading", sr.operationThreading());
-            if (sr.scroll() != null) {
-                builder.field("scroll", sr.scroll().keepAlive().format());
-            }
-            builder.endObject();
-            sb.append(builder.string()).append("\n").append(sr.source().toUtf8().replace('\n', ' ')).append("\n");
-        } catch (IOException e) {
-            throw new ElasticSearchGenerationException("Failed to generate", e);
+    private void format(StringBuilder sb, SearchRequest sr) throws IOException {
+        XContentBuilder builder = jsonBuilder();
+        builder.startObject()
+                .field("index", Strings.arrayToCommaDelimitedString(sr.indices()))
+                .field("type", Strings.arrayToCommaDelimitedString(sr.types()))
+                .field("search_type", sr.searchType().name().toLowerCase())
+                .field("preference", sr.preference())
+                .field("routing", sr.routing())
+                .field("ignore_indices", sr.ignoreIndices())
+                .field("query_hint", sr.queryHint())
+                .field("operation_threading", sr.operationThreading());
+        if (sr.scroll() != null) {
+            builder.field("scroll", sr.scroll().keepAlive().format());
         }
+        builder.endObject();
+        sb.append(builder.string()).append("\n").append(sr.source().toUtf8().replace('\n', ' ')).append("\n");
     }
 }

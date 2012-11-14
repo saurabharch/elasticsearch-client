@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.segments;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentResponse;
 import org.elasticsearch.action.admin.indices.segments.IndicesSegmentsRequest;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,14 +35,14 @@ public class HttpIndicesSegmentsAction extends HttpAction<IndicesSegmentsRequest
     private static final String ENDPOINT = "_segments";
 
     @Override
-    protected void doExecute(HttpClient client, IndicesSegmentsRequest request, ActionListener<IndicesSegmentResponse> listener) {
+    protected HttpRequest toRequest(IndicesSegmentsRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .param("operation_threading", request.operationThreading().name().toLowerCase());
         if (request.ignoreIndices() != null) {
             httpRequest.param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

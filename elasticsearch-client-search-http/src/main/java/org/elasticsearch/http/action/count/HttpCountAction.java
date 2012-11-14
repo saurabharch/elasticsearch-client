@@ -16,16 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.count;
 
 import java.io.IOException;
 import java.util.Map;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -35,24 +32,26 @@ public class HttpCountAction extends HttpAction<CountRequest, CountResponse> {
     public final static String NAME = "count";
     private final static String METHOD = "GET";
     private final static String ENDPOINT = "_count";
-    
+
     @Override
-    protected void doExecute(HttpClient client, CountRequest request, ActionListener<CountResponse> listener) {
+    protected HttpRequest toRequest(CountRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
-                .param("ignore_indices", request.indices())
+                .param("ignore_indices", request.ignoreIndices().name().toLowerCase())
                 .param("query_hint", request.queryHint())
-                .param("min_score", request.minScore())
                 .body(request.querySource());
-        submit(client, httpRequest, listener);        
+        if (request.minScore() != -1) {
+            httpRequest.param("min_score", request.minScore());
+        }
+        return httpRequest;
     }
 
     @Override
     protected CountResponse toResponse(HttpResponse response) throws IOException {
         Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
+        // {"count":3,"_shards":{"total":1,"successful":1,"failed":0}}
         logger.info("count response = ", map);
         return null;
     }
-    
 }

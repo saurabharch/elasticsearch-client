@@ -19,16 +19,15 @@
 
 package org.elasticsearch.http.action.admin.cluster.node.stats;
 
-import java.io.IOException;
-import java.util.Map;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequest;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
+
+import java.io.IOException;
+import java.util.Map;
 
 public class HttpNodesStatsAction extends HttpAction<NodesStatsRequest, NodesStatsResponse>{
 
@@ -39,7 +38,7 @@ public class HttpNodesStatsAction extends HttpAction<NodesStatsRequest, NodesSta
     private static final String ENDPOINT = "/_nodes/stats";
     
     @Override
-    protected void doExecute(HttpClient client, NodesStatsRequest request, ActionListener<NodesStatsResponse> listener) {
+    protected HttpRequest toRequest(NodesStatsRequest request) {
         String endpoint = ENDPOINT;
         if (request.jvm()) {
             endpoint += "/jvm";
@@ -59,7 +58,7 @@ public class HttpNodesStatsAction extends HttpAction<NodesStatsRequest, NodesSta
         HttpRequest httpRequest = new HttpRequest(METHOD, endpoint)
                 .param("nodeId", request.nodesIds())
                 ;
-        submit(client, httpRequest, listener);        
+        return httpRequest;
     }
 
     @Override

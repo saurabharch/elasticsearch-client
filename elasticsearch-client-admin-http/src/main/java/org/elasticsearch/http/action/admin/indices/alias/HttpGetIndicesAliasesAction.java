@@ -37,12 +37,12 @@ public class HttpGetIndicesAliasesAction extends HttpAction<ClusterStateRequest,
     private static final String METHOD = "GET";
     private static final String ENDPOINT = "_aliases";
     
-    protected void doExecute(HttpClient client, ClusterStateRequest request, ActionListener<ClusterStateResponse> listener) {
+    protected HttpRequest toRequest(ClusterStateRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.filteredIndices())
                 .param("filter_nodes", true)
                 .param("filter_routing_table", true);
-        submit(client, httpRequest, listener);        
+        return httpRequest;
     }
 
     protected ClusterStateResponse toResponse(HttpResponse response) throws IOException {

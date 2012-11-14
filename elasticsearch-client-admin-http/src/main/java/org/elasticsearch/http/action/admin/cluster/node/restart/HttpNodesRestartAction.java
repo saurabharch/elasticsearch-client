@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.cluster.node.restart;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.restart.NodesRestartRequest;
 import org.elasticsearch.action.admin.cluster.node.restart.NodesRestartResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,12 +35,12 @@ public class HttpNodesRestartAction extends HttpAction<NodesRestartRequest, Node
     private static final String ENDPOINT = "/_cluster/nodes/_restart";
 
     @Override
-    protected void doExecute(HttpClient client, NodesRestartRequest request, ActionListener<NodesRestartResponse> listener) {
+    protected HttpRequest toRequest(NodesRestartRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("delay", request.delay())
                 .param("timeout", request.timeout());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

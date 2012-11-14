@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.mapping.put;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,13 +35,13 @@ public class HttpPutMappingAction extends HttpAction<PutMappingRequest, PutMappi
     private static final String ENDPOINT = "_mapping";
 
     @Override
-    protected void doExecute(HttpClient client, PutMappingRequest request, ActionListener<PutMappingResponse> listener) {
+    protected HttpRequest toRequest(PutMappingRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .type(request.type())
                 .param("timeout", request.timeout())
                 .body(request.source());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

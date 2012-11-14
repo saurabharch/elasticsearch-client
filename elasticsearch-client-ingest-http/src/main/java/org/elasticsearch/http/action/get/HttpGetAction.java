@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.get;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
@@ -44,13 +42,13 @@ public class HttpGetAction extends HttpAction<GetRequest, GetResponse> {
     private static final String METHOD = "GET";
 
     @Override
-    protected void doExecute(final HttpClient client, final GetRequest request, final ActionListener<GetResponse> listener) {
+    protected HttpRequest toRequest(final GetRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())
                 .param("fields", request.fields());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

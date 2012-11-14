@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.indices.close;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,11 +36,11 @@ public class HttpCloseIndexAction extends HttpAction<CloseIndexRequest, CloseInd
     private static final String ENDPOINT = "_close";
     
     @Override
-    protected void doExecute(HttpClient client, CloseIndexRequest request, ActionListener<CloseIndexResponse> listener) {
+    protected HttpRequest toRequest(CloseIndexRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .param("timeout", request.timeout());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

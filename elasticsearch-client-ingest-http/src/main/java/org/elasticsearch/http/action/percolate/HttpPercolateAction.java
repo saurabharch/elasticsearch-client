@@ -39,13 +39,13 @@ public class HttpPercolateAction extends HttpAction<PercolateRequest, PercolateR
     private static final String ENDPOINT = "_percolate";
 
     @Override
-    protected void doExecute(HttpClient client, PercolateRequest request, ActionListener<PercolateResponse> listener) {
+    protected HttpRequest toRequest(PercolateRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.index())
                 .type(request.type())
                 .param("prefer_local", Boolean.toString(request.preferLocalShard()))
                 .body(request.source());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.indices.exists.indices;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,10 +36,10 @@ public class HttpIndicesExistsAction extends HttpAction<IndicesExistsRequest, In
     private static final String METHOD = "HEAD";
     
     @Override
-    protected void doExecute(HttpClient client, IndicesExistsRequest request, ActionListener<IndicesExistsResponse> listener) {
+    protected HttpRequest toRequest(IndicesExistsRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, null)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()));                
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

@@ -19,13 +19,11 @@
 
 package org.elasticsearch.http.action.explain;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.explain.ExplainRequest;
 import org.elasticsearch.action.explain.ExplainResponse;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
@@ -38,13 +36,13 @@ public class HttpExplainAction extends HttpAction<ExplainRequest, ExplainRespons
     private final static String ENDPOINT = "_explain";
     
     @Override
-    protected void doExecute(HttpClient client, ExplainRequest request, ActionListener<ExplainResponse> listener) {
+    protected HttpRequest toRequest(ExplainRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("routing", request.routing())
                 .param("parent", request.parent())
                 .param("preference", request.preference())
                 .body(request.source());
-        submit(client, httpRequest, listener);        
+        return httpRequest;
     }
 
     @Override

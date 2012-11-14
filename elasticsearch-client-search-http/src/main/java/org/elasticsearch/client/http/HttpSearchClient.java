@@ -146,6 +146,6 @@ public class HttpSearchClient extends AbstractSearchClient {
 
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             void execute(Action<Request, Response, RequestBuilder, SearchClient> action, Request request, ActionListener<Response> listener) {
-       internalClient.execute(action, request);
+       internalClient.execute(action, request, listener);
     }
 }

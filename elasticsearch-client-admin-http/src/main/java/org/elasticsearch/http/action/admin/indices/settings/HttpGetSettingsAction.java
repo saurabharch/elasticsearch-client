@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.settings;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.settings.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.GetSettingsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,10 +35,10 @@ public class HttpGetSettingsAction extends HttpAction<GetSettingsRequest, GetSet
     private static final String ENDPOINT = "_settings";
 
     @Override
-    protected void doExecute(HttpClient client, GetSettingsRequest request, ActionListener<GetSettingsResponse> listener) {
+    protected HttpRequest toRequest(GetSettingsRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

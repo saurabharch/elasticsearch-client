@@ -21,11 +21,9 @@ package org.elasticsearch.http.action.deletebyquery;
 
 import java.io.IOException;
 import java.util.Map;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,13 +35,13 @@ public class HttpDeleteByQueryAction extends HttpAction<DeleteByQueryRequest, De
     private final static String ENDPOINT = "_query";
     
     @Override
-    protected void doExecute(HttpClient client, DeleteByQueryRequest request, ActionListener<DeleteByQueryResponse> listener) {
+    protected HttpRequest toRequest(DeleteByQueryRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("routing", request.routing())
                 .param("consistencylevel", request.consistencyLevel().name().toLowerCase())
                 .param("replication", request.replicationType().name().toLowerCase())
                 .body(request.querySource());
-        submit(client, httpRequest, listener);           
+        return httpRequest; 
     }
 
     @Override

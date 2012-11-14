@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.indices.stats;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
 import org.elasticsearch.action.admin.indices.stats.IndicesStats;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -37,7 +35,7 @@ public class HttpIndicesStatsAction extends HttpAction<IndicesStatsRequest, Indi
     private static final String ENDPOINT = "_stats";
 
     @Override
-    protected void doExecute(HttpClient client, IndicesStatsRequest request, ActionListener<IndicesStats> listener) {
+    protected HttpRequest toRequest(IndicesStatsRequest request) {
         String endpoint = ENDPOINT;
         if (!request.isAll() && !request.isAll()) {
             if (request.docs()) {
@@ -71,7 +69,7 @@ public class HttpIndicesStatsAction extends HttpAction<IndicesStatsRequest, Indi
         if (request.groups() != null) {
             httpRequest.param("groups", request.groups());
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

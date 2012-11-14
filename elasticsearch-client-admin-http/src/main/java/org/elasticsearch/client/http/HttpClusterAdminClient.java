@@ -143,12 +143,12 @@ public class HttpClusterAdminClient extends AbstractClusterAdminClient {
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             ActionFuture<Response> execute(ClusterAction<Request, Response, RequestBuilder> action, Request request) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());
-        return httpAction.execute(internalClient, request);
+        return httpAction.execute(internalClient, request, null);
     }
 
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> 
             void execute(ClusterAction<Request, Response, RequestBuilder> action, Request request, ActionListener<Response> listener) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());
-        httpAction.execute(internalClient, request);
+        httpAction.execute(internalClient, request, listener);
     }
 }

@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.bulk;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -29,7 +27,6 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -46,27 +43,23 @@ public class HttpBulkAction extends HttpAction<BulkRequest, BulkResponse> {
     private static final String ENDPOINT = "_bulk";
 
     @Override
-    protected void doExecute(HttpClient client, BulkRequest bulkRequest, ActionListener<BulkResponse> listener) {
-        try {
-            StringBuilder out = new StringBuilder();
-            for (ActionRequest request : bulkRequest.requests()) {
-                if (request instanceof IndexRequest) {
-                    IndexRequest indexRequest = (IndexRequest) request;
-                    formatBulk(out, indexRequest);
-                } else if (request instanceof DeleteRequest) {
-                    DeleteRequest deleteRequest = (DeleteRequest) request;
-                    formatBulk(out, deleteRequest);
-                }
+    protected HttpRequest toRequest(BulkRequest bulkRequest) throws IOException {
+        StringBuilder out = new StringBuilder();
+        for (ActionRequest request : bulkRequest.requests()) {
+            if (request instanceof IndexRequest) {
+                IndexRequest indexRequest = (IndexRequest) request;
+                formatBulk(out, indexRequest);
+            } else if (request instanceof DeleteRequest) {
+                DeleteRequest deleteRequest = (DeleteRequest) request;
+                formatBulk(out, deleteRequest);
             }
-            HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
-                    .param("replication", bulkRequest.replicationType().name().toLowerCase())
-                    .param("consistency", bulkRequest.consistencyLevel().name().toLowerCase())
-                    .param("refresh", Boolean.toString(bulkRequest.refresh()))
-                    .body(out);
-            submit(client, httpRequest, listener);
-        } catch (IOException e) {
-            listener.onFailure(e);
         }
+        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+                .param("replication", bulkRequest.replicationType().name().toLowerCase())
+                .param("consistency", bulkRequest.consistencyLevel().name().toLowerCase())
+                .param("refresh", Boolean.toString(bulkRequest.refresh()))
+                .body(out);
+        return httpRequest;
     }
 
     @Override

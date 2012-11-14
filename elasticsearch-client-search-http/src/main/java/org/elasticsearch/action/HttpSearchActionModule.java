@@ -22,8 +22,20 @@ package org.elasticsearch.action;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import org.elasticsearch.action.count.CountAction;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryAction;
+import org.elasticsearch.action.explain.ExplainAction;
+import org.elasticsearch.action.mlt.MoreLikeThisAction;
+import org.elasticsearch.action.search.MultiSearchAction;
+import org.elasticsearch.action.search.SearchAction;
+import org.elasticsearch.action.search.SearchScrollAction;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.http.action.count.HttpCountAction;
+import org.elasticsearch.http.action.deletebyquery.HttpDeleteByQueryAction;
+import org.elasticsearch.http.action.explain.HttpExplainAction;
+import org.elasticsearch.http.action.mlt.HttpMoreLikeThisAction;
+import org.elasticsearch.http.action.search.HttpMultiSearchAction;
+import org.elasticsearch.http.action.search.HttpSearchAction;
+import org.elasticsearch.http.action.search.HttpSearchScrollAction;
 
 public class HttpSearchActionModule {
 
@@ -34,6 +46,12 @@ public class HttpSearchActionModule {
      */
     static {
         registerAction(CountAction.INSTANCE, new HttpCountAction());
+        registerAction(DeleteByQueryAction.INSTANCE, new HttpDeleteByQueryAction());
+        registerAction(ExplainAction.INSTANCE, new HttpExplainAction());
+        registerAction(MoreLikeThisAction.INSTANCE, new HttpMoreLikeThisAction());
+        registerAction(MultiSearchAction.INSTANCE, new HttpMultiSearchAction());
+        registerAction(SearchAction.INSTANCE, new HttpSearchAction());
+        registerAction(SearchScrollAction.INSTANCE, new HttpSearchScrollAction());
     }
         
     /**

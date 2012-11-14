@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.indices.cache.clear;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
 import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -38,7 +36,7 @@ public class HttpClearIndicesCacheAction extends HttpAction<ClearIndicesCacheReq
     private static final String ENDPOINT = "_cache/clear";
     
     @Override
-    protected void doExecute(HttpClient client, ClearIndicesCacheRequest request, ActionListener<ClearIndicesCacheResponse> listener) {
+    protected HttpRequest toRequest(ClearIndicesCacheRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .index(request.indices())
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase())
@@ -48,7 +46,7 @@ public class HttpClearIndicesCacheAction extends HttpAction<ClearIndicesCacheReq
                 .param("bloom", request.bloomCache())
                 .param("fields", request.fields())
                 .param("operationThreading", request.operationThreading().name().toLowerCase());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

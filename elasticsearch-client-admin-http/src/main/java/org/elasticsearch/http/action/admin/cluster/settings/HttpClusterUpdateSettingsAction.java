@@ -19,11 +19,9 @@
 package org.elasticsearch.http.action.admin.cluster.settings;
 
 import org.elasticsearch.ElasticSearchGenerationException;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.settings.Settings;
@@ -42,7 +40,7 @@ public class HttpClusterUpdateSettingsAction extends HttpAction<ClusterUpdateSet
     private static final String ENDPOINT = "_cluster/settings";
 
     @Override
-    protected void doExecute(HttpClient client, ClusterUpdateSettingsRequest request, ActionListener<ClusterUpdateSettingsResponse> listener) {
+    protected HttpRequest toRequest(ClusterUpdateSettingsRequest request) throws IOException {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
         if (request.persistentSettings() != null) {
             httpRequest.body(toBody(request.persistentSettings(), "persistent"));
@@ -50,7 +48,7 @@ public class HttpClusterUpdateSettingsAction extends HttpAction<ClusterUpdateSet
         if (request.transientSettings() != null) {
             httpRequest.body(toBody(request.transientSettings(), "transient"));
         }
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override
@@ -60,17 +58,13 @@ public class HttpClusterUpdateSettingsAction extends HttpAction<ClusterUpdateSet
         return null;
     }
 
-    private String toBody(Settings settings, String mode) {
-        try {
-            XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
-            builder.startObject().startObject(mode);
-            for (Map.Entry<String, String> me : settings.getAsMap().entrySet()) {
-                builder.field(me.getKey(), me.getValue());
-            }
-            builder.endObject().endObject();
-            return builder.string();
-        } catch (IOException e) {
-            throw new ElasticSearchGenerationException("Failed to generate", e);
+    private String toBody(Settings settings, String mode) throws IOException {
+        XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
+        builder.startObject().startObject(mode);
+        for (Map.Entry<String, String> me : settings.getAsMap().entrySet()) {
+            builder.field(me.getKey(), me.getValue());
         }
+        builder.endObject().endObject();
+        return builder.string();
     }
 }

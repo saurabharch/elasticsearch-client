@@ -16,17 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.get;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetRequest.Item;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
@@ -50,27 +47,22 @@ public class HttpMultiGetAction extends HttpAction<MultiGetRequest, MultiGetResp
     private static final String ENDPOINT = "_mget";
 
     @Override
-    protected void doExecute(final HttpClient client, final MultiGetRequest request, final ActionListener<MultiGetResponse> listener) {
+    protected HttpRequest toRequest(final MultiGetRequest request) throws IOException {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
-        try {
-            XContentBuilder builder = jsonBuilder().startObject().startArray("docs");
-            for (Item item : request.items()) {
-                builder.startObject()
-                        .field("_index", item.index())
-                        .field("_type", item.type())
-                        .field("_id", item.id());
-                if (item.fields() != null) {
-                    builder.array("fields", item.fields());
-                }
-                builder.endObject();
+        XContentBuilder builder = jsonBuilder().startObject().startArray("docs");
+        for (Item item : request.items()) {
+            builder.startObject()
+                    .field("_index", item.index())
+                    .field("_type", item.type())
+                    .field("_id", item.id());
+            if (item.fields() != null) {
+                builder.array("fields", item.fields());
             }
-            builder.endArray().endObject();
-            httpRequest.body(builder.string());
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-            listener.onFailure(e);
+            builder.endObject();
         }
-        submit(client, httpRequest, listener);
+        builder.endArray().endObject();
+        httpRequest.body(builder.string());
+        return httpRequest;
     }
 
     @Override
@@ -100,15 +92,14 @@ public class HttpMultiGetAction extends HttpAction<MultiGetRequest, MultiGetResp
                         fields.put(key, new GetField(key, l));
                     }
                 }
-                MultiGetResponse.Failure failure = doc.containsKey("error") ?
-                        new MultiGetResponse.Failure(
+                MultiGetResponse.Failure failure = doc.containsKey("error")
+                        ? new MultiGetResponse.Failure(
                         doc.get("_index").toString(),
                         doc.get("_type").toString(),
                         doc.get("_id").toString(),
-                        doc.get("error").toString()
-                        ) : null;
-                GetResponse getResponse = failure == null ?
-                        new GetResponse(new GetResult(
+                        doc.get("error").toString()) : null;
+                GetResponse getResponse = failure == null
+                        ? new GetResponse(new GetResult(
                         doc.get("_index").toString(),
                         doc.get("_type").toString(),
                         doc.get("_id").toString(),

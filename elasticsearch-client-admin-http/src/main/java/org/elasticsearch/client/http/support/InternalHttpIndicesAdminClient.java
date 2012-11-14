@@ -24,7 +24,7 @@ public class InternalHttpIndicesAdminClient extends HttpClient {
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 
             ActionFuture<Response> execute(Action<Request, Response, RequestBuilder, Client> action, Request request) {
         HttpAction<Request,Response> httpAction = actions.getAction(action.name());
-        return httpAction.execute(this, request);
+        return httpAction.execute(this, request, null);
     }
 
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, Client extends GenericClient> 

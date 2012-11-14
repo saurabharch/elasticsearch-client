@@ -20,11 +20,9 @@ package org.elasticsearch.http.action.admin.cluster.node.shutdown;
 
 import java.io.IOException;
 import java.util.Map;
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.shutdown.NodesShutdownRequest;
 import org.elasticsearch.action.admin.cluster.node.shutdown.NodesShutdownResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -36,12 +34,12 @@ public class HttpNodesShutdownAction extends HttpAction<NodesShutdownRequest, No
     private static final String ENDPOINT = "/_cluster/nodes/_shutdown";
 
     @Override
-    protected void doExecute(HttpClient client, NodesShutdownRequest request, ActionListener<NodesShutdownResponse> listener) {
+    protected HttpRequest toRequest(NodesShutdownRequest request) {
         HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("delay", request.delay())
                 .param("exit", request.exit());
-        submit(client, httpRequest, listener);
+        return httpRequest;
     }
 
     @Override

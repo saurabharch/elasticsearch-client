@@ -51,16 +51,20 @@ import java.util.concurrent.TimeUnit;
 
 import static org.elasticsearch.common.settings.ImmutableSettings.settingsBuilder;
 
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.ESLoggerFactory;
+
 
 public class HttpIngestClient extends AbstractIngestClient {
 
+    private final ESLogger logger = ESLoggerFactory.getLogger(getClass().getName());
+        
     private final Settings settings;
 
     private final ClientEnvironment environment;
 
     private final ThreadPool threadPool;
 
-    
     private final HttpClient internalClient;
     
     private Set<TransportAddress> addresses;
@@ -119,7 +123,9 @@ public class HttpIngestClient extends AbstractIngestClient {
     }
     
     public void close() {
+        logger.debug("closing client...");
         internalClient.close();
+        logger.debug("internal client closed");
         threadPool.shutdown();
         try {
             threadPool.awaitTermination(10, TimeUnit.SECONDS);
@@ -133,6 +139,7 @@ public class HttpIngestClient extends AbstractIngestClient {
         }
         CachedStreams.clear();
         ThreadLocals.clearReferencesThreadLocals();
+        logger.debug("client closed");
     }
 
     public Settings settings() {
@@ -146,6 +153,6 @@ public class HttpIngestClient extends AbstractIngestClient {
 
     public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>, SearchClient extends GenericClient> 
             void execute(Action<Request, Response, RequestBuilder, SearchClient> action, Request request, ActionListener<Response> listener) {
-       internalClient.execute(action, request);
+       internalClient.execute(action, request, listener);
     }
 }
