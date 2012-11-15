@@ -38,12 +38,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class HttpIndicesAliasesAction extends HttpAction<IndicesAliasesRequest, IndicesAliasesResponse> {
 
     public static final String NAME = "indices_aliases";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_aliases";
 
     @Override
     protected HttpRequest toRequest(IndicesAliasesRequest request) throws IOException {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("master_timeout", request.masterNodeTimeout());
         XContentBuilder builder = jsonBuilder();
         builder.startObject().startArray("aliases");

@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpRefreshAction extends HttpAction<RefreshRequest, RefreshResponse> {
 
     public static final String NAME = "refresh";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_refresh";
 
     @Override
     protected HttpRequest toRequest(RefreshRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.indices())
                 .param("operation_threading", request.operationThreading().name().toLowerCase());
         if (request.ignoreIndices() != null) {

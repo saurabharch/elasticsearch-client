@@ -31,11 +31,10 @@ import java.util.Map;
 public class HttpIndexAction extends HttpAction<IndexRequest, IndexResponse> {
 
     public static final String NAME = "index";
-    private static final String METHOD = "PUT";
 
     @Override
     protected HttpRequest toRequest(final IndexRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, request.opType().equals(OpType.CREATE) ? "_create" : null)
+        HttpRequest httpRequest = new HttpRequest(PUT, request.opType().equals(OpType.CREATE) ? "_create" : null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

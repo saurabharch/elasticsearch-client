@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpGetMappingAction extends HttpAction<GetMappingRequest, GetMappingResponse> {
 
     public static final String NAME = "mapping_get";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_mapping";
 
     @Override
     protected HttpRequest toRequest(GetMappingRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .type(request.type());
         return httpRequest;

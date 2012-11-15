@@ -36,11 +36,10 @@ import java.util.Map;
 public class HttpCreateIndexAction extends HttpAction<CreateIndexRequest, CreateIndexResponse> {
 
     public static final String NAME = "index_create";
-    private static final String METHOD = "PUT";
 
     @Override
     protected HttpRequest toRequest(CreateIndexRequest request) throws IOException {
-        HttpRequest httpRequest = new HttpRequest(METHOD, null)
+        HttpRequest httpRequest = new HttpRequest(PUT, null)
                 .index(request.index())
                 .body(toBody(request.settings(), request.mappings()));
         return httpRequest;

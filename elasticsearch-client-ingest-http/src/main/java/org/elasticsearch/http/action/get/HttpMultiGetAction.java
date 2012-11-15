@@ -43,12 +43,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class HttpMultiGetAction extends HttpAction<MultiGetRequest, MultiGetResponse> {
 
     public static final String NAME = "mget";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_mget";
 
     @Override
     protected HttpRequest toRequest(final MultiGetRequest request) throws IOException {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT);
         XContentBuilder builder = jsonBuilder().startObject().startArray("docs");
         for (Item item : request.items()) {
             builder.startObject()

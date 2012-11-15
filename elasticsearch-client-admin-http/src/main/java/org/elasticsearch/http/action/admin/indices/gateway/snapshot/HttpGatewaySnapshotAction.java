@@ -33,12 +33,11 @@ import org.elasticsearch.common.Strings;
 public class HttpGatewaySnapshotAction extends HttpAction<GatewaySnapshotRequest, GatewaySnapshotResponse>{
 
     public static final String NAME = "gateway_snapshot";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_gateway/snapshot";
     
     @Override
     protected HttpRequest toRequest(GatewaySnapshotRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .param("operation_threading", request.operationThreading().name().toLowerCase());
         if (request.ignoreIndices() != null) {

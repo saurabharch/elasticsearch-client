@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpPutMappingAction extends HttpAction<PutMappingRequest, PutMappingResponse> {
 
     public static final String NAME = "mapping_put";
-    private static final String METHOD = "PUT";
     private static final String ENDPOINT = "_mapping";
 
     @Override
     protected HttpRequest toRequest(PutMappingRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(PUT, ENDPOINT)
                 .index(request.indices())
                 .type(request.type())
                 .param("timeout", request.timeout())

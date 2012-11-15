@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpUpdateAction extends HttpAction<UpdateRequest, UpdateResponse> {
 
     public static final String NAME = "update";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_update";
 
     @Override
     protected HttpRequest toRequest(final UpdateRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

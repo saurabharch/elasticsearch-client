@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpDeleteWarmerAction extends HttpAction<DeleteWarmerRequest, DeleteWarmerResponse> {
 
     public static final String NAME = "indices_warmer_delete";
-    private static final String METHOD = "DELETE";
     private static final String ENDPOINT = "_warmer";
 
     @Override
     protected HttpRequest toRequest(DeleteWarmerRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT + "/" + request.name());
+        HttpRequest httpRequest = new HttpRequest(DELETE, ENDPOINT + "/" + request.name());
         return httpRequest;
     }
 

@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpNodesRestartAction extends HttpAction<NodesRestartRequest, NodesRestartResponse> {
 
     public static final String NAME = "cluster_nodes_restart";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "/_cluster/nodes/_restart";
 
     @Override
     protected HttpRequest toRequest(NodesRestartRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("delay", request.delay())
                 .param("timeout", request.timeout());

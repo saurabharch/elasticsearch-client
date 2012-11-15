@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpExplainAction extends HttpAction<ExplainRequest, ExplainResponse> {
 
     public final static String NAME = "explain";
-    private final static String METHOD = "GET";
     private final static String ENDPOINT = "_explain";
     
     @Override
     protected HttpRequest toRequest(ExplainRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .param("routing", request.routing())
                 .param("parent", request.parent())
                 .param("preference", request.preference())

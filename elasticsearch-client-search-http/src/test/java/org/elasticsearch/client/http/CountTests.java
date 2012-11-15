@@ -19,7 +19,7 @@ public class CountTests {
     public void testCount() throws Exception {
         
         Settings settings = settingsBuilder()
-               // .put("http.connection.url", "http://10.1.1.33:9200")
+               // .put("http.connection.url", "http://localhost:9200")
                 .build();
                 
         HttpSearchClient client = new HttpSearchClient(settings);

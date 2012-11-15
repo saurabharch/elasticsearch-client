@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpClusterStateAction extends HttpAction<ClusterStateRequest, ClusterStateResponse>{
 
     public static final String NAME = "cluster_get_state";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_cluster/state";
     
     @Override
     protected HttpRequest toRequest(ClusterStateRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .param("master_timeout", request.masterNodeTimeout())
                 .param("filter_nodes", request.filterNodes())
                 .param("filter_routing_table", request.filterRoutingTable())

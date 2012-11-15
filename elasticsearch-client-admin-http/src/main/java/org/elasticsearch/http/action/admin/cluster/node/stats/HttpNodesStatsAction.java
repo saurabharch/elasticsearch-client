@@ -32,9 +32,6 @@ import java.util.Map;
 public class HttpNodesStatsAction extends HttpAction<NodesStatsRequest, NodesStatsResponse>{
 
     public static final String NAME = "cluster_nodes_stats";
-    
-    private static final String METHOD = "GET";
-    
     private static final String ENDPOINT = "/_nodes/stats";
     
     @Override
@@ -55,7 +52,7 @@ public class HttpNodesStatsAction extends HttpAction<NodesStatsRequest, NodesSta
         } else if (request.http()) {
             endpoint += "/http";
         }
-        HttpRequest httpRequest = new HttpRequest(METHOD, endpoint)
+        HttpRequest httpRequest = new HttpRequest(GET, endpoint)
                 .param("nodeId", request.nodesIds())
                 ;
         return httpRequest;

@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpSearchAction extends HttpAction<SearchRequest, SearchResponse> {
 
     public final static String NAME = "search";
-    private final static String METHOD = "POST";
     private final static String ENDPOINT = "_search";
     
     @Override
     protected HttpRequest toRequest(SearchRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase())

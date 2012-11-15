@@ -41,6 +41,11 @@ import org.elasticsearch.common.settings.Settings;
 public abstract class HttpAction<Request extends ActionRequest, Response extends ActionResponse> {
 
     protected ESLogger logger = ESLoggerFactory.getLogger(HttpAction.class.getName());
+    protected final static String GET = "GET";
+    protected final static String HEAD = "HEAD";
+    protected final static String PUT = "PUT";
+    protected final static String POST = "POST";
+    protected final static String DELETE = "DELETE";
 
     protected abstract HttpRequest toRequest(Request request) throws IOException;
 
@@ -116,7 +121,9 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
 
         public void onThrowable(Throwable t) {
             logger.error(t.getMessage(), t);
-            listener.onFailure(t);
+            if (listener != null) {
+                listener.onFailure(t);
+            }
         }
 
         public Response onCompleted() {
@@ -133,13 +140,17 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
                     if (logger.isDebugEnabled()) {
                         logger.debug("onCompleted calling onResponse");
                     }
-                    listener.onResponse(toResponse(response));
+                    if (listener != null) {
+                        listener.onResponse(toResponse(response));
+                    }
                 } else {
                     throw new IOException("HTTP error " + response.getStatusCode() + " message: " + response.getBody().toUtf8());
                 }
             } catch (IOException e) {
                 logger.error(e.getMessage(), e);
-                listener.onFailure(e);
+                if (listener != null) {
+                    listener.onFailure(e);
+                }
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("onCompleted done");

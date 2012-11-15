@@ -18,8 +18,7 @@
  */
 package org.elasticsearch.http.action.count;
 
-import java.io.IOException;
-import java.util.Map;
+import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.action.support.HttpAction;
@@ -27,15 +26,18 @@ import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 public class HttpCountAction extends HttpAction<CountRequest, CountResponse> {
 
     public final static String NAME = "count";
-    private final static String METHOD = "GET";
     private final static String ENDPOINT = "_count";
 
     @Override
     protected HttpRequest toRequest(CountRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase())
@@ -49,9 +51,20 @@ public class HttpCountAction extends HttpAction<CountRequest, CountResponse> {
 
     @Override
     protected CountResponse toResponse(HttpResponse response) throws IOException {
+        // {"count":3,"_shards":{"total":1,"successful":1,"failed":0, "failures": [ ... ]}}
+        
         Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
-        // {"count":3,"_shards":{"total":1,"successful":1,"failed":0}}
-        logger.info("count response = ", map);
-        return null;
+        long count = Long.parseLong(map.get("count").toString());
+        Map<String, Object> shards = (Map<String,Object>)map.get("_shards");
+        int totalShards = Integer.parseInt(shards.get("total").toString());
+        int successfulShards = Integer.parseInt(shards.get("successful").toString());
+        int failedShards = Integer.parseInt(shards.get("successful").toString());
+        CountResponse countResponse = new CountResponse(count, totalShards, successfulShards, failedShards, null /*list*/);
+
+        return countResponse;
     }
+    
+    private List<ShardOperationFailedException> toShardOperationFailedExceptions(List<Object> list) {
+        return null;
+    } 
 }

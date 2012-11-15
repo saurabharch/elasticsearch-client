@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpGetWarmerAction extends HttpAction<GetWarmerRequest, GetWarmerResponse> {
 
     public static final String NAME = "indices_warmer_get";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_warmer";
 
     @Override
     protected HttpRequest toRequest(GetWarmerRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT + "/" + request.name());
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT + "/" + request.name());
         return httpRequest;
     }
 

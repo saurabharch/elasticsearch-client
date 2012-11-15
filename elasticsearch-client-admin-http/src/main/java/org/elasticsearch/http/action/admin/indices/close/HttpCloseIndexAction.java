@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpCloseIndexAction extends HttpAction<CloseIndexRequest, CloseIndexResponse>{
 
     public static final String NAME = "close";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_close";
     
     @Override
     protected HttpRequest toRequest(CloseIndexRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.index())
                 .param("timeout", request.timeout());
         return httpRequest;

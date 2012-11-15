@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpClearIndicesCacheAction extends HttpAction<ClearIndicesCacheRequest, ClearIndicesCacheResponse>{
 
     public static final String NAME = "cache_clear";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_cache/clear";
     
     @Override
     protected HttpRequest toRequest(ClearIndicesCacheRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.indices())
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase())
                 .param("filter", request.filterCache())

@@ -31,13 +31,11 @@ import java.util.Map;
 public class HttpIndicesStatusAction extends HttpAction<IndicesStatusRequest, IndicesStatusResponse> {
 
     public static final String NAME = "indices_status";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_status";
 
     @Override
     protected HttpRequest toRequest(IndicesStatusRequest request) {
-        
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .index(request.indices());
         if (request.ignoreIndices() != null) {
             httpRequest.param("ignore_indices", request.ignoreIndices().name().toLowerCase());

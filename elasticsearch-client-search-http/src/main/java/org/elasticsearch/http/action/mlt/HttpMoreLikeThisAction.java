@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpMoreLikeThisAction extends HttpAction<MoreLikeThisRequest, SearchResponse> {
 
     public final static String NAME = "mlt";
-    private final static String METHOD = "POST";
     private final static String ENDPOINT = "_mlt";
 
     @Override
     protected HttpRequest toRequest(MoreLikeThisRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("mlt_fields", request.fields())
                 .param("percent_terms_to_match", request.percentTermsToMatch())
                 .param("min_term_freq", request.minTermFreq())

@@ -33,12 +33,11 @@ import org.elasticsearch.common.Strings;
 public class HttpDeleteMappingAction extends HttpAction<DeleteMappingRequest, DeleteMappingResponse>{
 
     public static final String NAME = "mapping_delete";
-    private static final String METHOD = "DELETE";
     private static final String ENDPOINT = "/_mapping";
     
     @Override
     protected HttpRequest toRequest(DeleteMappingRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(DELETE, ENDPOINT)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .type(request.type());
         return httpRequest;

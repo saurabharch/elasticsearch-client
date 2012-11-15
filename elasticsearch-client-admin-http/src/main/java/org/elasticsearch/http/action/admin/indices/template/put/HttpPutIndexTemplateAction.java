@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpPutIndexTemplateAction extends HttpAction<PutIndexTemplateRequest, PutIndexTemplateResponse> {
 
     public static final String NAME = "indices_template_put";
-    private static final String METHOD = "PUT";
     private static final String ENDPOINT = "_template";
 
     @Override
     protected HttpRequest toRequest(PutIndexTemplateRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT + "/" + request.name());
+        HttpRequest httpRequest = new HttpRequest(PUT, ENDPOINT + "/" + request.name());
         return httpRequest;
     }
 

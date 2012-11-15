@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpDeleteIndexTemplateAction extends HttpAction<DeleteIndexTemplateRequest, DeleteIndexTemplateResponse> {
 
     public static final String NAME = "indices_template_delete";
-    private static final String METHOD = "DELETE";
     private static final String ENDPOINT = "_template";
 
     @Override
     protected HttpRequest toRequest(DeleteIndexTemplateRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT + "/" + request.name());
+        HttpRequest httpRequest = new HttpRequest(DELETE, ENDPOINT + "/" + request.name());
         return httpRequest;
     }
 

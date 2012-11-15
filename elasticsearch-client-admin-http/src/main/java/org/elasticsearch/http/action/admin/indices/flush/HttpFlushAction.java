@@ -33,12 +33,11 @@ import java.util.Map;
 public class HttpFlushAction extends HttpAction<FlushRequest, FlushResponse>{
 
     public static final String NAME = "flush";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_flush";
     
     @Override
     protected HttpRequest toRequest(FlushRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .param("full", request.full())
                 .param("force", request.force())

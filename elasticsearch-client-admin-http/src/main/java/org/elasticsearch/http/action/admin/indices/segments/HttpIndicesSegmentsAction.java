@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpIndicesSegmentsAction extends HttpAction<IndicesSegmentsRequest, IndicesSegmentResponse> {
 
     public static final String NAME = "indices_segments";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_segments";
 
     @Override
     protected HttpRequest toRequest(IndicesSegmentsRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .index(request.indices())
                 .param("operation_threading", request.operationThreading().name().toLowerCase());
         if (request.ignoreIndices() != null) {

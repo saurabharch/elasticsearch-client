@@ -19,11 +19,9 @@
 
 package org.elasticsearch.http.action.admin.cluster.node.info;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -34,7 +32,6 @@ import java.util.Map;
 public class HttpNodesInfoAction extends HttpAction<NodesInfoRequest, NodesInfoResponse> {
 
     public static final String NAME = "nodes_info";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "/_nodes";
 
     @Override
@@ -57,7 +54,7 @@ public class HttpNodesInfoAction extends HttpAction<NodesInfoRequest, NodesInfoR
         } else if (request.http()) {
             endpoint += "/http";
         }
-        HttpRequest httpRequest = new HttpRequest(METHOD, endpoint)
+        HttpRequest httpRequest = new HttpRequest(GET, endpoint)
                 .param("nodeId", request.nodesIds());
         return httpRequest;
     }

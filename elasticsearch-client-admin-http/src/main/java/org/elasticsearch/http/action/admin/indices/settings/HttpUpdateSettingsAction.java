@@ -35,12 +35,11 @@ import java.util.Map;
 public class HttpUpdateSettingsAction extends HttpAction<UpdateSettingsRequest, UpdateSettingsResponse> {
 
     public static final String NAME = "update_settings";
-    private static final String METHOD = "PUT";
     private static final String ENDPOINT = "_settings";
 
     @Override
     protected HttpRequest toRequest(UpdateSettingsRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(PUT, ENDPOINT)
                 .index(request.indices());
         return httpRequest;
     }

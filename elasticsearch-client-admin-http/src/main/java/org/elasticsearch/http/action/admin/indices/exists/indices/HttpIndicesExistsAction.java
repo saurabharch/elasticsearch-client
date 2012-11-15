@@ -33,11 +33,10 @@ import org.elasticsearch.common.Strings;
 public class HttpIndicesExistsAction extends HttpAction<IndicesExistsRequest, IndicesExistsResponse>{
 
     public static final String NAME = "index_exist";
-    private static final String METHOD = "HEAD";
     
     @Override
     protected HttpRequest toRequest(IndicesExistsRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, null)
+        HttpRequest httpRequest = new HttpRequest(HEAD, null)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()));                
         return httpRequest;
     }

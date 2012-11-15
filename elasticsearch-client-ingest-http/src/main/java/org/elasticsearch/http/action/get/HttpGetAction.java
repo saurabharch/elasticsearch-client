@@ -39,11 +39,10 @@ import java.util.Map;
 public class HttpGetAction extends HttpAction<GetRequest, GetResponse> {
 
     public static final String NAME = "get";
-    private static final String METHOD = "GET";
 
     @Override
     protected HttpRequest toRequest(final GetRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, null)
+        HttpRequest httpRequest = new HttpRequest(GET, null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

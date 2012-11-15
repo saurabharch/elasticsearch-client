@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpValidateQueryAction extends HttpAction<ValidateQueryRequest, ValidateQueryResponse> {
 
     public static final String NAME = "validate";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_validate";
 
     @Override
     protected HttpRequest toRequest(ValidateQueryRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.indices())
                 .type(request.types())
                 .param("operation_threading", request.operationThreading().name().toLowerCase());

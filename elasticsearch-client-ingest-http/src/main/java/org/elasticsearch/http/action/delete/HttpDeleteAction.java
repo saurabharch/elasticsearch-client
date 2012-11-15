@@ -32,11 +32,10 @@ import java.util.Map;
 public class HttpDeleteAction extends HttpAction<DeleteRequest, DeleteResponse> {
 
     public static final String NAME = "delete";
-    private static final String METHOD = "DELETE";
 
     @Override
     protected HttpRequest toRequest(DeleteRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, null)
+        HttpRequest httpRequest = new HttpRequest(DELETE, null)
                 .index(request.index())
                 .type(request.type())
                 .id(request.id())

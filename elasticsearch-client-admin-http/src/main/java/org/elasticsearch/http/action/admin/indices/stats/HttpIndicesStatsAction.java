@@ -31,7 +31,6 @@ import java.util.Map;
 public class HttpIndicesStatsAction extends HttpAction<IndicesStatsRequest, IndicesStats> {
 
     public static final String NAME = "indices_stats";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_stats";
 
     @Override
@@ -58,7 +57,7 @@ public class HttpIndicesStatsAction extends HttpAction<IndicesStatsRequest, Indi
                 endpoint += "/warner";
             }
         }
-        HttpRequest httpRequest = new HttpRequest(METHOD, endpoint)
+        HttpRequest httpRequest = new HttpRequest(GET, endpoint)
                 .index(request.indices())
                 .type(request.types())
                 .param("clear", request.isClear())

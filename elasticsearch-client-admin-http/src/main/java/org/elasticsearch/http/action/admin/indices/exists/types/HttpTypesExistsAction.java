@@ -33,11 +33,10 @@ import org.elasticsearch.common.Strings;
 public class HttpTypesExistsAction extends HttpAction<TypesExistsRequest, TypesExistsResponse>{
 
     public static final String NAME = "types_exist";
-    private static final String METHOD = "HEAD";
     
     @Override
     protected HttpRequest toRequest(TypesExistsRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, null)
+        HttpRequest httpRequest = new HttpRequest(HEAD, null)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .type(Strings.arrayToCommaDelimitedString(request.types()));
         return httpRequest;

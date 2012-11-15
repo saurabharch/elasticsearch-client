@@ -19,7 +19,6 @@
 
 package org.elasticsearch.http.action.admin.indices.alias;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesGetAliasesResponse;
 import org.elasticsearch.action.support.HttpAction;
@@ -33,11 +32,10 @@ import java.util.Map;
 public class HttpIndicesGetAliasesAction extends HttpAction<IndicesGetAliasesRequest, IndicesGetAliasesResponse>{
 
     public static final String NAME = "get_indices_aliases";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_aliases";
     
     protected HttpRequest toRequest(IndicesGetAliasesRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .param("filter_nodes", true)
                 .param("filter_routing_table", true);
         return httpRequest;

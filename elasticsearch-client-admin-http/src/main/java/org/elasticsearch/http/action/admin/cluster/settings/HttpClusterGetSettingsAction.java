@@ -18,11 +18,9 @@
  */
 package org.elasticsearch.http.action.admin.cluster.settings;
 
-import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateRequest;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
 import org.elasticsearch.action.support.HttpAction;
-import org.elasticsearch.action.support.HttpClient;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
@@ -33,12 +31,11 @@ import java.util.Map;
 public class HttpClusterGetSettingsAction extends HttpAction<ClusterStateRequest, ClusterStateResponse> {
 
     public static final String NAME = "cluster_get_settings";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_cluster/settings";
 
     @Override
     protected HttpRequest toRequest(ClusterStateRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT);
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT);
         return httpRequest;
     }
 

@@ -33,11 +33,10 @@ import org.elasticsearch.common.Strings;
 public class HttpDeleteIndexAction extends HttpAction<DeleteIndexRequest, DeleteIndexResponse>{
 
     public static final String NAME = "index_delete";
-    private static final String METHOD = "DELETE";
     
     @Override
     protected HttpRequest toRequest(DeleteIndexRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, null)
+        HttpRequest httpRequest = new HttpRequest(DELETE, null)
                 .index(Strings.arrayToCommaDelimitedString(request.indices()))
                 .param("timeout", request.timeout().format());
         return httpRequest;

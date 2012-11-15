@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpGetIndexTemplateAction extends HttpAction<GetIndexTemplateRequest, GetIndexTemplateResponse> {
 
     public static final String NAME = "indices_template_get";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_template";
 
     @Override
     protected HttpRequest toRequest(GetIndexTemplateRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT + "/" + request.name());
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT + "/" + request.name());
         return httpRequest;
     }
 

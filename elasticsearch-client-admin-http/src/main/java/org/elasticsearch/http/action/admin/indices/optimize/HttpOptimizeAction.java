@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpOptimizeAction extends HttpAction<OptimizeRequest, OptimizeResponse> {
 
     public static final String NAME = "optimize";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_optimize";
 
     @Override
     protected HttpRequest toRequest(OptimizeRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.indices())
                 .param("flush", request.flush())
                 .param("max_num_segments", request.maxNumSegments())

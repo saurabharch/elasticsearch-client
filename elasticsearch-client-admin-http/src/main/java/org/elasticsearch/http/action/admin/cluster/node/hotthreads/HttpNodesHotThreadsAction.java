@@ -32,14 +32,11 @@ import java.util.Map;
 public class HttpNodesHotThreadsAction extends HttpAction<NodesHotThreadsRequest, NodesHotThreadsResponse>{
 
     public static final String NAME = "cluster_nodes_hotthreads";
-    
-    private static final String METHOD = "GET";
-    
     private static final String ENDPOINT = "/_cluster/nodes/hotthreads";
     
     @Override
     protected HttpRequest toRequest(NodesHotThreadsRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .param("nodeId", request.nodesIds())
                 .param("threads", request.threads())
                 .param("type", request.interval())

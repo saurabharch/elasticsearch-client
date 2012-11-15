@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpOpenIndexAction extends HttpAction<OpenIndexRequest, OpenIndexResponse> {
 
     public static final String NAME = "index_open";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_open";
 
     @Override
     protected HttpRequest toRequest(OpenIndexRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.index())
                 .param("timeout", request.timeout());
         return httpRequest;

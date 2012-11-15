@@ -31,12 +31,11 @@ import org.elasticsearch.common.xcontent.XContentHelper;
 public class HttpDeleteByQueryAction extends HttpAction<DeleteByQueryRequest, DeleteByQueryResponse> {
     
     public final static String NAME = "deletebyquery";
-    private final static String METHOD = "DELETE";
     private final static String ENDPOINT = "_query";
     
     @Override
     protected HttpRequest toRequest(DeleteByQueryRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(DELETE, ENDPOINT)
                 .param("routing", request.routing())
                 .param("consistencylevel", request.consistencyLevel().name().toLowerCase())
                 .param("replication", request.replicationType().name().toLowerCase())

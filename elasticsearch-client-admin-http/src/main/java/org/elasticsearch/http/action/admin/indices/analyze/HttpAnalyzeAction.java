@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpAnalyzeAction extends HttpAction<AnalyzeRequest, AnalyzeResponse>{
 
     public static final String NAME = "analyze";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_analyze";
     
     @Override
     protected HttpRequest toRequest(AnalyzeRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .index(request.index())
                 .param("text", request.text())
                 .param("prefer_local", request.preferLocalShard())

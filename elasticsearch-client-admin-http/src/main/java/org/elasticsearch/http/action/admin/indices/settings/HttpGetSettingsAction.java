@@ -31,12 +31,11 @@ import java.util.Map;
 public class HttpGetSettingsAction extends HttpAction<GetSettingsRequest, GetSettingsResponse> {
 
     public static final String NAME = "get_settings";
-    private static final String METHOD = "GET";
     private static final String ENDPOINT = "_settings";
 
     @Override
     protected HttpRequest toRequest(GetSettingsRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(GET, ENDPOINT)
                 .index(request.indices());
         return httpRequest;
     }

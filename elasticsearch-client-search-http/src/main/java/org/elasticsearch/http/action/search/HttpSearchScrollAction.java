@@ -32,12 +32,11 @@ import java.util.Map;
 public class HttpSearchScrollAction extends HttpAction<SearchScrollRequest, SearchResponse> {
 
     public final static String NAME = "search/scroll";
-    private final static String METHOD = "POST";
     private final static String ENDPOINT = "_search/scroll";
     
     @Override
     protected HttpRequest toRequest(SearchScrollRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("scroll", request.scroll().keepAlive().format())
                 .param("scroll_id", request.scrollId());

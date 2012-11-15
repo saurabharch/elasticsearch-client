@@ -37,12 +37,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class HttpMultiSearchAction extends HttpAction<MultiSearchRequest, MultiSearchResponse> {
 
     public final static String NAME = "msearch";
-    private final static String METHOD = "POST";
     private final static String ENDPOINT = "_msearch";
 
     @Override
     protected HttpRequest toRequest(MultiSearchRequest request) throws IOException {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("ignore_indices", request.ignoreIndices().name().toLowerCase());
         StringBuilder sb = new StringBuilder();
         for (SearchRequest sr : request.requests()) {

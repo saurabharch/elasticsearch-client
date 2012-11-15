@@ -32,14 +32,11 @@ import java.util.Map;
 public class HttpClusterRerouteAction extends HttpAction<ClusterRerouteRequest, ClusterRerouteResponse>{
 
     public static final String NAME = "cluster_reroute";
-    
-    private static final String METHOD = "POST";
-    
     private static final String ENDPOINT = "_cluster/reroute";
     
     @Override
     protected HttpRequest toRequest(ClusterRerouteRequest request) {
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("master_timeout", request.masterNodeTimeout());
         return httpRequest;
     }

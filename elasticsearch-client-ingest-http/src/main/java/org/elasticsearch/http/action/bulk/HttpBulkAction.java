@@ -39,7 +39,6 @@ import java.util.Map;
 public class HttpBulkAction extends HttpAction<BulkRequest, BulkResponse> {
 
     public static final String NAME = "bulk";
-    private static final String METHOD = "POST";
     private static final String ENDPOINT = "_bulk";
 
     @Override
@@ -54,7 +53,7 @@ public class HttpBulkAction extends HttpAction<BulkRequest, BulkResponse> {
                 formatBulk(out, deleteRequest);
             }
         }
-        HttpRequest httpRequest = new HttpRequest(METHOD, ENDPOINT)
+        HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
                 .param("replication", bulkRequest.replicationType().name().toLowerCase())
                 .param("consistency", bulkRequest.consistencyLevel().name().toLowerCase())
                 .param("refresh", Boolean.toString(bulkRequest.refresh()))
