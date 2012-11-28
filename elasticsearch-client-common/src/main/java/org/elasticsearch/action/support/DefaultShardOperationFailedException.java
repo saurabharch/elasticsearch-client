@@ -55,6 +55,11 @@ public class DefaultShardOperationFailedException implements ShardOperationFaile
         this.reason = detailedMessage(t);
     }
 
+    public DefaultShardOperationFailedException(String index, int shardId, String reason) {
+        this.index = index;
+        this.shardId = shardId;
+        this.reason = reason;
+    }
     
     public String index() {
         return this.index;

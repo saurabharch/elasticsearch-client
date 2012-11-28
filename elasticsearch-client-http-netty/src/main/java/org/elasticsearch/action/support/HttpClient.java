@@ -53,13 +53,14 @@ public abstract class HttpClient extends AsyncHttpClient implements GenericClien
         providerConfig.addProperty(NettyAsyncHttpProviderConfig.USE_BLOCKING_IO, "false");
         AsyncHttpClientConfig.Builder config = new AsyncHttpClientConfig.Builder()
                 .setAsyncHttpClientProviderConfig(providerConfig)
-                .setExecutorService(Executors.newFixedThreadPool(settings.getAsInt("http.connection.poolsize", 4)))
+                .setExecutorService(Executors.newFixedThreadPool(settings.getAsInt("http.connection.poolsize", 5)))
+                .setMaximumConnectionsTotal(settings.getAsInt("http.connection.maxtotal", 5))
+                .setMaximumConnectionsPerHost(settings.getAsInt("http.connection.maxperhost", 1))
                 .setAllowPoolingConnection(settings.getAsBoolean("http.connection.pooling", Boolean.TRUE))
-                .setConnectionTimeoutInMs(settings.getAsInt("http.connection.timeout", 5000))
-                .setMaximumConnectionsTotal(settings.getAsInt("http.connection.max", 4))
-                .setRequestTimeoutInMs((int) settings.getAsTime("http.request.timeout", TimeValue.timeValueSeconds(15L)).getMillis())
                 .setFollowRedirects(settings.getAsBoolean("http.connection.followredirect", Boolean.TRUE))
-                //.setMaxRequestRetry(settings.getAsInt("http.request.maxretries", 3))
+                .setConnectionTimeoutInMs(settings.getAsInt("http.connection.timeout", 5000))
+                .setRequestTimeoutInMs((int) settings.getAsTime("http.request.timeout", TimeValue.timeValueSeconds(15L)).getMillis())
+                .setMaxRequestRetry(settings.getAsInt("http.request.maxretries", 3))
                 .setCompressionEnabled(settings.getAsBoolean("http.compression.enabled", Boolean.TRUE));
         if (settings.get("http.proxy.host") != null && settings.getAsInt("http.proxy.port", -1) != -1) {
             config.setProxyServer(new ProxyServer(settings.get("http.proxy.host"), settings.getAsInt("http.proxy.port", -1)));

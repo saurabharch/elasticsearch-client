@@ -19,11 +19,15 @@
 
 package org.elasticsearch.action.support;
 
+import java.io.IOException;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.common.bytes.BytesReference;
 
 import java.util.List;
 import java.util.Map;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.common.xcontent.XContentType;
 
 public class HttpResponse extends ActionResponse {
     
@@ -53,6 +57,10 @@ public class HttpResponse extends ActionResponse {
     
     public BytesReference getBody() {
         return body;
+    }
+    
+    public XContentParser parser() throws IOException {
+        return XContentFactory.xContent(XContentFactory.xContentType(body)).createParser(body.streamInput());
     }
     
     @Override

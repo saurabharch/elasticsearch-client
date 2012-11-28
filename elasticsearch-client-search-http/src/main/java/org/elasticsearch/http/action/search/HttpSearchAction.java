@@ -16,42 +16,111 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.elasticsearch.http.action.search;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.HttpAction;
+import org.elasticsearch.action.support.HttpBaseAction;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
 import org.elasticsearch.common.xcontent.XContentHelper;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import org.elasticsearch.action.ShardOperationFailedException;
+import org.elasticsearch.action.search.ShardSearchFailure;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.search.facet.InternalFacets;
+import org.elasticsearch.search.internal.InternalSearchHits;
+import org.elasticsearch.search.internal.InternalSearchResponse;
 
-public class HttpSearchAction extends HttpAction<SearchRequest, SearchResponse> {
+public class HttpSearchAction extends HttpBaseAction<SearchRequest, SearchResponse> {
 
     public final static String NAME = "search";
     private final static String ENDPOINT = "_search";
-    
+
     @Override
     protected HttpRequest toRequest(SearchRequest request) {
         HttpRequest httpRequest = new HttpRequest(POST, ENDPOINT)
-                .param("operation_threading", request.operationThreading().name().toLowerCase())
                 .param("routing", request.routing())
-                .param("ignore_indices", request.ignoreIndices().name().toLowerCase())
                 .param("query_hint", request.queryHint())
-                .param("search_type", request.searchType().name().toLowerCase())
-                .param("scroll", request.scroll().keepAlive().format())
                 .body(request.source());
-        return httpRequest; 
+        if (request.operationThreading() != null) {
+            httpRequest.param("operation_threading", request.operationThreading().name().toLowerCase());
+        }
+        if (request.ignoreIndices() != null) {
+            httpRequest.param("ignore_indices", request.ignoreIndices().name().toLowerCase());
+        }
+        if (request.searchType() != null) {
+            httpRequest.param("search_type", request.searchType().name().toLowerCase());
+        }
+        if (request.scroll() != null) {
+            httpRequest.param("scroll", request.scroll().keepAlive().format());
+        }
+        return httpRequest;
     }
 
     @Override
     protected SearchResponse toResponse(HttpResponse response) throws IOException {
-        Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
-        logger.info("search response = {}", map);
-        return null;
+        logger.info("search response = {}", response);
+        String scrollId = null;
+        int totalShards = -1;
+        int successfulShards = -1;
+        int failedShards = -1;
+        long tookInMillis = -1L;
+        boolean timedOut = false;
+        ShardSearchFailure[] shardFailures = null;
+
+        InternalSearchHits hits = null;
+        InternalFacets facets = null;
+
+        //List<ShardOperationFailedException> failures = null;
+
+        XContentParser parser = response.parser();
+        XContentParser.Token token = parser.nextToken();
+        String currentFieldName = null;
+
+        while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
+            if (token == XContentParser.Token.FIELD_NAME) {
+                currentFieldName = parser.currentName();
+                if ("_shards".equals(currentFieldName)) {
+                    while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
+                        if (token == XContentParser.Token.FIELD_NAME) {
+                            currentFieldName = parser.currentName();
+                            if ("failures".equals(currentFieldName)) {
+                                //failures = parseShardFailures(parser);
+                            }
+                        } else if (token.isValue()) {
+                            if ("total".equals(currentFieldName)) {
+                                totalShards = parser.intValue();
+                            } else if ("successful".equals(currentFieldName)) {
+                                successfulShards = parser.intValue();
+                            } else if ("failed".equals(currentFieldName)) {
+                                failedShards = parser.intValue();
+                            }
+                        }
+                    }
+                } else if ("hits".equals(currentFieldName)) {
+                    while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
+                        if (token == XContentParser.Token.FIELD_NAME) {
+                            currentFieldName = parser.currentName();
+                        } else if (token.isValue()) {
+                        }
+                    }
+                } else if (token.isValue()) {
+                    if ("took".equals(currentFieldName)) {
+                        tookInMillis = parser.longValue();
+                    } else if ("timed_out".equals(currentFieldName)) {
+                        timedOut = parser.booleanValue();
+                    }
+                }
+            }
+        }
+            InternalSearchResponse ir = new InternalSearchResponse(hits, facets, timedOut);
+            //Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
+            //logger.info("search response = {}", map);
+            return new SearchResponse(ir, scrollId, totalShards, successfulShards, tookInMillis, shardFailures);
+        
     }
-    
 }

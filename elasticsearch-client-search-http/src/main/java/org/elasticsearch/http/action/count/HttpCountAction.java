@@ -21,16 +21,15 @@ package org.elasticsearch.http.action.count;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.count.CountRequest;
 import org.elasticsearch.action.count.CountResponse;
-import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.common.xcontent.XContentHelper;
+import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.action.support.HttpBaseAction;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
-public class HttpCountAction extends HttpAction<CountRequest, CountResponse> {
+public class HttpCountAction extends HttpBaseAction<CountRequest, CountResponse> {
 
     public final static String NAME = "count";
     private final static String ENDPOINT = "_count";
@@ -51,20 +50,32 @@ public class HttpCountAction extends HttpAction<CountRequest, CountResponse> {
 
     @Override
     protected CountResponse toResponse(HttpResponse response) throws IOException {
-        // {"count":3,"_shards":{"total":1,"successful":1,"failed":0, "failures": [ ... ]}}
-        
-        Map<String, Object> map = XContentHelper.convertToMap(response.getBody(), false).v2();
-        long count = Long.parseLong(map.get("count").toString());
-        Map<String, Object> shards = (Map<String,Object>)map.get("_shards");
-        int totalShards = Integer.parseInt(shards.get("total").toString());
-        int successfulShards = Integer.parseInt(shards.get("successful").toString());
-        int failedShards = Integer.parseInt(shards.get("successful").toString());
-        CountResponse countResponse = new CountResponse(count, totalShards, successfulShards, failedShards, null /*list*/);
-
-        return countResponse;
+        long count = -1;
+        int totalShards = -1;
+        int successfulShards = -1;
+        int failedShards = -1;
+        List<ShardOperationFailedException> failures = null;
+        XContentParser parser = response.parser();
+        XContentParser.Token token = parser.nextToken();
+        String currentFieldName = null;
+        while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
+            if (token == XContentParser.Token.FIELD_NAME) {
+                currentFieldName = parser.currentName();
+                if ("failures".equals(currentFieldName)) {
+                    failures = parseShardFailures(parser);
+                }
+            } else if (token.isValue()) {
+                if ("count".equals(currentFieldName)) {
+                    count = parser.longValue();
+                } else if ("total".equals(currentFieldName)) {
+                    totalShards = parser.intValue();
+                } else if ("successful".equals(currentFieldName)) {
+                    successfulShards = parser.intValue();
+                } else if ("failed".equals(currentFieldName)) {
+                    failedShards = parser.intValue();
+                }
+            }
+        }
+        return new CountResponse(count, totalShards, successfulShards, failedShards, failures);
     }
-    
-    private List<ShardOperationFailedException> toShardOperationFailedExceptions(List<Object> list) {
-        return null;
-    } 
 }

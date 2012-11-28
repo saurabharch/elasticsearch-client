@@ -61,7 +61,7 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
         try {
             HttpRequest httpRequest = toRequest(request);
             AsyncHttpClient.BoundRequestBuilder builder = client.prepareRequest(httpRequest.buildRequest(client.settings()));
-            WrapHandler handler = new WrapHandler(client.settings());
+            HttpHandler handler = new HttpHandler(client.settings());
             if (logger.isDebugEnabled()) {
                 logger.debug("submitting request = {}, body = {}", builder.build().toString(), builder.build().getStringData());
             }
@@ -78,7 +78,7 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
         }
     }
 
-    private class WrapHandler implements AsyncHandler<Response> {
+    private class HttpHandler implements AsyncHandler<Response> {
 
         private ActionListener<Response> listener;
         private final BytesStreamOutput body;
@@ -86,7 +86,7 @@ public abstract class HttpAction<Request extends ActionRequest, Response extends
         private HttpResponseHeaders headers;
         private String contentType;
 
-        WrapHandler(Settings settings) {
+        HttpHandler(Settings settings) {
             this.body = new BytesStreamOutput();
         }
 
