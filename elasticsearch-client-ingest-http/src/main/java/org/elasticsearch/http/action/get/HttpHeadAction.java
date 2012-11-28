@@ -42,6 +42,6 @@ public class HttpHeadAction extends HttpAction<GetRequest, GetResponse> {
 
     @Override
     protected GetResponse toResponse(HttpResponse response) throws IOException {
-        return response.getStatusCode() > 200 && response.getStatusCode() < 300 ? new GetResponse(null) : null;
+        return response.getStatusCode() >= 200 && response.getStatusCode() < 300 ? new GetResponse(null) : null;
     }
 }
