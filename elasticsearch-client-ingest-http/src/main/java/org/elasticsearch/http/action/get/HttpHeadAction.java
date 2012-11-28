@@ -19,22 +19,12 @@
 
 package org.elasticsearch.http.action.get;
 
+import java.io.IOException;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.support.HttpAction;
 import org.elasticsearch.action.support.HttpRequest;
 import org.elasticsearch.action.support.HttpResponse;
-import org.elasticsearch.common.io.stream.BytesStreamOutput;
-import org.elasticsearch.common.xcontent.XContentHelper;
-import org.elasticsearch.index.get.GetField;
-import org.elasticsearch.index.get.GetResult;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class HttpHeadAction extends HttpAction<GetRequest, GetResponse> {
 
